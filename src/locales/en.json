@@ -207,7 +207,7 @@
     "noUsers": "No users found",
     "isActive": "Active",
     "roles": {
-      "superAdmin": "Super Admin",
+      "superAdmin": "SA",
       "admin": "Admin",
       "normal": "Normal",
       "viewer": "Viewer"

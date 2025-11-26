@@ -207,7 +207,7 @@
     "noUsers": "Nem található felhasználó",
     "isActive": "Aktív",
     "roles": {
-      "superAdmin": "Szuper Admin",
+      "superAdmin": "SA",
       "admin": "Admin",
       "normal": "Normal",
       "viewer": "Megtekintő"
