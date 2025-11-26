@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Partners = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useTranslation();
 
   const { data: partners, isLoading } = useQuery({
     queryKey: ['partners', searchTerm],
@@ -32,22 +34,22 @@ const Partners = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Partners</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('partners.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your clients, suppliers, and partners
+            {t('partners.description')}
           </p>
         </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Add Partner
+          {t('partners.addPartner')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Partners</CardTitle>
+          <CardTitle>{t('partners.allPartners')}</CardTitle>
           <CardDescription>
-            A list of all partners in the system
+            {t('partners.allPartnersDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -55,7 +57,7 @@ const Partners = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search partners..."
+                placeholder={t('partners.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -65,7 +67,7 @@ const Partners = () => {
 
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              Loading partners...
+              {t('partners.loadingPartners')}
             </div>
           ) : partners && partners.length > 0 ? (
             <div className="space-y-4">
@@ -77,8 +79,8 @@ const Partners = () => {
                   <div>
                     <h3 className="font-semibold">{partner.name}</h3>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      {partner.email && <p>Email: {partner.email}</p>}
-                      {partner.phone && <p>Phone: {partner.phone}</p>}
+                      {partner.email && <p>{t('partners.email')}: {partner.email}</p>}
+                      {partner.phone && <p>{t('partners.phone')}: {partner.phone}</p>}
                       {partner.category && (
                         <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-md text-xs">
                           {partner.category}
@@ -87,14 +89,14 @@ const Partners = () => {
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
-                    View Details
+                    {t('common.viewDetails')}
                   </Button>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No partners found. Add your first partner to get started.
+              {t('partners.noPartnersFound')}
             </div>
           )}
         </CardContent>

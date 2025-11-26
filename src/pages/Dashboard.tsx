@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FolderKanban, TrendingUp, CheckSquare, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
   const { activeCompany } = useCompany();
+  const { t } = useTranslation();
 
   const { data: projectStats } = useQuery({
     queryKey: ['project-stats', activeCompany?.id],
@@ -94,9 +96,9 @@ const Dashboard = () => {
       <div className="flex h-full items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>No Company Selected</CardTitle>
+            <CardTitle>{t('dashboard.noCompanySelected')}</CardTitle>
             <CardDescription>
-              Please select a company from the top bar or ask an admin to assign you to a company.
+              {t('dashboard.noCompanyMessage')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -107,61 +109,61 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
         <p className="text-muted-foreground">
-          Welcome to {activeCompany.name}
+          {t('dashboard.welcome', { companyName: activeCompany.name })}
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.totalProjects')}</CardTitle>
             <FolderKanban className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{projectStats?.total || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {Object.keys(projectStats?.byStatus || {}).length} different statuses
+              {t('dashboard.differentStatuses', { count: Object.keys(projectStats?.byStatus || {}).length })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sales Opportunities</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.salesOpportunities')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{salesStats?.total || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Active sales pipeline
+              {t('dashboard.activePipeline')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Tasks</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.upcomingTasks')}</CardTitle>
             <CheckSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{upcomingTasks?.length || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Due in next 7 days
+              {t('dashboard.dueInDays')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Partners</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.totalPartners')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{partnersCount || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Clients, suppliers, partners
+              {t('dashboard.partnersDescription')}
             </p>
           </CardContent>
         </Card>
@@ -170,8 +172,8 @@ const Dashboard = () => {
       {upcomingTasks && upcomingTasks.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Tasks</CardTitle>
-            <CardDescription>Tasks due in the next 7 days</CardDescription>
+            <CardTitle>{t('dashboard.upcomingTasksTitle')}</CardTitle>
+            <CardDescription>{t('dashboard.tasksDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -184,7 +186,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}
+                    {task.deadline ? new Date(task.deadline).toLocaleDateString() : t('dashboard.noDeadline')}
                   </div>
                 </div>
               ))}

@@ -20,18 +20,20 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from '@/components/ui/sidebar';
-
-const menuItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Partners', url: '/partners', icon: Users },
-  { title: 'Projects', url: '/projects', icon: FolderKanban },
-  { title: 'Sales', url: '/sales', icon: TrendingUp },
-  { title: 'Documents', url: '/documents', icon: FileText },
-  { title: 'Calendar', url: '/calendar', icon: Calendar },
-  { title: 'Settings', url: '/settings', icon: Settings },
-];
+import { useTranslation } from 'react-i18next';
 
 export function AppSidebar() {
+  const { t } = useTranslation();
+  
+  const menuItems = [
+    { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard },
+    { title: t('nav.partners'), url: '/partners', icon: Users },
+    { title: t('nav.projects'), url: '/projects', icon: FolderKanban },
+    { title: t('nav.sales'), url: '/sales', icon: TrendingUp },
+    { title: t('nav.documents'), url: '/documents', icon: FileText },
+    { title: t('nav.calendar'), url: '/calendar', icon: Calendar },
+    { title: t('nav.settings'), url: '/settings', icon: Settings },
+  ];
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
@@ -40,7 +42,7 @@ export function AppSidebar() {
             <Building2 className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-semibold text-sidebar-foreground">Mini CRM</h2>
+            <h2 className="font-semibold text-sidebar-foreground">{t('app.name')}</h2>
             <p className="text-xs text-sidebar-foreground/60">Multi-Company</p>
           </div>
         </div>

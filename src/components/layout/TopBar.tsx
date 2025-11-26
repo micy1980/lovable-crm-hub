@@ -16,6 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export function TopBar() {
   const { user } = useAuth();
@@ -24,12 +26,13 @@ export function TopBar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast({
-        title: 'Error',
+        title: t('auth.error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -50,12 +53,12 @@ export function TopBar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
-                {activeCompany?.name || 'Select Company'}
+                {activeCompany?.name || t('topbar.selectCompany')}
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('topbar.selectCompany')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {companies.map((company: any) => (
                 <DropdownMenuItem
@@ -69,6 +72,9 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+
+        {/* Language Selector */}
+        <LanguageSelector />
 
         {/* Theme Toggle */}
         <Button
@@ -95,11 +101,11 @@ export function TopBar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('topbar.profile')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              {t('topbar.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

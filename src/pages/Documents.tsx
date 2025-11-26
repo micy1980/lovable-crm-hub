@@ -1,33 +1,36 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Documents = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('documents.title')}</h1>
           <p className="text-muted-foreground">
-            Centralized document management and search
+            {t('documents.description')}
           </p>
         </div>
         <Button>
           <Upload className="mr-2 h-4 w-4" />
-          Upload Document
+          {t('documents.uploadDocument')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Document Library</CardTitle>
+          <CardTitle>{t('documents.documentLibrary')}</CardTitle>
           <CardDescription>
-            Search and manage all your documents in one place
+            {t('documents.libraryDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            Document management coming soon. You'll be able to upload, search, and organize documents with visibility controls.
+            {t('documents.comingSoon')}
           </div>
         </CardContent>
       </Card>

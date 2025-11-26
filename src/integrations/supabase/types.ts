@@ -356,6 +356,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean | null
+          language: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
@@ -368,6 +369,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_active?: boolean | null
+          language?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -380,6 +382,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean | null
+          language?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }

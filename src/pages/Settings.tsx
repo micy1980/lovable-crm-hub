@@ -1,9 +1,11 @@
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTranslation } from 'react-i18next';
 
 const Settings = () => {
   const { data: profile } = useUserProfile();
+  const { t } = useTranslation();
 
   const isSuperAdmin = profile?.role === 'super_admin';
   const isAdmin = profile?.role === 'admin' || isSuperAdmin;
@@ -11,40 +13,40 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
         <p className="text-muted-foreground">
-          Manage your account and system settings
+          {t('settings.description')}
         </p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          {isAdmin && <TabsTrigger value="users">Users</TabsTrigger>}
-          {isSuperAdmin && <TabsTrigger value="companies">Companies</TabsTrigger>}
-          {isSuperAdmin && <TabsTrigger value="masterdata">Master Data</TabsTrigger>}
+          <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
+          {isAdmin && <TabsTrigger value="users">{t('settings.users')}</TabsTrigger>}
+          {isSuperAdmin && <TabsTrigger value="companies">{t('settings.companies')}</TabsTrigger>}
+          {isSuperAdmin && <TabsTrigger value="masterdata">{t('settings.masterdata')}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Settings</CardTitle>
+              <CardTitle>{t('settings.profileSettings')}</CardTitle>
               <CardDescription>
-                Manage your personal information and preferences
+                {t('settings.profileDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-sm font-medium">{t('settings.email')}</p>
                   <p className="text-sm text-muted-foreground">{profile?.email}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Full Name</p>
+                  <p className="text-sm font-medium">{t('settings.fullName')}</p>
                   <p className="text-sm text-muted-foreground">{profile?.full_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Role</p>
+                  <p className="text-sm font-medium">{t('settings.role')}</p>
                   <p className="text-sm text-muted-foreground capitalize">
                     {profile?.role?.replace('_', ' ')}
                   </p>
@@ -58,14 +60,14 @@ const Settings = () => {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle>{t('settings.userManagement')}</CardTitle>
                 <CardDescription>
-                  Manage users and their permissions
+                  {t('settings.userManagementDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
-                  User management interface coming soon.
+                  {t('settings.userManagementComingSoon')}
                 </div>
               </CardContent>
             </Card>
@@ -77,14 +79,14 @@ const Settings = () => {
             <TabsContent value="companies">
               <Card>
                 <CardHeader>
-                  <CardTitle>Company Management</CardTitle>
+                  <CardTitle>{t('settings.companyManagement')}</CardTitle>
                   <CardDescription>
-                    Create and manage companies
+                    {t('settings.companyManagementDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8 text-muted-foreground">
-                    Company management interface coming soon.
+                    {t('settings.companyManagementComingSoon')}
                   </div>
                 </CardContent>
               </Card>
@@ -93,14 +95,14 @@ const Settings = () => {
             <TabsContent value="masterdata">
               <Card>
                 <CardHeader>
-                  <CardTitle>Master Data</CardTitle>
+                  <CardTitle>{t('settings.masterData')}</CardTitle>
                   <CardDescription>
-                    Manage system-wide master data lists
+                    {t('settings.masterDataDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8 text-muted-foreground">
-                    Master data management interface coming soon.
+                    {t('settings.masterDataComingSoon')}
                   </div>
                 </CardContent>
               </Card>
