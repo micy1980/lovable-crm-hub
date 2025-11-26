@@ -135,24 +135,34 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>{t('users.companies')}</Label>
-        <div className="space-y-2 border rounded-md p-3 max-h-48 overflow-y-auto">
-          {companies.map((company: any) => (
-            <div key={company.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`company-${company.id}`}
-                checked={userCompanyIds.includes(company.id)}
-                onCheckedChange={(checked) => handleCompanyToggle(company.id, checked as boolean)}
-              />
-              <label
-                htmlFor={`company-${company.id}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {company.name}
-              </label>
-            </div>
-          ))}
+      <div className="space-y-3 pt-4 border-t">
+        <Label className="text-base font-semibold">{t('users.companies')}</Label>
+        <div className="space-y-2 border rounded-md p-4 max-h-64 overflow-y-auto bg-muted/30">
+          {companies.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              {t('users.noCompaniesAvailable')}
+            </p>
+          ) : (
+            companies.map((company: any) => (
+              <div key={company.id} className="flex items-start space-x-3 p-2 hover:bg-background rounded-md transition-colors">
+                <Checkbox
+                  id={`company-${company.id}`}
+                  checked={userCompanyIds.includes(company.id)}
+                  onCheckedChange={(checked) => handleCompanyToggle(company.id, checked as boolean)}
+                  className="mt-1"
+                />
+                <label
+                  htmlFor={`company-${company.id}`}
+                  className="flex-1 text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  <div>{company.name}</div>
+                  {company.tax_id && (
+                    <div className="text-xs text-muted-foreground mt-1">{company.tax_id}</div>
+                  )}
+                </label>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

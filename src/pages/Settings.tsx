@@ -40,8 +40,8 @@ const Settings = () => {
           {isSuperAdmin && <TabsTrigger value="masterdata">{t('settings.masterdata')}</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="profile">
-          <Card>
+        <TabsContent value="profile" className="flex justify-center">
+          <Card className="w-full max-w-3xl">
             <CardHeader>
               <CardTitle>{t('settings.profileSettings')}</CardTitle>
               <CardDescription>
@@ -49,38 +49,38 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium">{t('settings.email')}</p>
-                  <p className="text-sm text-muted-foreground">{profile?.email}</p>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium mb-1">{t('settings.email')}</p>
+                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">{t('settings.fullName')}</p>
+                    <p className="text-sm text-muted-foreground">{profile?.full_name || '-'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">{t('settings.fullName')}</p>
-                  <p className="text-sm text-muted-foreground">{profile?.full_name || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{t('settings.role')}</p>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium mb-1">{t('settings.role')}</p>
                     <Badge variant={isSuperAdmin ? 'default' : 'secondary'}>
                       {profile?.role?.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4 pt-2">
                   <div>
-                    <p className="text-sm font-medium">{t('settings.isActive')}</p>
+                    <p className="text-sm font-medium mb-1">{t('settings.isActive')}</p>
                     <Badge variant={profile?.is_active ? 'default' : 'secondary'}>
                       {profile?.is_active ? t('common.yes') : t('common.no')}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{t('settings.canDelete')}</p>
+                    <p className="text-sm font-medium mb-1">{t('settings.canDelete')}</p>
                     <Badge variant={profile?.can_delete ? 'default' : 'secondary'}>
                       {profile?.can_delete ? t('common.yes') : t('common.no')}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{t('settings.canViewLogs')}</p>
+                    <p className="text-sm font-medium mb-1">{t('settings.canViewLogs')}</p>
                     <Badge variant={profile?.can_view_logs ? 'default' : 'secondary'}>
                       {profile?.can_view_logs ? t('common.yes') : t('common.no')}
                     </Badge>
