@@ -1,25 +1,28 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 const CalendarPage = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('calendar.title')}</h1>
         <p className="text-muted-foreground">
-          View and manage tasks on a calendar
+          {t('calendar.description')}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Task Calendar</CardTitle>
+          <CardTitle>{t('calendar.title')}</CardTitle>
           <CardDescription>
-            Monthly and weekly view of all tasks
+            {t('calendar.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            Calendar view coming soon. You'll see all tasks organized by deadline with filtering options.
+            {t('calendar.comingSoon')}
           </div>
         </CardContent>
       </Card>
