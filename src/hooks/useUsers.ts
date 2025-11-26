@@ -48,7 +48,41 @@ export const useUsers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast({ title: t('users.updated') });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('users.error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const toggleUserFlag = useMutation({
+    mutationFn: async ({ 
+      id, 
+      field,
+      value
+    }: { 
+      id: string; 
+      field: 'is_active' | 'can_delete' | 'can_view_logs';
+      value: boolean;
+    }) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ [field]: value })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
     onError: (error: any) => {
       toast({
@@ -109,6 +143,7 @@ export const useUsers = () => {
     users,
     isLoading,
     updateUser,
+    toggleUserFlag,
     assignUserToCompany,
     removeUserFromCompany,
   };
