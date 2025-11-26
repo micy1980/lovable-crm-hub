@@ -9,14 +9,47 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserEditForm } from './UserEditForm';
 import { UserCompaniesDialog } from './UserCompaniesDialog';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
+import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
+import { useAuth } from '@/contexts/AuthContext';
+
+function ToggleBadge({ 
+  value, 
+  onClick, 
+  disabled, 
+  label 
+}: { 
+  value: boolean; 
+  onClick: () => void; 
+  disabled: boolean;
+  label: string;
+}) {
+  return (
+    <Badge
+      variant={value ? 'default' : 'secondary'}
+      className={`text-xs cursor-pointer transition-colors ${
+        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+      } ${
+        value 
+          ? 'bg-success text-success-foreground hover:bg-success/90' 
+          : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+      }`}
+      onClick={disabled ? undefined : onClick}
+    >
+      {label}
+    </Badge>
+  );
+}
 
 export function UserList() {
   const { t } = useTranslation();
-  const { users, isLoading } = useUsers();
+  const { user: currentUser } = useAuth();
+  const { data: currentProfile } = useUserProfile();
+  const { users, isLoading, toggleUserFlag } = useUsers();
   const { companies } = useCompanies();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
@@ -24,6 +57,21 @@ export function UserList() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
+
+  const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
+
+  const handleToggleFlag = (userId: string, field: 'is_active' | 'can_delete' | 'can_view_logs', currentValue: boolean) => {
+    // Prevent users from deactivating themselves
+    if (userId === currentUser?.id && field === 'is_active' && currentValue) {
+      return;
+    }
+    
+    toggleUserFlag.mutate({
+      id: userId,
+      field,
+      value: !currentValue,
+    });
+  };
 
   const filteredUsers = useMemo(() => {
     return users.filter((user: any) => {
@@ -137,19 +185,28 @@ export function UserList() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={user.is_active ? 'default' : 'secondary'} className="text-xs">
-                      {user.is_active ? t('common.yes') : t('common.no')}
-                    </Badge>
+                    <ToggleBadge
+                      value={user.is_active}
+                      onClick={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
+                      disabled={!canEdit || (user.id === currentUser?.id && user.is_active)}
+                      label={user.is_active ? t('common.yes') : t('common.no')}
+                    />
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={user.can_delete ? 'default' : 'secondary'} className="text-xs">
-                      {user.can_delete ? t('common.yes') : t('common.no')}
-                    </Badge>
+                    <ToggleBadge
+                      value={user.can_delete}
+                      onClick={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
+                      disabled={!canEdit}
+                      label={user.can_delete ? t('common.yes') : t('common.no')}
+                    />
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={user.can_view_logs ? 'default' : 'secondary'} className="text-xs">
-                      {user.can_view_logs ? t('common.yes') : t('common.no')}
-                    </Badge>
+                    <ToggleBadge
+                      value={user.can_view_logs}
+                      onClick={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
+                      disabled={!canEdit}
+                      label={user.can_view_logs ? t('common.yes') : t('common.no')}
+                    />
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
                     {format(new Date(user.created_at), 'PP')}
