@@ -7,6 +7,7 @@ import {
   Calendar,
   Settings,
   Building2,
+  ScrollText,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -21,9 +22,12 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar';
 import { useTranslation } from 'react-i18next';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin } from '@/lib/roleUtils';
 
 export function AppSidebar() {
   const { t } = useTranslation();
+  const { data: profile } = useUserProfile();
   
   const menuItems = [
     { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard },
@@ -34,6 +38,11 @@ export function AppSidebar() {
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar },
     { title: t('nav.settings'), url: '/settings', icon: Settings },
   ];
+
+  // Only show Logs to super_admin
+  if (isSuperAdmin(profile)) {
+    menuItems.push({ title: t('nav.logs'), url: '/logs', icon: ScrollText });
+  }
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">

@@ -32,7 +32,8 @@
     "sales": "Sales",
     "documents": "Documents",
     "calendar": "Calendar",
-    "settings": "Settings"
+    "settings": "Settings",
+    "logs": "Audit Logs"
   },
   "common": {
     "save": "Save",
@@ -204,5 +205,27 @@
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Logout"
+  },
+  "logs": {
+    "title": "Audit Logs",
+    "description": "View system activity and changes (Super Admin only)",
+    "auditLog": "Audit Log",
+    "auditDescription": "System-wide activity log with detailed change tracking",
+    "filterCompany": "Filter by Company",
+    "filterEvent": "Filter by Event Type",
+    "allCompanies": "All Companies",
+    "allEvents": "All Events",
+    "systemEvents": "System Events",
+    "noLogs": "No logs found matching the current filters",
+    "timestamp": "Timestamp",
+    "company": "Company",
+    "user": "User",
+    "entityType": "Entity Type",
+    "action": "Action",
+    "details": "Details",
+    "system": "System",
+    "unknown": "Unknown",
+    "entityId": "Entity ID",
+    "accessDenied": "Access denied. Only Super Admins can view audit logs."
   }
 }
