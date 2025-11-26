@@ -7,6 +7,7 @@ import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const Settings = () => {
   const { data: profile, isLoading } = useUserProfile();
@@ -61,31 +62,42 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t('settings.role')}:</span>
-                    <Badge variant={isSuperAdmin ? 'default' : 'secondary'}>
-                      {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t('settings.isActive')}:</span>
-                    <Badge variant={profile?.is_active ? 'default' : 'secondary'}>
-                      {profile?.is_active ? t('common.yes') : t('common.no')}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t('settings.canDelete')}:</span>
-                    <Badge variant={profile?.can_delete ? 'default' : 'secondary'}>
-                      {profile?.can_delete ? t('common.yes') : t('common.no')}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t('settings.canViewLogs')}:</span>
-                    <Badge variant={profile?.can_view_logs ? 'default' : 'secondary'}>
-                      {profile?.can_view_logs ? t('common.yes') : t('common.no')}
-                    </Badge>
-                  </div>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">{t('settings.permissions')}</h4>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('settings.role')}</TableHead>
+                        <TableHead className="text-center">{t('settings.isActive')}</TableHead>
+                        <TableHead className="text-center">{t('settings.canDelete')}</TableHead>
+                        <TableHead className="text-center">{t('settings.canViewLogs')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={profile?.is_active ? 'default' : 'secondary'} className="text-xs">
+                            {profile?.is_active ? t('common.yes') : t('common.no')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={profile?.can_delete ? 'default' : 'secondary'} className="text-xs">
+                            {profile?.can_delete ? t('common.yes') : t('common.no')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={profile?.can_view_logs ? 'default' : 'secondary'} className="text-xs">
+                            {profile?.can_view_logs ? t('common.yes') : t('common.no')}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             </CardContent>
