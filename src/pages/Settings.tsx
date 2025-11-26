@@ -1,6 +1,8 @@
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CompanyList } from '@/components/companies/CompanyList';
+import { UserList } from '@/components/users/UserList';
 import { useTranslation } from 'react-i18next';
 
 const Settings = () => {
@@ -58,38 +60,14 @@ const Settings = () => {
 
         {isAdmin && (
           <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('settings.userManagement')}</CardTitle>
-                <CardDescription>
-                  {t('settings.userManagementDescription')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('settings.userManagementComingSoon')}
-                </div>
-              </CardContent>
-            </Card>
+            <UserList />
           </TabsContent>
         )}
 
         {isSuperAdmin && (
           <>
             <TabsContent value="companies">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('settings.companyManagement')}</CardTitle>
-                  <CardDescription>
-                    {t('settings.companyManagementDescription')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    {t('settings.companyManagementComingSoon')}
-                  </div>
-                </CardContent>
-              </Card>
+              <CompanyList />
             </TabsContent>
 
             <TabsContent value="masterdata">
