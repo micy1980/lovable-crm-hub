@@ -5,10 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin } from '@/lib/roleUtils';
+import { Link } from 'react-router-dom';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
   const { t } = useTranslation();
+  const { data: profile } = useUserProfile();
 
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects', activeCompany?.id],
@@ -38,6 +42,13 @@ const Projects = () => {
               {t('projects.noCompanyMessage')}
             </CardDescription>
           </CardHeader>
+          {isSuperAdmin(profile) && (
+            <CardContent>
+              <Link to="/settings">
+                <Button className="w-full">{t('projects.createCompany')}</Button>
+              </Link>
+            </CardContent>
+          )}
         </Card>
       </div>
     );
