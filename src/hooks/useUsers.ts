@@ -111,9 +111,15 @@ export const useUsers = () => {
       can_delete: boolean; 
       can_view_logs: boolean;
     }) => {
+      // Get the current session token to authenticate with the edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       // Call the admin edge function to create the user
-      // The edge function validates the caller and uses service role key server-side
-      // This does NOT affect the current session
+      // The edge function validates the caller and uses service role key server-side.
+      // This does NOT affect the current session.
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
         body: {
           email,
@@ -122,6 +128,9 @@ export const useUsers = () => {
           isActive: is_active,
           canDelete: can_delete,
           canViewLogs: can_view_logs,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
