@@ -8,6 +8,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin } from '@/lib/roleUtils';
+import { format } from 'date-fns';
 
 interface UserEditFormProps {
   user: any;
@@ -123,14 +124,27 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         />
       </div>
 
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          {t('common.cancel')}
-        </Button>
-        <Button type="submit" disabled={updateUser.isPending}>
-          {t('common.save')}
-        </Button>
+      <div className="flex items-end justify-between gap-4 pt-4">
+        {canEditRole && user?.created_at && user?.id && (
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            <div>
+              Created: {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm:ss')}
+            </div>
+            <div className="flex items-center gap-1">
+              <span>userid:</span>
+              <span className="font-mono">{user.id}</span>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex gap-2 ml-auto">
+          <Button type="button" variant="outline" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" disabled={updateUser.isPending}>
+            {t('common.save')}
+          </Button>
+        </div>
       </div>
     </form>
   );
