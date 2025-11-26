@@ -10,29 +10,31 @@ Deno.serve(async (req) => {
   try {
     // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-      console.error('admin-create-user: Missing required environment variables')
+    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+      console.error('[admin-create-user] Missing required environment variables')
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization') ?? ''
+    // Get Authorization header
+    const authHeader = req.headers.get('Authorization')
+    console.log('[admin-create-user] Authorization header present:', !!authHeader)
+    
     if (!authHeader) {
-      console.error('admin-create-user: Missing authorization header')
+      console.error('[admin-create-user] Missing authorization header')
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Create user-bound client to validate the caller's session
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+    // Create request-bound client to validate caller
+    const requestClient = createClient(supabaseUrl, anonKey, {
       global: {
         headers: {
           Authorization: authHeader,
@@ -44,138 +46,127 @@ Deno.serve(async (req) => {
       },
     })
 
-    // Create admin client for all admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    // Create service client for admin operations
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
       },
     })
 
-    // Parse request body
-    const { email, full_name, role, is_active, can_delete, can_view_logs } = await req.json()
+    // Step 1: Get the caller's user from the request-bound client
+    const { data: { user }, error: authError } = await requestClient.auth.getUser()
 
-    if (!email || !role) {
-      console.error('admin-create-user: Missing required fields')
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: email and role' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Get the caller's user from the session
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseUser.auth.getUser()
-
-    if (userError || !user) {
-      console.error('admin-create-user: no user in session', userError)
+    if (authError || !user) {
+      console.error('[admin-create-user] No user in session:', authError?.message)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Load the caller's profile to check their role
-    const { data: profile, error: profileError } = await supabaseAdmin
+    console.log('[admin-create-user] Caller user ID:', user.id)
+
+    // Step 2: Check the caller's role in profiles table
+    const { data: profile, error: profileError } = await requestClient
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
     if (profileError || !profile) {
-      console.error('admin-create-user: profile not found', profileError)
+      console.error('[admin-create-user] Profile not found:', profileError?.message)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Check if the caller is super admin
-    const isSA = profile.role === 'super_admin'
-    if (!isSA) {
-      console.warn('admin-create-user: caller is not SA', {
-        userId: user.id,
-        role: profile.role,
-      })
+    console.log('[admin-create-user] Caller role:', profile.role)
+
+    if (profile.role !== 'super_admin') {
+      console.warn('[admin-create-user] Caller is not super_admin, role:', profile.role)
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Generate a random password for the new user
-    const tempPassword = crypto.randomUUID() + crypto.randomUUID()
+    // Step 3: Parse and validate request body
+    const payload = await req.json() as {
+      email: string
+      fullName: string
+      role: string
+      isActive: boolean
+      canDelete: boolean
+      canViewLogs: boolean
+    }
 
-    // Create the user using admin API (does NOT affect current session)
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        full_name: full_name || email,
-      },
-    })
-
-    if (createError) {
-      console.error('admin-create-user: Error creating user', createError)
+    if (!payload.email || !payload.fullName || !payload.role) {
+      console.error('[admin-create-user] Missing required fields')
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: 'Missing required fields: email, fullName, and role' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    if (!newUser.user) {
-      console.error('admin-create-user: Failed to create user')
-      return new Response(
-        JSON.stringify({ error: 'Failed to create user' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    console.log('[admin-create-user] Creating user:', payload.email)
 
-    // Update the profile with the specified role and permissions
-    // The profile is already created by the handle_new_user trigger, so we update it
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        role,
-        full_name: full_name || email,
-        is_active: is_active ?? true,
-        can_delete: can_delete ?? false,
-        can_view_logs: can_view_logs ?? false,
-      })
-      .eq('id', newUser.user.id)
-
-    if (updateError) {
-      console.error('admin-create-user: Error updating profile', updateError)
-      // Try to clean up the auth user if profile update fails
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-      return new Response(
-        JSON.stringify({ error: 'Failed to update user profile' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    console.log('admin-create-user: Successfully created user', {
-      userId: newUser.user.id,
-      email: newUser.user.email,
-      role,
+    // Step 4: Create the auth user using service client
+    const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
+      email: payload.email,
+      email_confirm: true,
+      user_metadata: {
+        full_name: payload.fullName,
+      },
     })
 
+    if (createError || !created.user) {
+      console.error('[admin-create-user] Failed to create auth user:', createError?.message)
+      return new Response(
+        JSON.stringify({ error: createError?.message ?? 'Failed to create user' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const newUserId = created.user.id
+    console.log('[admin-create-user] Created auth user:', newUserId)
+
+    // Step 5: Insert profile row using service client
+    const { error: profileInsertError } = await serviceClient
+      .from('profiles')
+      .insert({
+        id: newUserId,
+        email: payload.email,
+        full_name: payload.fullName,
+        role: payload.role,
+        is_active: payload.isActive,
+        can_delete: payload.canDelete,
+        can_view_logs: payload.canViewLogs,
+      })
+
+    if (profileInsertError) {
+      console.error('[admin-create-user] Failed to insert profile:', profileInsertError.message)
+      // Try to clean up the auth user
+      await serviceClient.auth.admin.deleteUser(newUserId)
+      return new Response(
+        JSON.stringify({ error: profileInsertError.message }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('[admin-create-user] Successfully created user:', newUserId)
+
+    // Step 6: Return success
     return new Response(
       JSON.stringify({
-        success: true,
-        userId: newUser.user.id,
-        user: {
-          id: newUser.user.id,
-          email: newUser.user.email,
-        },
+        ok: true,
+        userId: newUserId,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('admin-create-user: Unexpected error', error)
+    console.error('[admin-create-user] Unexpected error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Internal server error'
     return new Response(
       JSON.stringify({ error: errorMessage }),

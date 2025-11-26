@@ -111,32 +111,24 @@ export const useUsers = () => {
       can_delete: boolean; 
       can_view_logs: boolean;
     }) => {
-      // Get the current session token to authenticate with the edge function
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
       // Call the admin edge function to create the user
-      // This uses the service role key server-side and does NOT affect the current session
+      // The edge function validates the caller and uses service role key server-side
+      // This does NOT affect the current session
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
         body: {
           email,
-          full_name,
+          fullName: full_name || email,
           role,
-          is_active,
-          can_delete,
-          can_view_logs,
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          isActive: is_active,
+          canDelete: can_delete,
+          canViewLogs: can_view_logs,
         },
       });
 
       if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Failed to create user');
+      if (!data?.ok) throw new Error(data?.error || 'Failed to create user');
 
-      return data.user;
+      return { id: data.userId, email };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
