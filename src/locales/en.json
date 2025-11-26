@@ -148,7 +148,8 @@
     "companyManagementDescription": "Create and manage companies",
     "masterData": "Master Data",
     "masterDataDescription": "Manage system-wide master data lists",
-    "masterDataComingSoon": "Master data management interface coming soon."
+    "masterDataComingSoon": "Master data management interface coming soon.",
+    "masterDataReadOnly": "You can view master data but only Super Admins can edit it."
   },
   "companies": {
     "title": "Companies",
@@ -167,7 +168,9 @@
     "created": "Company created successfully",
     "updated": "Company updated successfully",
     "deleted": "Company deleted successfully",
-    "error": "Error managing company"
+    "error": "Error managing company",
+    "searchPlaceholder": "Search by name or tax ID...",
+    "userCount": "Users"
   },
   "users": {
     "title": "User Management",
@@ -192,6 +195,15 @@
     "companyAssigned": "Company assigned successfully",
     "companyRemoved": "Company removed successfully",
     "error": "Error managing user",
+    "searchPlaceholder": "Search by name or email...",
+    "filterByRole": "Filter by role",
+    "filterByStatus": "Filter by status",
+    "filterByCompany": "Filter by company",
+    "allRoles": "All roles",
+    "allStatuses": "All statuses",
+    "allCompanies": "All companies",
+    "createdAt": "Created",
+    "noUsers": "No users found",
     "roles": {
       "superAdmin": "Super Admin",
       "admin": "Admin",

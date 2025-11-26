@@ -1,0 +1,32 @@
+{
+  "masterdata": {
+    "title": "Master Data Management",
+    "description": "Manage system-wide dropdown lists and configuration",
+    "types": {
+      "PARTNER_CATEGORY": "Partner Categories",
+      "PROJECT_STATUS": "Project Statuses",
+      "SALES_STATUS": "Sales Statuses",
+      "COST_CATEGORY": "Cost Categories",
+      "BUSINESS_UNIT": "Business Units",
+      "TASK_STATUS": "Task Statuses"
+    },
+    "selectType": "Select a type from the left to manage items",
+    "label": "Label",
+    "value": "Value",
+    "order": "Order",
+    "isDefault": "Default",
+    "addItem": "Add Item",
+    "editItem": "Edit Item",
+    "deleteItem": "Delete Item",
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "labelRequired": "Label is required",
+    "valueRequired": "Value is required",
+    "valueMustBeUnique": "Value must be unique for this type",
+    "created": "Item created successfully",
+    "updated": "Item updated successfully",
+    "deleted": "Item deleted successfully",
+    "error": "Error managing master data",
+    "noItems": "No items found. Add your first item to get started.",
+    "dragToReorder": "Drag to reorder items"
+  }
+}

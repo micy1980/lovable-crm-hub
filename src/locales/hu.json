@@ -148,7 +148,8 @@
     "companyManagementDescription": "Vállalatok létrehozása és kezelése",
     "masterData": "Törzsadatok",
     "masterDataDescription": "Rendszerszintű törzsadatok kezelése",
-    "masterDataComingSoon": "A törzsadat-kezelési felület hamarosan elérhető lesz."
+    "masterDataComingSoon": "A törzsadat-kezelési felület hamarosan elérhető lesz.",
+    "masterDataReadOnly": "Megtekintheti a törzsadatokat, de csak a Szuper Adminok szerkeszthetik azokat."
   },
   "companies": {
     "title": "Vállalatok",
@@ -167,7 +168,9 @@
     "created": "Vállalat sikeresen létrehozva",
     "updated": "Vállalat sikeresen frissítve",
     "deleted": "Vállalat sikeresen törölve",
-    "error": "Hiba a vállalat kezelése során"
+    "error": "Hiba a vállalat kezelése során",
+    "searchPlaceholder": "Keresés név vagy adószám szerint...",
+    "userCount": "Felhasználók"
   },
   "users": {
     "title": "Felhasználó kezelés",
@@ -192,6 +195,15 @@
     "companyAssigned": "Vállalat sikeresen hozzárendelve",
     "companyRemoved": "Vállalat sikeresen eltávolítva",
     "error": "Hiba a felhasználó kezelése során",
+    "searchPlaceholder": "Keresés név vagy e-mail szerint...",
+    "filterByRole": "Szűrés szerepkör szerint",
+    "filterByStatus": "Szűrés állapot szerint",
+    "filterByCompany": "Szűrés vállalat szerint",
+    "allRoles": "Minden szerepkör",
+    "allStatuses": "Minden állapot",
+    "allCompanies": "Minden vállalat",
+    "createdAt": "Létrehozva",
+    "noUsers": "Nem található felhasználó",
     "roles": {
       "superAdmin": "Szuper Admin",
       "admin": "Admin",

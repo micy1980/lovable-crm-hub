@@ -1,0 +1,32 @@
+{
+  "masterdata": {
+    "title": "Törzsadat Kezelés",
+    "description": "Rendszerszintű legördülő listák és konfiguráció kezelése",
+    "types": {
+      "PARTNER_CATEGORY": "Partner Kategóriák",
+      "PROJECT_STATUS": "Projekt Státuszok",
+      "SALES_STATUS": "Értékesítési Státuszok",
+      "COST_CATEGORY": "Költség Kategóriák",
+      "BUSINESS_UNIT": "Üzleti Egységek",
+      "TASK_STATUS": "Feladat Státuszok"
+    },
+    "selectType": "Válasszon típust a bal oldalról az elemek kezeléséhez",
+    "label": "Címke",
+    "value": "Érték",
+    "order": "Sorrend",
+    "isDefault": "Alapértelmezett",
+    "addItem": "Elem hozzáadása",
+    "editItem": "Elem szerkesztése",
+    "deleteItem": "Elem törlése",
+    "deleteConfirm": "Biztosan törölni szeretné ezt az elemet?",
+    "labelRequired": "A címke kötelező",
+    "valueRequired": "Az érték kötelező",
+    "valueMustBeUnique": "Az értéknek egyedinek kell lennie erre a típusra",
+    "created": "Elem sikeresen létrehozva",
+    "updated": "Elem sikeresen frissítve",
+    "deleted": "Elem sikeresen törölve",
+    "error": "Hiba a törzsadat kezelése során",
+    "noItems": "Nem található elem. Adja hozzá az első elemet a kezdéshez.",
+    "dragToReorder": "Húzza az elemek átrendezéséhez"
+  }
+}
