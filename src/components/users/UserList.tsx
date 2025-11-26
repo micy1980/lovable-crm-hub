@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search, Building2 } from 'lucide-react';
+import { Pencil, Search, Building2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,6 +13,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserEditForm } from './UserEditForm';
+import { UserCreateForm } from './UserCreateForm';
 import { UserCompaniesDialog } from './UserCompaniesDialog';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -23,9 +24,10 @@ export function UserList() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const { data: currentProfile } = useUserProfile();
-  const { users, isLoading, toggleUserFlag, updateUser } = useUsers();
+  const { users, isLoading, toggleUserFlag, updateUser, createUser } = useUsers();
   const { companies } = useCompanies();
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -44,6 +46,12 @@ export function UserList() {
       id: userId,
       field,
       value: !currentValue,
+    });
+  };
+
+  const handleCreateUser = (data: any) => {
+    createUser.mutate(data, {
+      onSuccess: () => setIsCreateOpen(false),
     });
   };
 
@@ -75,8 +83,18 @@ export function UserList() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>{t('users.title')}</CardTitle>
-          <CardDescription>{t('users.description')}</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{t('users.title')}</CardTitle>
+              <CardDescription>{t('users.description')}</CardDescription>
+            </div>
+            {canEdit && (
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('users.addUser')}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -158,7 +176,7 @@ export function UserList() {
                        <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
                         <TableCell>
-                          {canEdit ? (
+                          {canEdit && !isSelf ? (
                             <Select
                               value={user.role}
                               onValueChange={(value) => {
@@ -167,7 +185,6 @@ export function UserList() {
                                   role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
                                 });
                               }}
-                              disabled={!canEdit}
                             >
                               <SelectTrigger className="w-[140px] h-8">
                                 <SelectValue>
@@ -283,6 +300,19 @@ export function UserList() {
           <UserEditForm
             user={editingUser}
             onClose={() => setEditingUser(null)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('users.createTitle')}</DialogTitle>
+          </DialogHeader>
+          <UserCreateForm
+            onSubmit={handleCreateUser}
+            onClose={() => setIsCreateOpen(false)}
+            isSubmitting={createUser.isPending}
           />
         </DialogContent>
       </Dialog>

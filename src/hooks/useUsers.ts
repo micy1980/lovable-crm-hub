@@ -95,6 +95,66 @@ export const useUsers = () => {
     },
   });
 
+  const createUser = useMutation({
+    mutationFn: async ({ 
+      email, 
+      full_name, 
+      role, 
+      is_active, 
+      can_delete, 
+      can_view_logs 
+    }: { 
+      email: string; 
+      full_name?: string; 
+      role: 'super_admin' | 'admin' | 'normal' | 'viewer'; 
+      is_active: boolean; 
+      can_delete: boolean; 
+      can_view_logs: boolean;
+    }) => {
+      // Create auth user with a temporary password
+      const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: tempPassword,
+        options: {
+          data: {
+            full_name,
+          }
+        }
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Failed to create user');
+
+      // Update the profile with role and permissions
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          role, 
+          full_name,
+          is_active, 
+          can_delete, 
+          can_view_logs 
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
+
+      return authData.user;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({ title: t('users.userCreated') });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('users.error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const assignUserToCompany = useMutation({
     mutationFn: async ({ user_id, company_id }: { user_id: string; company_id: string }) => {
       const { error } = await supabase
@@ -146,6 +206,7 @@ export const useUsers = () => {
     isLoading,
     updateUser,
     toggleUserFlag,
+    createUser,
     assignUserToCompany,
     removeUserFromCompany,
   };
