@@ -111,36 +111,32 @@ export const useUsers = () => {
       can_delete: boolean; 
       can_view_logs: boolean;
     }) => {
-      // Create auth user with a temporary password
-      const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: {
-          data: {
-            full_name,
-          }
-        }
+      // Get the current session token to authenticate with the edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      // Call the admin edge function to create the user
+      // This uses the service role key server-side and does NOT affect the current session
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email,
+          full_name,
+          role,
+          is_active,
+          can_delete,
+          can_view_logs,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Failed to create user');
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Failed to create user');
 
-      // Update the profile with role and permissions
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          role, 
-          full_name,
-          is_active, 
-          can_delete, 
-          can_view_logs 
-        })
-        .eq('id', authData.user.id);
-
-      if (profileError) throw profileError;
-
-      return authData.user;
+      return data.user;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
