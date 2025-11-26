@@ -32,7 +32,8 @@
     "sales": "Értékesítés",
     "documents": "Dokumentumok",
     "calendar": "Naptár",
-    "settings": "Beállítások"
+    "settings": "Beállítások",
+    "logs": "Audit Naplók"
   },
   "common": {
     "save": "Mentés",
@@ -204,5 +205,27 @@
     "profile": "Profil",
     "settings": "Beállítások",
     "logout": "Kijelentkezés"
+  },
+  "logs": {
+    "title": "Audit Naplók",
+    "description": "Rendszeraktivitás és változások megtekintése (csak Super Admin)",
+    "auditLog": "Audit Napló",
+    "auditDescription": "Rendszerszintű tevékenységi napló részletes változáskövetéssel",
+    "filterCompany": "Szűrés cég szerint",
+    "filterEvent": "Szűrés eseménytípus szerint",
+    "allCompanies": "Minden cég",
+    "allEvents": "Minden esemény",
+    "systemEvents": "Rendszeresemények",
+    "noLogs": "Nincs a szűrőknek megfelelő napló",
+    "timestamp": "Időbélyeg",
+    "company": "Cég",
+    "user": "Felhasználó",
+    "entityType": "Entitás típus",
+    "action": "Művelet",
+    "details": "Részletek",
+    "system": "Rendszer",
+    "unknown": "Ismeretlen",
+    "entityId": "Entitás ID",
+    "accessDenied": "Hozzáférés megtagadva. Csak Super Adminok tekinthetik meg az audit naplókat."
   }
 }
