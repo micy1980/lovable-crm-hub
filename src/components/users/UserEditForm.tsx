@@ -4,9 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useUsers } from '@/hooks/useUsers';
-import { useCompanies } from '@/hooks/useCompanies';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin } from '@/lib/roleUtils';
@@ -19,8 +17,7 @@ interface UserEditFormProps {
 export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
-  const { updateUser, assignUserToCompany, removeUserFromCompany } = useUsers();
-  const { companies } = useCompanies();
+  const { updateUser } = useUsers();
   const { register, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       full_name: user?.full_name || '',
@@ -39,15 +36,6 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
 
   const canEditRole = isSuperAdmin(profile);
   const canEditPermissions = isSuperAdmin(profile);
-  const userCompanyIds = user?.user_companies?.map((uc: any) => uc.company_id) || [];
-
-  const handleCompanyToggle = (companyId: string, checked: boolean) => {
-    if (checked) {
-      assignUserToCompany.mutate({ user_id: user.id, company_id: companyId });
-    } else {
-      removeUserFromCompany.mutate({ user_id: user.id, company_id: companyId });
-    }
-  };
 
   const onSubmit = (data: any) => {
     const updateData: any = {
@@ -98,7 +86,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="super_admin">{t('users.roles.superAdmin')}</SelectItem>
+            <SelectItem value="super_admin">SA</SelectItem>
             <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
             <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
             <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
@@ -135,36 +123,6 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         />
       </div>
 
-      <div className="space-y-3 pt-4 border-t">
-        <Label className="text-base font-semibold">{t('users.companies')}</Label>
-        <div className="space-y-2 border rounded-md p-4 max-h-64 overflow-y-auto bg-muted/30">
-          {companies.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              {t('users.noCompaniesAvailable')}
-            </p>
-          ) : (
-            companies.map((company: any) => (
-              <div key={company.id} className="flex items-start space-x-3 p-2 hover:bg-background rounded-md transition-colors">
-                <Checkbox
-                  id={`company-${company.id}`}
-                  checked={userCompanyIds.includes(company.id)}
-                  onCheckedChange={(checked) => handleCompanyToggle(company.id, checked as boolean)}
-                  className="mt-1"
-                />
-                <label
-                  htmlFor={`company-${company.id}`}
-                  className="flex-1 text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  <div>{company.name}</div>
-                  {company.tax_id && (
-                    <div className="text-xs text-muted-foreground mt-1">{company.tax_id}</div>
-                  )}
-                </label>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>

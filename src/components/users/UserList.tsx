@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search } from 'lucide-react';
+import { Pencil, Search, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
 import { UserEditForm } from './UserEditForm';
+import { UserCompaniesDialog } from './UserCompaniesDialog';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 
@@ -18,6 +19,7 @@ export function UserList() {
   const { users, isLoading } = useUsers();
   const { companies } = useCompanies();
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -73,7 +75,7 @@ export function UserList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('users.allRoles')}</SelectItem>
-                  <SelectItem value="super_admin">{t('users.roles.superAdmin')}</SelectItem>
+                  <SelectItem value="super_admin">SA</SelectItem>
                   <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
                   <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
                   <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
@@ -110,7 +112,6 @@ export function UserList() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('users.fullName')}</TableHead>
-                  <TableHead>{t('users.email')}</TableHead>
                   <TableHead>{t('users.role')}</TableHead>
                   <TableHead className="text-center">{t('users.isActive')}</TableHead>
                   <TableHead className="text-center">{t('users.canDelete')}</TableHead>
@@ -122,7 +123,7 @@ export function UserList() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       {t('users.noUsers')}
                     </TableCell>
                   </TableRow>
@@ -130,10 +131,9 @@ export function UserList() {
                   filteredUsers.map((user: any) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
-                  <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {user.role.replace('_', ' ')}
+                      {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
@@ -155,13 +155,22 @@ export function UserList() {
                     {format(new Date(user.created_at), 'PP')}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditingUser(user)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingUser(user)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setCompanyAssignmentUser(user)}
+                      >
+                        <Building2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
                 ))
@@ -183,6 +192,12 @@ export function UserList() {
           />
         </DialogContent>
       </Dialog>
+
+      <UserCompaniesDialog
+        user={companyAssignmentUser}
+        open={!!companyAssignmentUser}
+        onClose={() => setCompanyAssignmentUser(null)}
+      />
     </>
   );
 }
