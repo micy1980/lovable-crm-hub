@@ -3,10 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin } from '@/lib/roleUtils';
+import { Link } from 'react-router-dom';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
   const { t } = useTranslation();
+  const { data: profile } = useUserProfile();
 
   if (!activeCompany) {
     return (
@@ -18,6 +22,13 @@ const Sales = () => {
               {t('sales.noCompanyMessage')}
             </CardDescription>
           </CardHeader>
+          {isSuperAdmin(profile) && (
+            <CardContent>
+              <Link to="/settings">
+                <Button className="w-full">{t('sales.createCompany')}</Button>
+              </Link>
+            </CardContent>
+          )}
         </Card>
       </div>
     );
