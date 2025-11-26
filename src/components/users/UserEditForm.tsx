@@ -1,10 +1,15 @@
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useUsers } from '@/hooks/useUsers';
+import { useCompanies } from '@/hooks/useCompanies';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslation } from 'react-i18next';
+import { isSuperAdmin } from '@/lib/roleUtils';
 
 interface UserEditFormProps {
   user: any;
@@ -13,9 +18,12 @@ interface UserEditFormProps {
 
 export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const { t } = useTranslation();
-  const { updateUser } = useUsers();
+  const { data: profile } = useUserProfile();
+  const { updateUser, assignUserToCompany, removeUserFromCompany } = useUsers();
+  const { companies } = useCompanies();
   const { register, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
+      full_name: user?.full_name || '',
       role: user?.role || 'normal',
       is_active: user?.is_active ?? true,
       can_delete: user?.can_delete ?? false,
@@ -27,14 +35,39 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const isActive = watch('is_active');
   const canDelete = watch('can_delete');
   const canViewLogs = watch('can_view_logs');
+  const fullName = watch('full_name');
+
+  const canEditRole = isSuperAdmin(profile);
+  const canEditPermissions = isSuperAdmin(profile);
+  const userCompanyIds = user?.user_companies?.map((uc: any) => uc.company_id) || [];
+
+  const handleCompanyToggle = (companyId: string, checked: boolean) => {
+    if (checked) {
+      assignUserToCompany.mutate({ user_id: user.id, company_id: companyId });
+    } else {
+      removeUserFromCompany.mutate({ user_id: user.id, company_id: companyId });
+    }
+  };
 
   const onSubmit = (data: any) => {
-    updateUser.mutate(
-      { id: user.id, ...data },
-      {
-        onSuccess: () => onClose(),
-      }
-    );
+    const updateData: any = {
+      id: user.id,
+      full_name: data.full_name,
+      is_active: data.is_active,
+    };
+
+    if (canEditRole) {
+      updateData.role = data.role;
+    }
+
+    if (canEditPermissions) {
+      updateData.can_delete = data.can_delete;
+      updateData.can_view_logs = data.can_view_logs;
+    }
+
+    updateUser.mutate(updateData, {
+      onSuccess: () => onClose(),
+    });
   };
 
   return (
@@ -45,8 +78,22 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="full_name">{t('users.fullName')}</Label>
+        <Input
+          id="full_name"
+          {...register('full_name')}
+          value={fullName}
+          onChange={(e) => setValue('full_name', e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="role">{t('users.role')}</Label>
-        <Select value={role} onValueChange={(value) => setValue('role', value)}>
+        <Select
+          value={role}
+          onValueChange={(value) => setValue('role', value)}
+          disabled={!canEditRole}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -74,6 +121,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           id="can_delete"
           checked={canDelete}
           onCheckedChange={(checked) => setValue('can_delete', checked)}
+          disabled={!canEditPermissions}
         />
       </div>
 
@@ -83,7 +131,29 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           id="can_view_logs"
           checked={canViewLogs}
           onCheckedChange={(checked) => setValue('can_view_logs', checked)}
+          disabled={!canEditPermissions}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label>{t('users.companies')}</Label>
+        <div className="space-y-2 border rounded-md p-3 max-h-48 overflow-y-auto">
+          {companies.map((company: any) => (
+            <div key={company.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`company-${company.id}`}
+                checked={userCompanyIds.includes(company.id)}
+                onCheckedChange={(checked) => handleCompanyToggle(company.id, checked as boolean)}
+              />
+              <label
+                htmlFor={`company-${company.id}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {company.name}
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="flex justify-end gap-2">

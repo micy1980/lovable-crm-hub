@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompanyList } from '@/components/companies/CompanyList';
 import { UserList } from '@/components/users/UserList';
+import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
@@ -103,19 +104,7 @@ const Settings = () => {
             </TabsContent>
 
             <TabsContent value="masterdata">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('settings.masterData')}</CardTitle>
-                  <CardDescription>
-                    {t('settings.masterDataDescription')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    {t('settings.masterDataComingSoon')}
-                  </div>
-                </CardContent>
-              </Card>
+              <MasterDataManager />
             </TabsContent>
           </>
         )}

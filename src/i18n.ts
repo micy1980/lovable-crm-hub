@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en.json';
 import hu from './locales/hu.json';
+import masterdataEn from './locales/masterdata-en.json';
+import masterdataHu from './locales/masterdata-hu.json';
 
 const STORAGE_KEY = 'mini_crm_language';
 
@@ -11,8 +13,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { translation: en },
-      hu: { translation: hu },
+      en: { translation: { ...en, ...masterdataEn } },
+      hu: { translation: { ...hu, ...masterdataHu } },
     },
     fallbackLng: 'en',
     supportedLngs: ['en', 'hu'],
