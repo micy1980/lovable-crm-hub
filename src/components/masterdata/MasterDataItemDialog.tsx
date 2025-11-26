@@ -27,8 +27,6 @@ export function MasterDataItemDialog({
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       label: initialData?.label || '',
-      value: initialData?.value || '',
-      order_index: initialData?.order_index ?? 0,
       is_default: initialData?.is_default ?? false,
     },
   });
@@ -53,28 +51,6 @@ export function MasterDataItemDialog({
             {errors.label && (
               <p className="text-sm text-destructive">{String(errors.label.message)}</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="value">{t('masterdata.value')}</Label>
-            <Input
-              id="value"
-              {...register('value', { required: t('masterdata.valueRequired') })}
-              placeholder={t('masterdata.value')}
-              disabled={!!initialData}
-            />
-            {errors.value && (
-              <p className="text-sm text-destructive">{String(errors.value.message)}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="order_index">{t('masterdata.order')}</Label>
-            <Input
-              id="order_index"
-              type="number"
-              {...register('order_index', { valueAsNumber: true })}
-            />
           </div>
 
           <div className="flex items-center justify-between">

@@ -27,9 +27,26 @@ export const useMasterData = (type: string | null) => {
 
   const createItem = useMutation({
     mutationFn: async (data: any) => {
+      // Auto-generate value from label if not provided
+      const value = data.value || data.label.toUpperCase().replace(/\s+/g, '_');
+      
+      // Get max order_index for this type
+      const { data: existingItems } = await supabase
+        .from('master_data')
+        .select('order_index')
+        .eq('type', data.type)
+        .order('order_index', { ascending: false })
+        .limit(1);
+      
+      const maxOrder = existingItems?.[0]?.order_index ?? -1;
+      
       const { error } = await supabase
         .from('master_data')
-        .insert(data);
+        .insert({
+          ...data,
+          value,
+          order_index: maxOrder + 1,
+        });
 
       if (error) throw error;
     },
@@ -90,11 +107,38 @@ export const useMasterData = (type: string | null) => {
     },
   });
 
+  const reorderItems = useMutation({
+    mutationFn: async (items: any[]) => {
+      // Update order_index for all items
+      const updates = items.map((item) => 
+        supabase
+          .from('master_data')
+          .update({ order_index: item.order_index })
+          .eq('id', item.id)
+      );
+
+      const results = await Promise.all(updates);
+      const error = results.find((r) => r.error)?.error;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['master-data'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('masterdata.error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     items,
     isLoading,
     createItem,
     updateItem,
     deleteItem,
+    reorderItems,
   };
 };
