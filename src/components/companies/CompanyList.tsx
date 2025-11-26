@@ -121,13 +121,13 @@ export function CompanyList() {
                 </TableRow>
               ) : (
                 filteredCompanies.map((company: any) => (
-                  <TableRow key={company.id}>
-                    <TableCell className="font-medium">{company.name}</TableCell>
-                    <TableCell>{company.tax_id || '-'}</TableCell>
-                    <TableCell>{company.address || '-'}</TableCell>
-                    <TableCell>{company.user_count}</TableCell>
-                    <TableCell>{format(new Date(company.created_at), 'PP')}</TableCell>
-                    <TableCell className="text-right">
+                  <TableRow key={company.id} className="h-12">
+                    <TableCell className="font-medium py-2">{company.name}</TableCell>
+                    <TableCell className="py-2">{company.tax_id || '-'}</TableCell>
+                    <TableCell className="py-2">{company.address || '-'}</TableCell>
+                    <TableCell className="py-2">{company.user_count}</TableCell>
+                    <TableCell className="py-2">{format(new Date(company.created_at), 'PP')}</TableCell>
+                    <TableCell className="text-right py-2">
                     <Button
                       variant="ghost"
                       size="icon"

@@ -23,7 +23,7 @@ export function UserList() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const { data: currentProfile } = useUserProfile();
-  const { users, isLoading, toggleUserFlag } = useUsers();
+  const { users, isLoading, toggleUserFlag, updateUser } = useUsers();
   const { companies } = useCompanies();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
@@ -155,12 +155,37 @@ export function UserList() {
                     const canToggleActive = canEdit && !(isSelf && user.is_active);
                     
                     return (
-                      <TableRow key={user.id}>
+                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
-                          </Badge>
+                          {canEdit ? (
+                            <Select
+                              value={user.role}
+                              onValueChange={(value) => {
+                                updateUser.mutate({ 
+                                  id: user.id, 
+                                  role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
+                                });
+                              }}
+                              disabled={!canEdit}
+                            >
+                              <SelectTrigger className="w-[140px] h-8">
+                                <SelectValue>
+                                  {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="super_admin">SA</SelectItem>
+                                <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
+                                <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
+                                <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant="outline" className="capitalize">
+                              {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           <TooltipProvider>

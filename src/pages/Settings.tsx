@@ -41,8 +41,8 @@ const Settings = () => {
           {isSuperAdmin && <TabsTrigger value="masterdata">{t('settings.masterdata')}</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="profile" className="flex justify-center">
-          <Card className="w-full max-w-3xl">
+        <TabsContent value="profile">
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>{t('settings.profileSettings')}</CardTitle>
               <CardDescription>
