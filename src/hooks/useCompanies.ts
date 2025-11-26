@@ -24,17 +24,29 @@ export const useCompanies = () => {
 
   const createCompany = useMutation({
     mutationFn: async (values: { name: string; tax_id?: string; address?: string }) => {
-      const { data, error } = await supabase
+      const { data: company, error: companyError } = await supabase
         .from('companies')
         .insert(values)
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (companyError) throw companyError;
+
+      // Auto-assign the current user to the newly created company
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && company) {
+        const { error: assignError } = await supabase
+          .from('user_companies')
+          .insert({ user_id: user.id, company_id: company.id });
+        
+        if (assignError) throw assignError;
+      }
+
+      return company;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['user-companies'] });
       toast({ title: t('companies.created') });
     },
     onError: (error: any) => {
