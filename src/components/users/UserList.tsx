@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -16,34 +18,6 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { useAuth } from '@/contexts/AuthContext';
-
-function ToggleBadge({ 
-  value, 
-  onClick, 
-  disabled, 
-  label 
-}: { 
-  value: boolean; 
-  onClick: () => void; 
-  disabled: boolean;
-  label: string;
-}) {
-  return (
-    <Badge
-      variant={value ? 'default' : 'secondary'}
-      className={`text-xs cursor-pointer transition-colors ${
-        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
-      } ${
-        value 
-          ? 'bg-success text-success-foreground hover:bg-success/90' 
-          : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-      }`}
-      onClick={disabled ? undefined : onClick}
-    >
-      {label}
-    </Badge>
-  );
-}
 
 export function UserList() {
   const { t } = useTranslation();
@@ -176,62 +150,100 @@ export function UserList() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user: any) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <ToggleBadge
-                      value={user.is_active}
-                      onClick={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
-                      disabled={!canEdit || (user.id === currentUser?.id && user.is_active)}
-                      label={user.is_active ? t('common.yes') : t('common.no')}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <ToggleBadge
-                      value={user.can_delete}
-                      onClick={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
-                      disabled={!canEdit}
-                      label={user.can_delete ? t('common.yes') : t('common.no')}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <ToggleBadge
-                      value={user.can_view_logs}
-                      onClick={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
-                      disabled={!canEdit}
-                      label={user.can_view_logs ? t('common.yes') : t('common.no')}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground">
-                    {format(new Date(user.created_at), 'PP')}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditingUser(user)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setCompanyAssignmentUser(user)}
-                      >
-                        <Building2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                ))
-              )}
+                  filteredUsers.map((user: any) => {
+                    const isSelf = user.id === currentUser?.id;
+                    const canToggleActive = canEdit && !(isSelf && user.is_active);
+                    
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex justify-center">
+                                  <Switch
+                                    checked={user.is_active}
+                                    onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
+                                    disabled={!canToggleActive}
+                                    aria-label={user.is_active ? t('common.yes') : t('common.no')}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {user.is_active ? t('common.yes') : t('common.no')}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex justify-center">
+                                  <Switch
+                                    checked={user.can_delete}
+                                    onCheckedChange={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
+                                    disabled={!canEdit}
+                                    aria-label={user.can_delete ? t('common.yes') : t('common.no')}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {user.can_delete ? t('common.yes') : t('common.no')}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex justify-center">
+                                  <Switch
+                                    checked={user.can_view_logs}
+                                    onCheckedChange={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
+                                    disabled={!canEdit}
+                                    aria-label={user.can_view_logs ? t('common.yes') : t('common.no')}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {user.can_view_logs ? t('common.yes') : t('common.no')}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-muted-foreground">
+                          {format(new Date(user.created_at), 'PP')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingUser(user)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setCompanyAssignmentUser(user)}
+                            >
+                              <Building2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
