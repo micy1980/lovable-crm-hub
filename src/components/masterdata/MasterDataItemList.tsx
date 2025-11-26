@@ -17,7 +17,7 @@ interface MasterDataItemListProps {
   onReorder: (items: any[]) => void;
 }
 
-function SortableRow({ item, canEdit, onEdit, onDelete }: { item: any; canEdit: boolean; onEdit: (item: any) => void; onDelete: (id: string) => void }) {
+function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; canEdit: boolean; onEdit: (item: any) => void; onDelete: (id: string) => void; index: number }) {
   const { t } = useTranslation();
   const {
     attributes,
@@ -34,10 +34,12 @@ function SortableRow({ item, canEdit, onEdit, onDelete }: { item: any; canEdit: 
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isEven = index % 2 === 0;
+
   return (
-    <TableRow ref={setNodeRef} style={style} className="h-12">
+    <TableRow ref={setNodeRef} style={style} className={`h-11 ${isEven ? 'bg-muted/30' : ''}`}>
       {canEdit && (
-        <TableCell className="w-12">
+        <TableCell className="w-12 py-2">
           <div {...attributes} {...listeners} className="cursor-move">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
@@ -49,12 +51,12 @@ function SortableRow({ item, canEdit, onEdit, onDelete }: { item: any; canEdit: 
       </TableCell>
       {canEdit && (
         <TableCell className="text-right py-2">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+          <Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="h-8 w-8">
             <Pencil className="h-4 w-4" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
@@ -136,13 +138,14 @@ export function MasterDataItemList({
         </TableHeader>
         <TableBody>
           <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <SortableRow
                 key={item.id}
                 item={item}
                 canEdit={canEdit}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                index={index}
               />
             ))}
           </SortableContext>

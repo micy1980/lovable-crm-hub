@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslation } from 'react-i18next';
@@ -21,26 +20,16 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const { register, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       full_name: user?.full_name || '',
-      role: user?.role || 'normal',
     },
   });
 
-  const role = watch('role');
   const fullName = watch('full_name');
 
-  const canEditRole = isSuperAdmin(profile);
-
   const onSubmit = (data: any) => {
-    const updateData: any = {
+    updateUser.mutate({
       id: user.id,
       full_name: data.full_name,
-    };
-
-    if (canEditRole) {
-      updateData.role = data.role;
-    }
-
-    updateUser.mutate(updateData, {
+    }, {
       onSuccess: () => onClose(),
     });
   };
@@ -62,27 +51,8 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="role">{t('users.role')}</Label>
-        <Select
-          value={role}
-          onValueChange={(value) => setValue('role', value)}
-          disabled={!canEditRole}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="super_admin">SA</SelectItem>
-            <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
-            <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
-            <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="flex items-end justify-between gap-4 pt-4">
-        {canEditRole && user?.created_at && user?.id && (
+        {isSuperAdmin(profile) && user?.created_at && user?.id && (
           <div className="text-xs text-muted-foreground space-y-0.5">
             <div>
               Created: {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm:ss')}
