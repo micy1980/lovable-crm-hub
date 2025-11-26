@@ -17,7 +17,7 @@ export function MasterDataManager() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const { items, isLoading, createItem, updateItem, deleteItem } = useMasterData(selectedType);
+  const { items, isLoading, createItem, updateItem, deleteItem, reorderItems } = useMasterData(selectedType);
 
   const canEdit = isSuperAdmin(profile);
 
@@ -87,13 +87,7 @@ export function MasterDataManager() {
                   canEdit={canEdit}
                   onEdit={setEditingItem}
                   onDelete={handleDelete}
-                  onReorder={(items) => {
-                    items.forEach((item, index) => {
-                      if (item.order_index !== index) {
-                        updateItem.mutate({ id: item.id, order_index: index });
-                      }
-                    });
-                  }}
+                  onReorder={(reorderedItems) => reorderItems.mutate(reorderedItems)}
                 />
               </>
             )}
