@@ -189,6 +189,7 @@
     "manageCompanies": "Manage Companies",
     "assignedCompanies": "Assigned Companies",
     "noCompanies": "No companies assigned",
+    "noCompaniesAvailable": "No companies available",
     "addCompany": "Add Company",
     "selectCompany": "Select a company",
     "updated": "User updated successfully",
@@ -204,6 +205,7 @@
     "allCompanies": "All companies",
     "createdAt": "Created",
     "noUsers": "No users found",
+    "isActive": "Active",
     "roles": {
       "superAdmin": "Super Admin",
       "admin": "Admin",

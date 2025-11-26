@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Building2, Search } from 'lucide-react';
+import { Pencil, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
 import { UserEditForm } from './UserEditForm';
-import { UserCompaniesDialog } from './UserCompaniesDialog';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 
@@ -19,7 +18,6 @@ export function UserList() {
   const { users, isLoading } = useUsers();
   const { companies } = useCompanies();
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [managingCompanies, setManagingCompanies] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -111,63 +109,52 @@ export function UserList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('users.email')}</TableHead>
                   <TableHead>{t('users.fullName')}</TableHead>
+                  <TableHead>{t('users.email')}</TableHead>
                   <TableHead>{t('users.role')}</TableHead>
-                  <TableHead>{t('users.status')}</TableHead>
-                  <TableHead>{t('users.companies')}</TableHead>
-                  <TableHead>{t('users.createdAt')}</TableHead>
+                  <TableHead className="text-center">{t('users.isActive')}</TableHead>
+                  <TableHead className="text-center">{t('users.canDelete')}</TableHead>
+                  <TableHead className="text-center">{t('users.canViewLogs')}</TableHead>
+                  <TableHead className="text-right">{t('users.createdAt')}</TableHead>
                   <TableHead className="text-right">{t('common.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       {t('users.noUsers')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredUsers.map((user: any) => (
                 <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.full_name || '-'}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
                       {user.role.replace('_', ' ')}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {user.is_active ? (
-                        <Badge variant="outline">{t('users.active')}</Badge>
-                      ) : (
-                        <Badge variant="secondary">{t('users.inactive')}</Badge>
-                      )}
-                      {user.can_delete && (
-                        <Badge variant="secondary" className="text-xs">
-                          {t('users.canDelete')}
-                        </Badge>
-                      )}
-                      {user.can_view_logs && (
-                        <Badge variant="secondary" className="text-xs">
-                          {t('users.canViewLogs')}
-                        </Badge>
-                      )}
-                    </div>
+                  <TableCell className="text-center">
+                    <Badge variant={user.is_active ? 'default' : 'secondary'} className="text-xs">
+                      {user.is_active ? t('common.yes') : t('common.no')}
+                    </Badge>
                   </TableCell>
-                  <TableCell>
-                    {user.user_companies?.length || 0} {t('users.companiesCount')}
+                  <TableCell className="text-center">
+                    <Badge variant={user.can_delete ? 'default' : 'secondary'} className="text-xs">
+                      {user.can_delete ? t('common.yes') : t('common.no')}
+                    </Badge>
                   </TableCell>
-                  <TableCell>{format(new Date(user.created_at), 'PP')}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={user.can_view_logs ? 'default' : 'secondary'} className="text-xs">
+                      {user.can_view_logs ? t('common.yes') : t('common.no')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {format(new Date(user.created_at), 'PP')}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setManagingCompanies(user)}
-                    >
-                      <Building2 className="h-4 w-4" />
-                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -179,14 +166,14 @@ export function UserList() {
                 </TableRow>
                 ))
               )}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('users.editTitle')}</DialogTitle>
           </DialogHeader>
@@ -196,12 +183,6 @@ export function UserList() {
           />
         </DialogContent>
       </Dialog>
-
-      <UserCompaniesDialog
-        user={managingCompanies}
-        open={!!managingCompanies}
-        onClose={() => setManagingCompanies(null)}
-      />
     </>
   );
 }
