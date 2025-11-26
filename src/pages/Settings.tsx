@@ -49,7 +49,7 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm font-medium mb-1">{t('settings.email')}</p>
@@ -60,27 +60,28 @@ const Settings = () => {
                     <p className="text-sm text-muted-foreground">{profile?.full_name || '-'}</p>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm font-medium mb-1">{t('settings.role')}</p>
+                
+                <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{t('settings.role')}:</span>
                     <Badge variant={isSuperAdmin ? 'default' : 'secondary'}>
-                      {profile?.role?.replace('_', ' ').toUpperCase()}
+                      {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">{t('settings.isActive')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{t('settings.isActive')}:</span>
                     <Badge variant={profile?.is_active ? 'default' : 'secondary'}>
                       {profile?.is_active ? t('common.yes') : t('common.no')}
                     </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">{t('settings.canDelete')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{t('settings.canDelete')}:</span>
                     <Badge variant={profile?.can_delete ? 'default' : 'secondary'}>
                       {profile?.can_delete ? t('common.yes') : t('common.no')}
                     </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">{t('settings.canViewLogs')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{t('settings.canViewLogs')}:</span>
                     <Badge variant={profile?.can_view_logs ? 'default' : 'secondary'}>
                       {profile?.can_view_logs ? t('common.yes') : t('common.no')}
                     </Badge>
