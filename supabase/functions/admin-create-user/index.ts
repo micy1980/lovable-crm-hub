@@ -54,11 +54,12 @@ Deno.serve(async (req) => {
       },
     })
 
-    // Step 1: Get the caller's user from the request-bound client
-    const { data: { user }, error: authError } = await requestClient.auth.getUser()
+    // Step 1: Get the caller's user from the request-bound client using the bearer token
+    const token = authHeader.replace('Bearer', '').trim()
+    const { data: { user }, error: authError } = await requestClient.auth.getUser(token)
 
     if (authError || !user) {
-      console.error('[admin-create-user] No user in session:', authError?.message)
+      console.error('[admin-create-user] No user in session (getUser with token):', authError?.message)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
