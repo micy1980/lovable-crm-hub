@@ -258,7 +258,11 @@
       "admin": "Admin",
       "normal": "Normal",
       "viewer": "Megtekintő"
-    }
+    },
+    "saBadgeTooltip": "Rendszer szintű Super Admin – minden vállalatban teljes hozzáférés.",
+    "saCannotDeleteSelf": "A saját SA felhasználói fiókot nem lehet törölni.",
+    "onlySaCanDeleteSa": "SA felhasználót csak SA törölhet.",
+    "saCompanyPermissionsInfo": "Super Admin felhasználók minden vállalatban teljes jogosultsággal rendelkeznek. A vállalati jogosultságok itt csak tájékoztató jellegűek, nem módosíthatók."
   },
   "topbar": {
     "selectCompany": "Vállalat kiválasztása",

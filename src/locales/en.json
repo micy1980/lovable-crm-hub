@@ -258,7 +258,11 @@
       "admin": "Admin",
       "normal": "Normal",
       "viewer": "Viewer"
-    }
+    },
+    "saBadgeTooltip": "System-wide Super Admin – full access in all companies.",
+    "saCannotDeleteSelf": "You cannot delete your own SA user account.",
+    "onlySaCanDeleteSa": "SA users can only be deleted by other SA users.",
+    "saCompanyPermissionsInfo": "Super Admin users have full permissions in every company. Company-level permissions shown here are informational only and cannot be edited."
   },
   "topbar": {
     "selectCompany": "Select company",
