@@ -42,7 +42,7 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
       style={style}
       className={cn(
         "grid gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
-        canEdit ? "grid-cols-[40px_1fr_150px_100px]" : "grid-cols-[1fr_150px]",
+        canEdit ? "grid-cols-[40px_200px_120px_100px]" : "grid-cols-[200px_120px]",
         index % 2 === 1 ? 'bg-muted/10' : '',
         isDefault ? 'border-b-2 border-border' : 'border-border'
       )}
@@ -140,7 +140,7 @@ export function MasterDataItemList({
         {/* Header Row */}
         <div className={cn(
           "grid gap-4 px-4 py-3 bg-muted/30 border-b border-border",
-          canEdit ? "grid-cols-[40px_1fr_150px_100px]" : "grid-cols-[1fr_150px]"
+          canEdit ? "grid-cols-[40px_200px_120px_100px]" : "grid-cols-[200px_120px]"
         )}>
           {canEdit && <div className="text-sm font-semibold text-muted-foreground"></div>}
           <div className="text-sm font-semibold text-muted-foreground">{t('masterdata.label')}</div>
