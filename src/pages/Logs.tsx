@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserCompanyAssignments } from '@/components/logs/UserCompanyAssignments';
 import {
   Select,
   SelectContent,
@@ -128,12 +130,19 @@ const Logs = () => {
         <p className="text-muted-foreground">{t('logs.description')}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('logs.auditLog')}</CardTitle>
-          <CardDescription>{t('logs.auditDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Tabs defaultValue="logs" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="logs">{t('logs.auditLog')}</TabsTrigger>
+          <TabsTrigger value="assignments">{t('logs.userAssignments')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="logs">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('logs.auditLog')}</CardTitle>
+              <CardDescription>{t('logs.auditDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
           {/* Filters */}
           <div className="flex gap-4">
             <div className="flex-1">
@@ -252,8 +261,22 @@ const Logs = () => {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="assignments">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('logs.userAssignments')}</CardTitle>
+              <CardDescription>{t('logs.userAssignmentsDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserCompanyAssignments />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
