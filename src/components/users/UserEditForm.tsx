@@ -146,7 +146,6 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           {...register('family_name', {
             required: t('users.familyNameRequired')
           })}
-          placeholder={t('users.familyNamePlaceholder')}
           className={(errors.family_name || (familyNameTouched && !familyName?.trim())) ? 'border-destructive' : ''}
           value={familyName}
           onChange={(e) => {
@@ -169,7 +168,6 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           {...register('given_name', {
             required: t('users.givenNameRequired')
           })}
-          placeholder={t('users.givenNamePlaceholder')}
           className={(errors.given_name || (givenNameTouched && !givenName?.trim())) ? 'border-destructive' : ''}
           value={givenName}
           onChange={(e) => {
