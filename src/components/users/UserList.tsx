@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search, Building2, Plus } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,6 +15,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserEditForm } from './UserEditForm';
 import { UserCreateForm } from './UserCreateForm';
 import { UserCompaniesDialog } from './UserCompaniesDialog';
+import { UserDeleteDialog } from './UserDeleteDialog';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
@@ -24,11 +25,12 @@ export function UserList() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const { data: currentProfile } = useUserProfile();
-  const { users, isLoading, toggleUserFlag, updateUser, createUser } = useUsers();
+  const { users, isLoading, toggleUserFlag, updateUser, createUser, deleteUser } = useUsers();
   const { companies } = useCompanies();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
+  const [deletingUser, setDeletingUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -61,6 +63,14 @@ export function UserList() {
       }
       // Other errors will bubble up naturally
     }
+  };
+
+  const handleDeleteUser = async (password: string) => {
+    if (!deletingUser) return;
+    await deleteUser.mutateAsync({
+      targetUserId: deletingUser.id,
+      password,
+    });
   };
 
   const filteredUsers = useMemo(() => {
@@ -292,6 +302,15 @@ export function UserList() {
                             >
                               <Building2 className="h-4 w-4" />
                             </Button>
+                            {isSuperAdmin(currentProfile) && !isSelf && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeletingUser(user)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -333,6 +352,14 @@ export function UserList() {
         user={companyAssignmentUser}
         open={!!companyAssignmentUser}
         onClose={() => setCompanyAssignmentUser(null)}
+      />
+
+      <UserDeleteDialog
+        user={deletingUser}
+        open={!!deletingUser}
+        onClose={() => setDeletingUser(null)}
+        onConfirm={handleDeleteUser}
+        isDeleting={deleteUser.isPending}
       />
     </>
   );

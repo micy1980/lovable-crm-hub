@@ -320,6 +320,70 @@ export const useUsers = () => {
     },
   });
 
+  const deleteUser = useMutation({
+    mutationFn: async ({ targetUserId, password }: { targetUserId: string; password: string }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { targetUserId, password },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (data && !data.success) {
+        if (data.errorCode === 'INVALID_PASSWORD') {
+          const invalidPasswordError = new Error(t('users.deleteDialog.invalidPassword'));
+          (invalidPasswordError as any).errorCode = 'INVALID_PASSWORD';
+          throw invalidPasswordError;
+        }
+        
+        if (data.errorCode === 'USER_HAS_ACTIVITY') {
+          const hasActivityError = new Error(t('users.deleteDialog.hasActivity'));
+          (hasActivityError as any).errorCode = 'USER_HAS_ACTIVITY';
+          throw hasActivityError;
+        }
+        
+        throw new Error(data.error || data.message || 'Failed to delete user');
+      }
+
+      if (error) throw error;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to delete user');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({ title: t('users.deleteDialog.success') });
+    },
+    onError: (error: any) => {
+      if (error.errorCode === 'INVALID_PASSWORD') {
+        // This is handled by the dialog component
+        throw error;
+      }
+      
+      if (error.errorCode === 'USER_HAS_ACTIVITY') {
+        toast({
+          title: t('users.error'),
+          description: t('users.deleteDialog.hasActivity'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: t('users.error'),
+        description: t('users.deleteDialog.unexpectedError'),
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     users,
     isLoading,
@@ -328,5 +392,6 @@ export const useUsers = () => {
     createUser,
     assignUserToCompany,
     removeUserFromCompany,
+    deleteUser,
   };
 };

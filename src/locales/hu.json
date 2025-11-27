@@ -41,6 +41,7 @@
     "cancel": "Mégse",
     "edit": "Szerkesztés",
     "delete": "Törlés",
+    "deleting": "Törlés...",
     "search": "Keresés",
     "loading": "Betöltés...",
     "noData": "Nincs elérhető adat",
@@ -228,6 +229,16 @@
     "noUsers": "Nem található felhasználó",
     "isActive": "Aktív",
     "emailAlreadyExists": "Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.",
+    "deleteDialog": {
+      "title": "Felhasználó törlése",
+      "description": "Biztosan törölni szeretnéd ezt a felhasználót? Ez a művelet nem vonható vissza. A törléshez add meg a saját jelszavadat.",
+      "yourPassword": "Saját jelszavad",
+      "deleteButton": "Felhasználó törlése",
+      "invalidPassword": "Hibás jelszó",
+      "hasActivity": "A felhasználó nem törölhető, mert már vannak hozzá tartozó adatok. Állítsd inaktívra a \"Felhasználók\" fülön.",
+      "success": "A felhasználó törlése sikeres volt",
+      "unexpectedError": "Váratlan hiba történt a felhasználó törlése közben"
+    },
     "roles": {
       "superAdmin": "SA",
       "admin": "Admin",

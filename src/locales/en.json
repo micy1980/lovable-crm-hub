@@ -41,6 +41,7 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete",
+    "deleting": "Deleting...",
     "search": "Search",
     "loading": "Loading...",
     "noData": "No data available",
@@ -228,6 +229,16 @@
     "noUsers": "No users found",
     "isActive": "Active",
     "emailAlreadyExists": "A user with this email address already exists. Please use a different email or edit the existing user.",
+    "deleteDialog": {
+      "title": "Delete user",
+      "description": "Are you sure you want to delete this user? This action cannot be undone. To confirm, please enter your own password.",
+      "yourPassword": "Your password",
+      "deleteButton": "Delete user",
+      "invalidPassword": "Incorrect password",
+      "hasActivity": "This user cannot be deleted because there is already activity linked to them. Please set the user to inactive on the Users tab.",
+      "success": "User was deleted successfully",
+      "unexpectedError": "An unexpected error occurred while deleting the user"
+    },
     "roles": {
       "superAdmin": "SA",
       "admin": "Admin",
