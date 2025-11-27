@@ -35,25 +35,60 @@ import { Loader2, AlertCircle } from 'lucide-react';
 // User-Company Assignments Component
 const UserCompanyAssignments = () => {
   const { t } = useTranslation();
+  const [userFilter, setUserFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['user-company-assignments'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: userCompaniesData, error: ucError } = await supabase
         .from('user_companies')
         .select(`
           id,
           user_id,
           company_id,
           profiles:user_id(email, full_name, role),
-          companies:company_id(name),
-          user_company_permissions!inner(role)
+          companies:company_id(name)
         `)
         .order('user_id');
       
-      if (error) throw error;
-      return data;
+      if (ucError) throw ucError;
+
+      // Fetch company permissions for each user-company pair
+      const enrichedData = await Promise.all(
+        userCompaniesData.map(async (uc: any) => {
+          const { data: permData } = await supabase
+            .from('user_company_permissions')
+            .select('role')
+            .eq('user_id', uc.user_id)
+            .eq('company_id', uc.company_id)
+            .maybeSingle();
+
+          return {
+            ...uc,
+            companyRole: permData?.role || 'N/A'
+          };
+        })
+      );
+
+      return enrichedData;
     },
+  });
+
+  // Filter assignments
+  const filteredAssignments = assignments.filter((assignment: any) => {
+    const userName = assignment.profiles?.full_name?.toLowerCase() || '';
+    const userEmail = assignment.profiles?.email?.toLowerCase() || '';
+    const companyName = assignment.companies?.name?.toLowerCase() || '';
+    
+    const matchesUser = userFilter === '' || 
+      userName.includes(userFilter.toLowerCase()) || 
+      userEmail.includes(userFilter.toLowerCase());
+    
+    const matchesCompany = companyFilter === '' || 
+      companyName.includes(companyFilter.toLowerCase());
+    
+    return matchesUser && matchesCompany;
   });
 
   if (isLoading) {
@@ -64,63 +99,91 @@ const UserCompanyAssignments = () => {
     );
   }
 
-  if (assignments.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">{t('logs.noAssignments')}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('logs.userName')}</TableHead>
-            <TableHead>User ID</TableHead>
-            <TableHead>{t('logs.company')}</TableHead>
-            <TableHead>Company ID</TableHead>
-            <TableHead>{t('settings.role')}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {assignments.map((assignment: any) => (
-            <TableRow key={assignment.id}>
-              <TableCell>
-                <div className="text-sm">
-                  <div className="font-medium">
-                    {assignment.profiles?.full_name || t('logs.unknown')}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {assignment.profiles?.email}
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {assignment.user_id}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm">
-                  {assignment.companies?.name || t('logs.unknown')}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {assignment.company_id}
-                </span>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className="capitalize text-xs">
-                  {assignment.user_company_permissions?.[0]?.role || 'N/A'}
-                </Badge>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-2 block">
+            {t('users.searchPlaceholder')}
+          </label>
+          <input
+            type="text"
+            placeholder="Keresés névre vagy email-re..."
+            value={userFilter}
+            onChange={(e) => setUserFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md bg-background"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-2 block">
+            {t('companies.searchPlaceholder')}
+          </label>
+          <input
+            type="text"
+            placeholder="Keresés vállalatra..."
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md bg-background"
+          />
+        </div>
+      </div>
+
+      {filteredAssignments.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">{t('logs.noAssignments')}</p>
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('logs.userName')}</TableHead>
+                <TableHead>User ID</TableHead>
+                <TableHead>{t('logs.company')}</TableHead>
+                <TableHead>Company ID</TableHead>
+                <TableHead>{t('settings.role')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAssignments.map((assignment: any) => (
+                <TableRow key={assignment.id}>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className="font-medium">
+                        {assignment.profiles?.full_name || t('logs.unknown')}
+                      </div>
+                      <div className="text-muted-foreground text-xs">
+                        {assignment.profiles?.email}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {assignment.user_id}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">
+                      {assignment.companies?.name || t('logs.unknown')}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {assignment.company_id}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="capitalize text-xs">
+                      {assignment.companyRole}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 };
