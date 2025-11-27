@@ -97,22 +97,26 @@ Deno.serve(async (req) => {
     const payload = await req.json() as {
       email: string
       password: string
-      fullName: string
+      familyName: string
+      givenName: string
       role: string
       isActive: boolean
       canDelete: boolean
       canViewLogs: boolean
     }
 
-    if (!payload.email || !payload.password || !payload.fullName || !payload.role) {
+    if (!payload.email || !payload.password || !payload.familyName || !payload.givenName || !payload.role) {
       console.error('[admin-create-user] Missing required fields')
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, fullName, and role' }),
+        JSON.stringify({ error: 'Missing required fields: email, password, familyName, givenName, and role' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     console.log('[admin-create-user] Creating user:', payload.email)
+
+    // Build full name from family and given names
+    const fullName = `${payload.familyName} ${payload.givenName}`
 
     // Step 4: Generate unique user_code
     const CODE_LENGTH = 5
@@ -151,7 +155,9 @@ Deno.serve(async (req) => {
       password: payload.password,
       email_confirm: true,
       user_metadata: {
-        full_name: payload.fullName,
+        full_name: fullName,
+        family_name: payload.familyName,
+        given_name: payload.givenName,
       },
     })
 
@@ -208,7 +214,9 @@ Deno.serve(async (req) => {
     const { error: profileUpdateError } = await serviceClient
       .from('profiles')
       .update({
-        full_name: payload.fullName,
+        family_name: payload.familyName,
+        given_name: payload.givenName,
+        full_name: fullName,
         role: payload.role,
         is_active: payload.isActive,
         can_delete: payload.canDelete,

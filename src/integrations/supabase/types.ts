@@ -353,7 +353,9 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           email: string
+          family_name: string | null
           full_name: string | null
+          given_name: string | null
           id: string
           is_active: boolean | null
           language: string | null
@@ -367,7 +369,9 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           email: string
+          family_name?: string | null
           full_name?: string | null
+          given_name?: string | null
           id: string
           is_active?: boolean | null
           language?: string | null
@@ -381,7 +385,9 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           email?: string
+          family_name?: string | null
           full_name?: string | null
+          given_name?: string | null
           id?: string
           is_active?: boolean | null
           language?: string | null

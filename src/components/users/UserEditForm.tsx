@@ -26,20 +26,49 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordTouched, setPasswordTouched] = useState(false);
-  const [fullNameTouched, setFullNameTouched] = useState(false);
+  const [familyNameTouched, setFamilyNameTouched] = useState(false);
+  const [givenNameTouched, setGivenNameTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: user?.email || '',
-      full_name: user?.full_name || '',
+      family_name: user?.family_name || '',
+      given_name: user?.given_name || '',
       password: '',
     },
   });
 
   const email = watch('email');
-  const fullName = watch('full_name');
+  const familyName = watch('family_name');
+  const givenName = watch('given_name');
   const password = watch('password');
 
   const onSubmit = async (data: any) => {
+    let hasError = false;
+
+    // Validate email is not empty
+    if (!data.email || data.email.trim() === '') {
+      setEmailError(t('users.emailRequired'));
+      setEmailTouched(true);
+      hasError = true;
+    }
+
+    // Validate family name is not empty
+    if (!data.family_name || data.family_name.trim() === '') {
+      setFamilyNameTouched(true);
+      hasError = true;
+    }
+
+    // Validate given name is not empty
+    if (!data.given_name || data.given_name.trim() === '') {
+      setGivenNameTouched(true);
+      hasError = true;
+    }
+
+    if (hasError) {
+      return;
+    }
+
     // Only validate password strength if password is provided
     if (data.password && data.password.trim() !== '') {
       const validation = validatePasswordStrength(data.password, t);
@@ -56,7 +85,8 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       await updateUser.mutateAsync({
         id: user.id,
         email: data.email !== user.email ? data.email : undefined,
-        full_name: data.full_name,
+        family_name: data.family_name,
+        given_name: data.given_name,
         password: data.password && data.password.trim() !== '' ? data.password : undefined,
       });
       onClose();
@@ -91,40 +121,66 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             }
           })}
           placeholder="user@example.com"
-          className={emailError ? 'border-destructive' : ''}
+          className={(emailError || (emailTouched && !email?.trim())) ? 'border-destructive' : ''}
           onChange={(e) => {
             setValue('email', e.target.value);
+            setEmailTouched(true);
             // Clear email error when user starts editing
             if (emailError) {
               setEmailError(null);
             }
           }}
+          onBlur={() => setEmailTouched(true)}
         />
-        {(errors.email || emailError) && (
+        {(errors.email || emailError || (emailTouched && !email?.trim())) && (
           <p className="text-sm text-destructive">
-            {emailError || String(errors.email?.message)}
+            {emailError || (emailTouched && !email?.trim() ? t('users.emailRequired') : String(errors.email?.message))}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="full_name">{t('users.fullName')}</Label>
+        <Label htmlFor="family_name">{t('users.familyName')}</Label>
         <Input
-          id="full_name"
-          {...register('full_name', {
-            required: t('users.fullNameRequired')
+          id="family_name"
+          {...register('family_name', {
+            required: t('users.familyNameRequired')
           })}
-          value={fullName}
-          className={(errors.full_name || (fullNameTouched && !fullName?.trim())) ? 'border-destructive' : ''}
+          placeholder={t('users.familyNamePlaceholder')}
+          className={(errors.family_name || (familyNameTouched && !familyName?.trim())) ? 'border-destructive' : ''}
+          value={familyName}
           onChange={(e) => {
-            setValue('full_name', e.target.value);
-            setFullNameTouched(true);
+            setValue('family_name', e.target.value);
+            setFamilyNameTouched(true);
           }}
-          onBlur={() => setFullNameTouched(true)}
+          onBlur={() => setFamilyNameTouched(true)}
         />
-        {(errors.full_name || (fullNameTouched && !fullName?.trim())) && (
+        {(errors.family_name || (familyNameTouched && !familyName?.trim())) && (
           <p className="text-sm text-destructive">
-            {t('users.fullNameRequired')}
+            {t('users.familyNameRequired')}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="given_name">{t('users.givenName')}</Label>
+        <Input
+          id="given_name"
+          {...register('given_name', {
+            required: t('users.givenNameRequired')
+          })}
+          placeholder={t('users.givenNamePlaceholder')}
+          className={(errors.given_name || (givenNameTouched && !givenName?.trim())) ? 'border-destructive' : ''}
+          value={givenName}
+          onChange={(e) => {
+            setValue('given_name', e.target.value);
+            setGivenNameTouched(true);
+          }}
+          onBlur={() => setGivenNameTouched(true)}
+        />
+        {(errors.given_name || (givenNameTouched && !givenName?.trim())) && (
+          <p className="text-sm text-destructive">
+            {t('users.givenNameRequired')}
           </p>
         )}
       </div>

@@ -26,7 +26,8 @@ export const useUsers = () => {
     mutationFn: async ({ 
       id, 
       role,
-      full_name,
+      family_name,
+      given_name,
       email,
       password,
       is_active, 
@@ -35,7 +36,8 @@ export const useUsers = () => {
     }: { 
       id: string; 
       role?: 'super_admin' | 'admin' | 'normal' | 'viewer';
-      full_name?: string;
+      family_name?: string;
+      given_name?: string;
       email?: string;
       password?: string;
       is_active?: boolean; 
@@ -75,10 +77,13 @@ export const useUsers = () => {
         }
       }
 
+      // Build full_name from family and given names if they are provided
+      const full_name = (family_name && given_name) ? `${family_name} ${given_name}` : undefined;
+
       // Update profile fields
       const { data, error } = await supabase
         .from('profiles')
-        .update({ role, full_name, is_active, can_delete, can_view_logs })
+        .update({ role, family_name, given_name, full_name, is_active, can_delete, can_view_logs })
         .eq('id', id)
         .select()
         .single();
@@ -185,7 +190,8 @@ export const useUsers = () => {
     mutationFn: async ({ 
       email, 
       password,
-      full_name, 
+      family_name,
+      given_name,
       role, 
       is_active, 
       can_delete, 
@@ -193,7 +199,8 @@ export const useUsers = () => {
     }: { 
       email: string;
       password: string;
-      full_name?: string; 
+      family_name: string;
+      given_name: string;
       role: 'super_admin' | 'admin' | 'normal' | 'viewer'; 
       is_active: boolean; 
       can_delete: boolean; 
@@ -212,7 +219,8 @@ export const useUsers = () => {
         body: {
           email,
           password,
-          fullName: full_name || email,
+          familyName: family_name,
+          givenName: given_name,
           role,
           isActive: is_active,
           canDelete: can_delete,
