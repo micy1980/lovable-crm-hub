@@ -185,6 +185,8 @@
   "users": {
     "title": "Felhasználó kezelés",
     "description": "Felhasználók, szerepkörök és jogosultságok kezelése",
+    "user": "Felhasználó",
+    "saStatus": "SA státusz",
     "email": "E-mail",
     "password": "Jelszó",
     "passwordRequired": "Jelszó megadása kötelező.",
