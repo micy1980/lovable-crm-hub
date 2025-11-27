@@ -11,7 +11,6 @@
     "fullName": "Teljes név",
     "signingIn": "Bejelentkezés folyamatban...",
     "creatingAccount": "Fiók létrehozása...",
-    "firstUserInfo": "Az első felhasználó automatikusan Super Admin lesz",
     "loginFailed": "Sikertelen bejelentkezés",
     "invalidCredentials": "Érvénytelen e-mail cím vagy jelszó. Kérjük, ellenőrizze az adatokat.",
     "error": "Hiba",

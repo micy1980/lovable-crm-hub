@@ -230,9 +230,6 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="text-center text-sm text-muted-foreground">
-          {t('auth.firstUserInfo')}
-        </CardFooter>
       </Card>
     </div>
   );
