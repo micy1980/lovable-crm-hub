@@ -710,12 +710,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_company_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          company_id: string
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_or_above: { Args: { _user_id: string }; Returns: boolean }
+      is_company_admin: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
