@@ -255,7 +255,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         {isSuperAdmin(profile) && user?.created_at && user?.id && (
           <div className="text-xs text-muted-foreground space-y-0.5">
             <div>
-              Created: {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm:ss')}
+              Created: {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
             </div>
             <div className="flex items-center gap-1">
               <span>userid:</span>

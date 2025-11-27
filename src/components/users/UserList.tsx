@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -40,13 +39,6 @@ export function UserList() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
-
-  const getInitials = (fullName: string | null) => {
-    if (!fullName) return '?';
-    const names = fullName.trim().split(' ');
-    if (names.length === 1) return names[0].charAt(0).toUpperCase();
-    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
-  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -254,30 +246,30 @@ export function UserList() {
                 <TableHeader>
                   <TableRow className="border-b bg-muted/30">
                     <TableHead 
-                      className="cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider py-3"
+                      className="cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider py-3 w-[35%]"
                       onClick={() => handleSort('fullName')}
                     >
                       {t('users.user')}
                       {getSortIcon('fullName')}
                     </TableHead>
                     <TableHead 
-                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[140px]"
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[12%]"
                       onClick={() => handleSort('role')}
                     >
                       {t('users.role')}
                       {getSortIcon('role')}
                     </TableHead>
-                    <TableHead className="text-center font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[180px]">
+                    <TableHead className="text-center font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[20%] pl-6">
                       {t('users.permissions')}
                     </TableHead>
                     <TableHead 
-                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[140px]"
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[18%]"
                       onClick={() => handleSort('createdAt')}
                     >
                       {t('users.createdAt')}
                       {getSortIcon('createdAt')}
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[120px]">
+                    <TableHead className="text-right font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[15%]">
                       {t('common.actions')}
                     </TableHead>
                   </TableRow>
@@ -301,20 +293,13 @@ export function UserList() {
                             index % 2 === 0 ? 'bg-background' : 'bg-muted/20'
                           }`}
                         >
-                          <TableCell className="py-3">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-9 w-9">
-                                <AvatarFallback className="text-sm font-medium bg-primary/10 text-primary">
-                                  {getInitials(user.full_name)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">{user.full_name || '-'}</span>
-                                <span className="text-xs text-muted-foreground">{user.email}</span>
-                              </div>
+                          <TableCell className="py-3 w-[35%]">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">{user.full_name || '-'}</span>
+                              <span className="text-xs text-muted-foreground">{user.email}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-center py-3">
+                          <TableCell className="text-center py-3 w-[12%]">
                             <div className="flex justify-center">
                               {canEdit && !isSelf ? (
                                 <Select
@@ -345,7 +330,7 @@ export function UserList() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="py-3">
+                          <TableCell className="py-3 w-[20%] pl-6">
                             <div className="flex items-center justify-center gap-2">
                               <TooltipProvider>
                                 <Tooltip>
@@ -406,12 +391,12 @@ export function UserList() {
                               </TooltipProvider>
                             </div>
                           </TableCell>
-                          <TableCell className="text-center py-3">
+                          <TableCell className="text-center py-3 w-[18%]">
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(user.created_at), 'yyyy-MM-dd')}
+                              {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right py-3">
+                          <TableCell className="text-right py-3 w-[15%]">
                             <div className="flex items-center justify-end gap-1">
                               <TooltipProvider>
                                 <Tooltip>
