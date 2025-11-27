@@ -116,14 +116,16 @@ Deno.serve(async (req) => {
 
     if (emailExists) {
       console.log('Email already registered:', email);
+      // Return 200 for validation errors to prevent runtime error display
       return new Response(
         JSON.stringify({
+          ok: false,
           errorCode: 'EMAIL_ALREADY_REGISTERED',
           message: 'A user with this email address has already been registered',
           message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
           message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.',
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -139,14 +141,16 @@ Deno.serve(async (req) => {
       // Check if this is a duplicate email error
       if (updateError.message?.toLowerCase().includes('already') || 
           updateError.message?.toLowerCase().includes('registered')) {
+        // Return 200 for validation errors to prevent runtime error display
         return new Response(
           JSON.stringify({
+            ok: false,
             errorCode: 'EMAIL_ALREADY_REGISTERED',
             message: updateError.message,
             message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
             message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.',
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       

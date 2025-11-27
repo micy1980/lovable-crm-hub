@@ -56,11 +56,14 @@ export const useUsers = () => {
           },
         });
 
-        // Check for structured errors in the response
-        if (emailData?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
-          const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
-          (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
-          throw duplicateError;
+        // Check for validation errors in response (now returns 200 with ok: false)
+        if (emailData && !emailData.ok) {
+          if (emailData.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+            const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
+            (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
+            throw duplicateError;
+          }
+          throw new Error(emailData.error || emailData.message || 'Failed to update email');
         }
 
         if (emailError) {
@@ -220,21 +223,22 @@ export const useUsers = () => {
         },
       });
 
-      // When edge function returns 400, Supabase puts response body in data
-      // Check for our structured errors first before throwing
-      if (data?.errorCode === 'EMAIL_ALREADY_REGISTERED' || 
-          data?.message?.toLowerCase().includes('already been registered')) {
-        const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
-        (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
-        throw duplicateError;
-      }
-      
-      if (data?.errorCode === 'WEAK_PASSWORD' ||
-          data?.error?.toLowerCase().includes('weak') ||
-          data?.error?.toLowerCase().includes('easy to guess')) {
-        const weakPasswordError = new Error('WEAK_PASSWORD');
-        (weakPasswordError as any).isWeakPassword = true;
-        throw weakPasswordError;
+      // Check for validation errors in response (now returns 200 with ok: false)
+      if (data && !data.ok) {
+        if (data.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+          const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
+          (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
+          throw duplicateError;
+        }
+        
+        if (data.errorCode === 'WEAK_PASSWORD') {
+          const weakPasswordError = new Error('WEAK_PASSWORD');
+          (weakPasswordError as any).isWeakPassword = true;
+          throw weakPasswordError;
+        }
+        
+        // Other validation errors
+        throw new Error(data.error || data.message || 'Failed to create user');
       }
 
       // Now check for generic errors

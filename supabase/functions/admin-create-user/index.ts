@@ -163,14 +163,16 @@ Deno.serve(async (req) => {
                                createError?.message?.toLowerCase().includes('user already registered')
       
       if (isDuplicateEmail) {
+        // Return 200 for validation errors to prevent runtime error display
         return new Response(
           JSON.stringify({ 
+            ok: false,
             errorCode: 'EMAIL_ALREADY_REGISTERED',
             message: 'A user with this email address has already been registered',
             message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
             message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.'
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
       
@@ -179,14 +181,16 @@ Deno.serve(async (req) => {
                             createError?.message?.toLowerCase().includes('easy to guess')
       
       if (isWeakPassword) {
+        // Return 200 for validation errors to prevent runtime error display
         return new Response(
           JSON.stringify({ 
+            ok: false,
             errorCode: 'WEAK_PASSWORD',
             error: 'Password is too weak',
             message_hu: 'A jelszó túl gyenge. Használj legalább 8 karaktert, kis- és nagybetűt, valamint számot.',
             message_en: 'Password is too weak. Please use at least 8 characters, with lowercase and uppercase letters and a number.'
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
       
