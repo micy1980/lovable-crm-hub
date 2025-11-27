@@ -240,7 +240,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[280px_80px_120px_60px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[220px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -249,7 +249,7 @@ export function UserList() {
                   {getSortIcon('fullName')}
                 </div>
                 <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
-                  {/* SA column header left intentionally blank */}
+                  {t('users.saStatus')}
                 </div>
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
@@ -292,7 +292,7 @@ export function UserList() {
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[280px_80px_120px_60px_170px_120px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[220px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
@@ -305,7 +305,7 @@ export function UserList() {
 
                             {/* SA Column */}
                             <div className="flex items-center justify-center">
-                              {isSA && (
+                              {isSA ? (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -318,6 +318,8 @@ export function UserList() {
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
                               )}
                             </div>
 

@@ -185,6 +185,8 @@
   "users": {
     "title": "User Management",
     "description": "Manage users, roles, and permissions",
+    "user": "User",
+    "saStatus": "SA Status",
     "email": "Email",
     "password": "Password",
     "passwordRequired": "Password is required.",
