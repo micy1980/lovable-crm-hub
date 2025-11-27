@@ -64,13 +64,13 @@ const Settings = () => {
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium">{t('settings.permissions')}</h4>
                   <div className="border rounded-lg overflow-hidden">
-                    <div className="grid grid-cols-[120px_80px_80px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+                    <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                       <div className="text-sm font-semibold text-muted-foreground">{t('settings.role')}</div>
                       <div className="text-sm font-semibold text-muted-foreground text-center">{t('settings.isActive')}</div>
                       <div className="text-sm font-semibold text-muted-foreground text-center">{t('settings.canDelete')}</div>
                       <div className="text-sm font-semibold text-muted-foreground text-center">{t('settings.canViewLogs')}</div>
                     </div>
-                    <div className="grid grid-cols-[120px_80px_80px_100px] gap-4 px-4 py-3">
+                    <div className="grid grid-cols-4 gap-4 px-4 py-3">
                       <div className="flex items-center">
                         <Badge variant="default" className="capitalize">
                           {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ')}
