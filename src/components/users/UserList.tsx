@@ -243,7 +243,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[3fr_1fr_1.6fr_1.2fr_0.8fr] gap-6 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[2.5fr_0.8fr_1.5fr_1fr_0.6fr] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -291,7 +291,7 @@ export function UserList() {
                       return (
                         <div
                           key={user.id}
-                          className={`grid grid-cols-[3fr_1fr_1.6fr_1.2fr_0.8fr] gap-6 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
+                          className={`grid grid-cols-[2.5fr_0.8fr_1.5fr_1fr_0.6fr] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
                             index % 2 === 1 ? 'bg-muted/10' : ''
                           }`}
                         >
