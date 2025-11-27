@@ -7,7 +7,6 @@ import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const Settings = () => {
   const { data: profile, isLoading } = useUserProfile();
@@ -64,40 +63,36 @@ const Settings = () => {
                 
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium">{t('settings.permissions')}</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('settings.role')}</TableHead>
-                        <TableHead className="text-center">{t('settings.isActive')}</TableHead>
-                        <TableHead className="text-center">{t('settings.canDelete')}</TableHead>
-                        <TableHead className="text-center">{t('settings.canViewLogs')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={profile?.is_active ? 'default' : 'secondary'} className="text-xs">
-                            {profile?.is_active ? t('common.yes') : t('common.no')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={profile?.can_delete ? 'default' : 'secondary'} className="text-xs">
-                            {profile?.can_delete ? t('common.yes') : t('common.no')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={profile?.can_view_logs ? 'default' : 'secondary'} className="text-xs">
-                            {profile?.can_view_logs ? t('common.yes') : t('common.no')}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="grid grid-cols-[120px_80px_80px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+                      <div className="text-sm font-semibold text-muted-foreground">{t('settings.role')}</div>
+                      <div className="text-sm font-semibold text-muted-foreground text-center">{t('settings.isActive')}</div>
+                      <div className="text-sm font-semibold text-muted-foreground text-center">{t('settings.canDelete')}</div>
+                      <div className="text-sm font-semibold text-muted-foreground text-center">{t('settings.canViewLogs')}</div>
+                    </div>
+                    <div className="grid grid-cols-[120px_80px_80px_100px] gap-4 px-4 py-3">
+                      <div className="flex items-center">
+                        <Badge variant="outline" className="capitalize">
+                          {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <Badge variant={profile?.is_active ? 'default' : 'secondary'} className="text-xs">
+                          {profile?.is_active ? t('common.yes') : t('common.no')}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <Badge variant={profile?.can_delete ? 'default' : 'secondary'} className="text-xs">
+                          {profile?.can_delete ? t('common.yes') : t('common.no')}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <Badge variant={profile?.can_view_logs ? 'default' : 'secondary'} className="text-xs">
+                          {profile?.can_view_logs ? t('common.yes') : t('common.no')}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
