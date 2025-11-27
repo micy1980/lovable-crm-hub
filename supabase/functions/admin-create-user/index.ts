@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
     // Step 3: Parse and validate request body
     const payload = await req.json() as {
       email: string
+      password: string
       fullName: string
       role: string
       isActive: boolean
@@ -103,19 +104,51 @@ Deno.serve(async (req) => {
       canViewLogs: boolean
     }
 
-    if (!payload.email || !payload.fullName || !payload.role) {
+    if (!payload.email || !payload.password || !payload.fullName || !payload.role) {
       console.error('[admin-create-user] Missing required fields')
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, fullName, and role' }),
+        JSON.stringify({ error: 'Missing required fields: email, password, fullName, and role' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     console.log('[admin-create-user] Creating user:', payload.email)
 
-    // Step 4: Create the auth user using service client
+    // Step 4: Generate unique user_code
+    const CODE_LENGTH = 5
+    const CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    
+    function randomCode() {
+      return Array.from({ length: CODE_LENGTH }, () =>
+        CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]
+      ).join('')
+    }
+
+    async function generateUniqueUserCode() {
+      for (let i = 0; i < 10; i++) {
+        const code = randomCode()
+
+        const { data, error } = await serviceClient
+          .from('profiles')
+          .select('id')
+          .eq('user_code', code)
+          .maybeSingle()
+
+        if (!data && !error) {
+          return code
+        }
+      }
+
+      throw new Error('Could not generate unique user_code after several attempts')
+    }
+
+    const userCode = await generateUniqueUserCode()
+    console.log('[admin-create-user] Generated user_code:', userCode)
+
+    // Step 5: Create the auth user using service client
     const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
       email: payload.email,
+      password: payload.password,
       email_confirm: true,
       user_metadata: {
         full_name: payload.fullName,
@@ -133,8 +166,8 @@ Deno.serve(async (req) => {
     const newUserId = created.user.id
     console.log('[admin-create-user] Created auth user:', newUserId)
 
-    // Step 5: Update the profile (already created by handle_new_user trigger)
-    // The trigger creates the profile automatically, so we just update it with the correct values
+    // Step 6: Update the profile (already created by handle_new_user trigger)
+    // The trigger creates the profile automatically, so we just update it with the correct values including user_code
     const { error: profileUpdateError } = await serviceClient
       .from('profiles')
       .update({
@@ -143,6 +176,7 @@ Deno.serve(async (req) => {
         is_active: payload.isActive,
         can_delete: payload.canDelete,
         can_view_logs: payload.canViewLogs,
+        user_code: userCode,
       })
       .eq('id', newUserId)
 
@@ -158,11 +192,12 @@ Deno.serve(async (req) => {
 
     console.log('[admin-create-user] Successfully created user:', newUserId)
 
-    // Step 6: Return success
+    // Step 7: Return success
     return new Response(
       JSON.stringify({
         ok: true,
         userId: newUserId,
+        userCode: userCode,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
