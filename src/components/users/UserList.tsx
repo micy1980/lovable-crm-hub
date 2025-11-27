@@ -127,9 +127,18 @@ export function UserList() {
       return matchesSearch && matchesRole && matchesStatus && matchesCompany;
     });
 
-    if (!sortColumn) return filtered;
-
+    // Sort with SA users always first
     return [...filtered].sort((a, b) => {
+      const aIsSA = a.role === 'super_admin';
+      const bIsSA = b.role === 'super_admin';
+      
+      // SA users always come first
+      if (aIsSA && !bIsSA) return -1;
+      if (!aIsSA && bIsSA) return 1;
+      
+      // Within SA or non-SA groups, apply the selected sort
+      if (!sortColumn) return 0;
+      
       let aValue: any;
       let bValue: any;
 
@@ -138,21 +147,9 @@ export function UserList() {
           aValue = (a.full_name || '').toLowerCase();
           bValue = (b.full_name || '').toLowerCase();
           break;
-        case 'role':
-          aValue = a.role || '';
-          bValue = b.role || '';
-          break;
         case 'isActive':
           aValue = a.is_active ? 1 : 0;
           bValue = b.is_active ? 1 : 0;
-          break;
-        case 'canDelete':
-          aValue = a.can_delete ? 1 : 0;
-          bValue = b.can_delete ? 1 : 0;
-          break;
-        case 'canViewLogs':
-          aValue = a.can_view_logs ? 1 : 0;
-          bValue = b.can_view_logs ? 1 : 0;
           break;
         case 'createdAt':
           aValue = new Date(a.created_at).getTime();
@@ -243,7 +240,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[280px_130px_120px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[280px_120px_60px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -253,17 +250,13 @@ export function UserList() {
                 </div>
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
-                  onClick={() => handleSort('role')}
-                >
-                  {t('users.role')}
-                  {getSortIcon('role')}
-                </div>
-                <div 
-                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
                   onClick={() => handleSort('isActive')}
                 >
                   {t('users.active')}
                   {getSortIcon('isActive')}
+                </div>
+                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                  {t('users.permissions')}
                 </div>
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
@@ -287,125 +280,65 @@ export function UserList() {
                   filteredUsers.map((user: any, index: number) => {
                       const isSelf = user.id === currentUser?.id;
                       const canToggleActive = canEdit && !(isSelf && user.is_active);
+                      const isSA = user.role === 'super_admin';
+                      const currentUserIsSA = currentProfile?.role === 'super_admin';
+                      const nextUser = filteredUsers[index + 1];
+                      const isLastSA = isSA && nextUser && nextUser.role !== 'super_admin';
                       
                       return (
-                        <div
-                          key={user.id}
-                          className={`grid grid-cols-[280px_130px_120px_170px_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
-                            index % 2 === 1 ? 'bg-muted/10' : ''
-                          }`}
-                        >
-                          {/* User Column */}
-                          <div className="flex flex-col justify-center min-w-0">
-                            <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
-                            <span className="text-xs text-muted-foreground truncate">{user.email}</span>
-                          </div>
+                        <div key={user.id}>
+                          <div
+                            className={`grid grid-cols-[280px_120px_60px_170px_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
+                              index % 2 === 1 ? 'bg-muted/10' : ''
+                            }`}
+                          >
+                            {/* User Column */}
+                            <div className="flex flex-col justify-center min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
+                                {isSA && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
+                                          SA
+                                        </Badge>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {t('users.saBadgeTooltip')}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                            </div>
 
-                          {/* Role Column */}
-                          <div className="flex items-center justify-center">
-                            {canEdit && !isSelf ? (
-                              <Select
-                                value={user.role}
-                                onValueChange={(value) => {
-                                  updateUser.mutate({ 
-                                    id: user.id, 
-                                    role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
-                                  });
-                                }}
-                              >
-                                <SelectTrigger className={`w-[110px] h-7 text-xs font-medium border-0 ${getRoleBadgeColor(user.role)}`}>
-                                  <SelectValue>
-                                    {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="super_admin">SA</SelectItem>
-                                  <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
-                                  <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
-                                  <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Badge className={`text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                                {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
-                              </Badge>
-                            )}
-                          </div>
+                            {/* Active Column */}
+                            <div className="flex items-center justify-center">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center">
+                                      <Switch
+                                        checked={user.is_active}
+                                        onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
+                                        disabled={!canToggleActive}
+                                        aria-label={t('users.isActive')}
+                                        className="scale-90 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                                      />
+                                      <Power className="h-4 w-4 ml-1.5 text-muted-foreground" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.isActive')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
 
-                          {/* Active Column */}
-                          <div className="flex items-center justify-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex items-center">
-                                    <Switch
-                                      checked={user.is_active}
-                                      onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
-                                      disabled={!canToggleActive}
-                                      aria-label={t('users.isActive')}
-                                      className="scale-90 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
-                                    />
-                                    <Power className="h-4 w-4 ml-1.5 text-muted-foreground" />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t('users.isActive')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-
-                          {/* Created At Column */}
-                          <div className="flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
-                            </span>
-                          </div>
-
-                          {/* Actions Column */}
-                          <div className="flex items-center justify-end gap-1">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => setEditingUser(user)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t('users.editTitle')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className={cn(
-                                      "h-8 w-8",
-                                      user.role === 'super_admin' && "opacity-50 cursor-not-allowed"
-                                    )}
-                                    onClick={() => user.role !== 'super_admin' && setCompanyAssignmentUser(user)}
-                                    disabled={user.role === 'super_admin'}
-                                  >
-                                    <Building2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {user.role === 'super_admin' 
-                                    ? 'Az SA szerepkör automatikusan minden vállalathoz hozzá van rendelve.'
-                                    : t('users.assignCompanies')
-                                  }
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            {isSuperAdmin(currentProfile) && (
+                            {/* Permissions Column */}
+                            <div className="flex items-center justify-center">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -413,29 +346,86 @@ export function UserList() {
                                       variant="ghost"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => !isSelf && setDeletingUser(user)}
-                                      disabled={isSelf}
+                                      onClick={() => setCompanyAssignmentUser(user)}
                                     >
-                                      <Trash2 className={cn(
-                                        "h-4 w-4",
-                                        isSelf ? "text-muted-foreground" : "text-destructive"
-                                      )} />
+                                      <Building2 className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {isSelf 
-                                      ? "A saját SA felhasználói fiókot nem lehet törölni." 
+                                    {t('users.assignCompanies')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+
+                            {/* Created At Column */}
+                            <div className="flex items-center justify-center">
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
+                              </span>
+                            </div>
+
+                            {/* Actions Column */}
+                            <div className="flex items-center justify-end gap-1">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => setEditingUser(user)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.editTitle')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className={cn(
+                                        "h-8 w-8",
+                                        (isSA && (isSelf || !currentUserIsSA)) && "opacity-50 cursor-not-allowed"
+                                      )}
+                                      onClick={() => {
+                                        if (!canEdit) return;
+                                        if (isSA && isSelf) return;
+                                        if (isSA && !currentUserIsSA) return;
+                                        setDeletingUser(user);
+                                      }}
+                                      disabled={!canEdit || (isSA && (isSelf || !currentUserIsSA))}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {isSA && isSelf 
+                                      ? t('users.saCannotDeleteSelf')
+                                      : isSA && !currentUserIsSA
+                                      ? t('users.onlySaCanDeleteSa')
                                       : t('users.deleteUser')
                                     }
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                            )}
+                            </div>
                           </div>
+                          {/* Separator after last SA user */}
+                          {isLastSA && (
+                            <div className="border-b-2 border-border"></div>
+                          )}
                         </div>
                       );
                     })
-                  )}
+                  )
+                }
               </div>
             </div>
           </div>

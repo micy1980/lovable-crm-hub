@@ -293,8 +293,8 @@ export function UserCompanyPermissionsDialog({ user, open, onClose }: UserCompan
             {t('users.companyPermissions')} - {user.full_name || user.email}
           </DialogTitle>
           {isReadOnly && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {t('users.saPermissionsReadOnly')}
+            <p className="text-sm text-muted-foreground mt-2 bg-muted/50 p-3 rounded-md">
+              {t('users.saCompanyPermissionsInfo')}
             </p>
           )}
         </DialogHeader>
