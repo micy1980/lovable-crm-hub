@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search, Building2, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -35,6 +35,8 @@ export function UserList() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
 
@@ -73,8 +75,26 @@ export function UserList() {
     });
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column: string) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="ml-2 h-4 w-4 inline" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="ml-2 h-4 w-4 inline" />
+      : <ArrowDown className="ml-2 h-4 w-4 inline" />;
+  };
+
   const filteredUsers = useMemo(() => {
-    return users.filter((user: any) => {
+    const filtered = users.filter((user: any) => {
       const matchesSearch =
         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -91,7 +111,47 @@ export function UserList() {
 
       return matchesSearch && matchesRole && matchesStatus && matchesCompany;
     });
-  }, [users, searchQuery, roleFilter, statusFilter, companyFilter]);
+
+    if (!sortColumn) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortColumn) {
+        case 'fullName':
+          aValue = (a.full_name || '').toLowerCase();
+          bValue = (b.full_name || '').toLowerCase();
+          break;
+        case 'role':
+          aValue = a.role || '';
+          bValue = b.role || '';
+          break;
+        case 'isActive':
+          aValue = a.is_active ? 1 : 0;
+          bValue = b.is_active ? 1 : 0;
+          break;
+        case 'canDelete':
+          aValue = a.can_delete ? 1 : 0;
+          bValue = b.can_delete ? 1 : 0;
+          break;
+        case 'canViewLogs':
+          aValue = a.can_view_logs ? 1 : 0;
+          bValue = b.can_view_logs ? 1 : 0;
+          break;
+        case 'createdAt':
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [users, searchQuery, roleFilter, statusFilter, companyFilter, sortColumn, sortDirection]);
 
   if (isLoading) {
     return <div>{t('common.loading')}</div>;
@@ -169,20 +229,55 @@ export function UserList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('users.fullName')}</TableHead>
-                  <TableHead>Kód</TableHead>
-                  <TableHead>{t('users.role')}</TableHead>
-                  <TableHead className="text-center">{t('users.isActive')}</TableHead>
-                  <TableHead className="text-center">{t('users.canDelete')}</TableHead>
-                  <TableHead className="text-center">{t('users.canViewLogs')}</TableHead>
-                  <TableHead className="text-right">{t('users.createdAt')}</TableHead>
-                  <TableHead className="text-right">{t('common.actions')}</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('fullName')}
+                  >
+                    {t('users.fullName')}
+                    {getSortIcon('fullName')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('role')}
+                  >
+                    {t('users.role')}
+                    {getSortIcon('role')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50 select-none w-[100px]"
+                    onClick={() => handleSort('isActive')}
+                  >
+                    {t('users.isActive')}
+                    {getSortIcon('isActive')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50 select-none w-[100px]"
+                    onClick={() => handleSort('canDelete')}
+                  >
+                    {t('users.canDelete')}
+                    {getSortIcon('canDelete')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50 select-none w-[140px]"
+                    onClick={() => handleSort('canViewLogs')}
+                  >
+                    {t('users.canViewLogs')}
+                    {getSortIcon('canViewLogs')}
+                  </TableHead>
+                  <TableHead 
+                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    {t('users.createdAt')}
+                    {getSortIcon('createdAt')}
+                  </TableHead>
+                  <TableHead className="text-right w-[120px]">{t('common.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       {t('users.noUsers')}
                     </TableCell>
                   </TableRow>
@@ -194,37 +289,36 @@ export function UserList() {
                     return (
                        <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
-                        <TableCell>
-                          <span className="font-mono text-xs">{user.user_code || '-'}</span>
-                        </TableCell>
-                        <TableCell>
-                          {canEdit && !isSelf ? (
-                            <Select
-                              value={user.role}
-                              onValueChange={(value) => {
-                                updateUser.mutate({ 
-                                  id: user.id, 
-                                  role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
-                                });
-                              }}
-                            >
-                              <SelectTrigger className="w-[140px] h-8">
-                                <SelectValue>
-                                  {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="super_admin">SA</SelectItem>
-                                <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
-                                <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
-                                <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Badge variant="outline" className="capitalize">
-                              {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
-                            </Badge>
-                          )}
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            {canEdit && !isSelf ? (
+                              <Select
+                                value={user.role}
+                                onValueChange={(value) => {
+                                  updateUser.mutate({ 
+                                    id: user.id, 
+                                    role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-[140px] h-8">
+                                  <SelectValue>
+                                    {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="super_admin">SA</SelectItem>
+                                  <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
+                                  <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
+                                  <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant="outline" className="capitalize">
+                                {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-center">
                           <TooltipProvider>
