@@ -13,7 +13,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserCompanyAssignments } from '@/components/logs/UserCompanyAssignments';
 import {
   Select,
   SelectContent,
@@ -32,6 +31,110 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
+
+// User-Company Assignments Component
+const UserCompanyAssignments = () => {
+  const { t } = useTranslation();
+
+  const { data: assignments = [], isLoading } = useQuery({
+    queryKey: ['user-company-assignments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_companies')
+        .select(`
+          id,
+          user_id,
+          company_id,
+          profiles:user_id(email, full_name, role),
+          companies:company_id(name)
+        `)
+        .order('user_id');
+      
+      if (error) throw error;
+      
+      // Group by user
+      const grouped = data.reduce((acc: any, curr: any) => {
+        const userId = curr.user_id;
+        if (!acc[userId]) {
+          acc[userId] = {
+            userId,
+            email: curr.profiles?.email,
+            fullName: curr.profiles?.full_name,
+            role: curr.profiles?.role,
+            companies: []
+          };
+        }
+        acc[userId].companies.push({
+          id: curr.company_id,
+          name: curr.companies?.name || curr.company_id
+        });
+        return acc;
+      }, {});
+      
+      return Object.values(grouped);
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (assignments.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">{t('logs.noAssignments')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('logs.userName')}</TableHead>
+            <TableHead>{t('settings.role')}</TableHead>
+            <TableHead>{t('logs.assignedCompanies')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {assignments.map((assignment: any) => (
+            <TableRow key={assignment.userId}>
+              <TableCell>
+                <div className="text-sm">
+                  <div className="font-medium">
+                    {assignment.fullName || t('logs.unknown')}
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    {assignment.email}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant="default" className="capitalize">
+                  {assignment.role === 'super_admin' ? 'SA' : assignment.role?.replace('_', ' ')}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {assignment.companies.map((company: any) => (
+                    <Badge key={company.id} variant="secondary" className="text-xs">
+                      {company.name}
+                    </Badge>
+                  ))}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
 
 const Logs = () => {
   const { t } = useTranslation();
