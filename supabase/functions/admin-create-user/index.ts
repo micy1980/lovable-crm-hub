@@ -219,8 +219,6 @@ Deno.serve(async (req) => {
         full_name: fullName,
         role: payload.role,
         is_active: payload.isActive,
-        can_delete: payload.canDelete,
-        can_view_logs: payload.canViewLogs,
         user_code: userCode,
       })
       .eq('id', newUserId)

@@ -37,15 +37,11 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       given_name: '',
       role: 'normal' as 'super_admin' | 'admin' | 'normal' | 'viewer',
       is_active: true,
-      can_delete: false,
-      can_view_logs: false,
     },
   });
 
   const role = watch('role');
   const isActive = watch('is_active');
-  const canDelete = watch('can_delete');
-  const canViewLogs = watch('can_view_logs');
   const password = watch('password');
   const email = watch('email');
   const familyName = watch('family_name');
@@ -277,24 +273,10 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             onCheckedChange={(checked) => setValue('is_active', checked)}
           />
         </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="can_delete" className="text-sm font-normal">{t('users.canDelete')}</Label>
-          <Switch
-            id="can_delete"
-            checked={canDelete}
-            onCheckedChange={(checked) => setValue('can_delete', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="can_view_logs" className="text-sm font-normal">{t('users.canViewLogs')}</Label>
-          <Switch
-            id="can_view_logs"
-            checked={canViewLogs}
-            onCheckedChange={(checked) => setValue('can_view_logs', checked)}
-          />
-        </div>
+        
+        <p className="text-sm text-muted-foreground mt-2">
+          {t('users.companyPermissionsNote')}
+        </p>
       </div>
 
       <div className="flex gap-2 justify-end pt-4">
