@@ -54,7 +54,7 @@ export function MasterDataManager() {
         )}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6">
           <div className="md:col-span-1">
             <MasterDataTypeList
               selectedType={selectedType}
@@ -62,7 +62,7 @@ export function MasterDataManager() {
             />
           </div>
 
-          <div className="md:col-span-2">
+          <div className="flex-1">
             {!selectedType ? (
               <div className="flex items-center justify-center h-64 text-muted-foreground">
                 {t('masterdata.selectType')}
