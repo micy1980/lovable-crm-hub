@@ -51,11 +51,6 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       const validation = validatePasswordStrength(data.password, t);
       if (!validation.valid) {
         setPasswordError(validation.message);
-        toast({
-          title: t('auth.weakPassword'),
-          description: validation.message || '',
-          variant: 'destructive',
-        });
         return;
       }
     }
@@ -69,6 +64,11 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       // Check if this is a duplicate email error
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
         setEmailError(t('users.emailAlreadyExists'));
+        return;
+      }
+      // Check if this is a weak password error from the backend
+      if (error?.isWeakPassword) {
+        setPasswordError(t('auth.weakPasswordMessage'));
         return;
       }
       // Re-throw other errors to be handled by the caller
@@ -128,10 +128,32 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             placeholder=""
             className={passwordError && password && password.trim() !== '' ? 'pr-10 border-destructive' : 'pr-10'}
             onChange={(e) => {
-              setValue('password', e.target.value);
+              const newPassword = e.target.value;
+              setValue('password', newPassword);
+              
               // Clear error when field becomes empty
-              if (e.target.value.trim() === '') {
+              if (newPassword.trim() === '') {
                 setPasswordError(null);
+              } else {
+                // Validate in real-time when field is not empty
+                const validation = validatePasswordStrength(newPassword, t);
+                if (!validation.valid) {
+                  setPasswordError(validation.message);
+                } else {
+                  setPasswordError(null);
+                }
+              }
+            }}
+            onBlur={(e) => {
+              const currentPassword = e.target.value;
+              // Validate on blur if field is not empty
+              if (currentPassword.trim() !== '') {
+                const validation = validatePasswordStrength(currentPassword, t);
+                if (!validation.valid) {
+                  setPasswordError(validation.message);
+                } else {
+                  setPasswordError(null);
+                }
               }
             }}
           />

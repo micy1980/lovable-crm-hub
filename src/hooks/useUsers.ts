@@ -74,15 +74,21 @@ export const useUsers = () => {
         // Check if the function returned a structured error in the response body
         if (passwordData && typeof passwordData === 'object') {
           if ('code' in passwordData && passwordData.code === 'weak_password') {
-            // Get current language
-            const currentLang = localStorage.getItem('mini_crm_language') || 'en';
-            const message = currentLang === 'hu' 
-              ? (passwordData.message_hu as string)
-              : (passwordData.message_en as string);
-            throw new Error(message);
+            // Create an error with a special code that the form can catch
+            const weakPasswordError = new Error(t('auth.weakPasswordMessage'));
+            (weakPasswordError as any).isWeakPassword = true;
+            throw weakPasswordError;
           }
           if ('error' in passwordData) {
-            throw new Error(passwordData.error as string);
+            // Check if the error message indicates a weak password
+            const errorMsg = passwordData.error as string;
+            if (errorMsg.toLowerCase().includes('weak') || 
+                errorMsg.toLowerCase().includes('easy to guess')) {
+              const weakPasswordError = new Error(t('auth.weakPasswordMessage'));
+              (weakPasswordError as any).isWeakPassword = true;
+              throw weakPasswordError;
+            }
+            throw new Error(errorMsg);
           }
         }
       }
@@ -95,6 +101,10 @@ export const useUsers = () => {
       toast({ title: t('users.updated') });
     },
     onError: (error: any) => {
+      // Don't show toast for weak password errors - the form will handle it
+      if (error.isWeakPassword) {
+        return;
+      }
       toast({
         title: t('users.error'),
         description: error.message,
@@ -187,6 +197,16 @@ export const useUsers = () => {
           (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
           throw duplicateError;
         }
+        
+        // Check for weak password error
+        if (data?.errorCode === 'WEAK_PASSWORD' ||
+            data?.error?.toLowerCase().includes('weak') ||
+            data?.error?.toLowerCase().includes('easy to guess')) {
+          const weakPasswordError = new Error('WEAK_PASSWORD');
+          (weakPasswordError as any).isWeakPassword = true;
+          throw weakPasswordError;
+        }
+        
         throw new Error(data?.error || 'Failed to create user');
       }
 
@@ -197,8 +217,8 @@ export const useUsers = () => {
       toast({ title: t('users.userCreated') });
     },
     onError: (error: any) => {
-      // Don't show toast for duplicate email errors - the form will handle it
-      if (error.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+      // Don't show toast for duplicate email or weak password errors - the form will handle them
+      if (error.errorCode === 'EMAIL_ALREADY_REGISTERED' || error.isWeakPassword) {
         return;
       }
       toast({
