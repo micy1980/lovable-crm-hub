@@ -34,6 +34,8 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isDefault = item.is_default;
+
   return (
     <div
       ref={setNodeRef}
@@ -41,7 +43,8 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
       className={cn(
         "grid gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
         canEdit ? "grid-cols-[40px_1fr_150px_100px]" : "grid-cols-[1fr_150px]",
-        index % 2 === 1 ? 'bg-muted/10' : ''
+        index % 2 === 1 ? 'bg-muted/10' : '',
+        isDefault ? 'border-b-2 border-border' : 'border-border'
       )}
     >
       {canEdit && (

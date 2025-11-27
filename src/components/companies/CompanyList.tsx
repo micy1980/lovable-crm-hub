@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Trash2, Plus, Search } from 'lucide-react';
+import { Pencil, Trash2, Plus, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -20,6 +20,8 @@ export function CompanyList() {
   const [deletingCompany, setDeletingCompany] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [companiesWithUserCount, setCompaniesWithUserCount] = useState<any[]>([]);
+  const [sortField, setSortField] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useMemo(() => {
     const fetchUserCounts = async () => {
@@ -41,15 +43,55 @@ export function CompanyList() {
     }
   }, [companies]);
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3" />;
+    }
+    return sortDirection === 'asc' ? (
+      <ArrowUp className="h-3 w-3" />
+    ) : (
+      <ArrowDown className="h-3 w-3" />
+    );
+  };
+
   const filteredCompanies = useMemo(() => {
-    return companiesWithUserCount.filter((company: any) => {
+    const filtered = companiesWithUserCount.filter((company: any) => {
       const matchesSearch =
         company.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         company.tax_id?.toLowerCase().includes(searchQuery.toLowerCase());
       
       return matchesSearch;
     });
-  }, [companiesWithUserCount, searchQuery]);
+
+    return filtered.sort((a: any, b: any) => {
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+
+      if (sortField === 'created_at') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      } else if (sortField === 'user_count') {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      } else if (typeof aValue === 'string') {
+        aValue = aValue?.toLowerCase() || '';
+        bValue = bValue?.toLowerCase() || '';
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [companiesWithUserCount, searchQuery, sortField, sortDirection]);
 
   const handleCreate = (data: any) => {
     createCompany.mutate(data, {
@@ -104,11 +146,41 @@ export function CompanyList() {
           <div className="border rounded-lg overflow-hidden">
             {/* Header Row */}
             <div className="grid grid-cols-[200px_120px_1fr_80px_120px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
-              <div className="text-sm font-semibold text-muted-foreground">{t('companies.name')}</div>
-              <div className="text-sm font-semibold text-muted-foreground">{t('companies.taxId')}</div>
-              <div className="text-sm font-semibold text-muted-foreground">{t('companies.address')}</div>
-              <div className="text-sm font-semibold text-muted-foreground text-center">{t('companies.userCount')}</div>
-              <div className="text-sm font-semibold text-muted-foreground">{t('companies.createdAt')}</div>
+              <div 
+                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                onClick={() => handleSort('name')}
+              >
+                {t('companies.name')}
+                {getSortIcon('name')}
+              </div>
+              <div 
+                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                onClick={() => handleSort('tax_id')}
+              >
+                {t('companies.taxId')}
+                {getSortIcon('tax_id')}
+              </div>
+              <div 
+                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                onClick={() => handleSort('address')}
+              >
+                {t('companies.address')}
+                {getSortIcon('address')}
+              </div>
+              <div 
+                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                onClick={() => handleSort('user_count')}
+              >
+                {t('companies.userCount')}
+                {getSortIcon('user_count')}
+              </div>
+              <div 
+                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                onClick={() => handleSort('created_at')}
+              >
+                {t('companies.createdAt')}
+                {getSortIcon('created_at')}
+              </div>
               <div className="text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>
             </div>
 
