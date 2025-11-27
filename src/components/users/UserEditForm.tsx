@@ -81,7 +81,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           </button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Csak akkor add meg, ha új jelszót szeretnél beállítani
+          A jelszónak erősnek kell lennie (min. 8 karakter, betűk és számok kombinációja). Hagyd üresen, ha nem változtatod.
         </p>
       </div>
 
