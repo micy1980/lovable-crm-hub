@@ -72,7 +72,7 @@ const Settings = () => {
                     </div>
                     <div className="grid grid-cols-[120px_80px_80px_100px] gap-4 px-4 py-3">
                       <div className="flex items-center">
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant="default" className="capitalize">
                           {profile?.role === 'super_admin' ? 'SA' : profile?.role?.replace('_', ' ')}
                         </Badge>
                       </div>
