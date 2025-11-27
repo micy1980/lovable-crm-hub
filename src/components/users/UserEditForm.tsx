@@ -140,7 +140,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="family_name">{t('users.familyName')}</Label>
+        <Label htmlFor="family_name">Családi név</Label>
         <Input
           id="family_name"
           {...register('family_name', {
@@ -162,7 +162,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="given_name">{t('users.givenName')}</Label>
+        <Label htmlFor="given_name">Utónév</Label>
         <Input
           id="given_name"
           {...register('given_name', {
