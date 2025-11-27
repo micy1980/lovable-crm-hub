@@ -237,7 +237,36 @@ Deno.serve(async (req) => {
 
     console.log('[admin-create-user] Successfully created user:', newUserId)
 
-    // Step 7: Return success
+    // Step 7: If user is super_admin, assign them to all companies
+    if (payload.role === 'super_admin') {
+      console.log('[admin-create-user] User is SA, assigning to all companies')
+      
+      const { data: allCompanies, error: companiesError } = await serviceClient
+        .from('companies')
+        .select('id')
+        .is('deleted_at', null)
+      
+      if (companiesError) {
+        console.error('[admin-create-user] Failed to fetch companies:', companiesError.message)
+      } else if (allCompanies && allCompanies.length > 0) {
+        const companyAssignments = allCompanies.map(company => ({
+          user_id: newUserId,
+          company_id: company.id
+        }))
+        
+        const { error: assignError } = await serviceClient
+          .from('user_companies')
+          .insert(companyAssignments)
+        
+        if (assignError) {
+          console.error('[admin-create-user] Failed to assign SA to companies:', assignError.message)
+        } else {
+          console.log('[admin-create-user] SA assigned to', allCompanies.length, 'companies')
+        }
+      }
+    }
+
+    // Step 8: Return success
     return new Response(
       JSON.stringify({
         ok: true,

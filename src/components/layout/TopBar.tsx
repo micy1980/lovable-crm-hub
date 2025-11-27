@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { isSuperAdmin } from '@/lib/roleUtils';
 
 export function TopBar() {
   const { user } = useAuth();
@@ -51,8 +52,8 @@ export function TopBar() {
         {/* Company Selector */}
         {companies.length > 0 && (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
+            <DropdownMenuTrigger asChild disabled={isSuperAdmin(profile)}>
+              <Button variant="outline" size="sm" className="gap-2" disabled={isSuperAdmin(profile)}>
                 {activeCompany?.name || t('topbar.selectCompany')}
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
