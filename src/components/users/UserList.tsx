@@ -425,14 +425,21 @@ export function UserList() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => setCompanyAssignmentUser(user)}
+                                    className={cn(
+                                      "h-8 w-8",
+                                      user.role === 'super_admin' && "opacity-50 cursor-not-allowed"
+                                    )}
+                                    onClick={() => user.role !== 'super_admin' && setCompanyAssignmentUser(user)}
+                                    disabled={user.role === 'super_admin'}
                                   >
                                     <Building2 className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  {t('users.assignCompanies')}
+                                  {user.role === 'super_admin' 
+                                    ? 'Az SA szerepkör automatikusan minden vállalathoz hozzá van rendelve.'
+                                    : t('users.assignCompanies')
+                                  }
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>

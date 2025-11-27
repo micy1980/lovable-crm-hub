@@ -59,12 +59,6 @@ export const CompanyProvider = ({ children }: { children: ReactNode }) => {
 
   // Persist company selection to localStorage
   const handleSetActiveCompany = (company: Company | null) => {
-    // Prevent SA users from changing companies
-    if (isSuperAdmin(profile)) {
-      console.warn('Super admin users cannot change selected company');
-      return;
-    }
-    
     setActiveCompany(company);
     if (company) {
       localStorage.setItem(ACTIVE_COMPANY_KEY, company.id);

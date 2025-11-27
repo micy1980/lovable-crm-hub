@@ -52,8 +52,8 @@ export function TopBar() {
         {/* Company Selector */}
         {companies.length > 0 && (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={isSuperAdmin(profile)}>
-              <Button variant="outline" size="sm" className="gap-2" disabled={isSuperAdmin(profile)}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
                 {activeCompany?.name || t('topbar.selectCompany')}
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
