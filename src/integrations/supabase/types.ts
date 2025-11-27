@@ -359,6 +359,7 @@ export type Database = {
           language: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
+          user_code: string
         }
         Insert: {
           can_delete?: boolean | null
@@ -372,6 +373,7 @@ export type Database = {
           language?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          user_code: string
         }
         Update: {
           can_delete?: boolean | null
@@ -385,6 +387,7 @@ export type Database = {
           language?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          user_code?: string
         }
         Relationships: []
       }

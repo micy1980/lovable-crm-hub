@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface UserCreateFormProps {
   onSubmit: (data: any) => void;
@@ -17,9 +19,11 @@ interface UserCreateFormProps {
 export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFormProps) {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
+      password: '',
       full_name: '',
       role: 'normal' as 'super_admin' | 'admin' | 'normal' | 'viewer',
       is_active: true,
@@ -67,6 +71,35 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
           {...register('full_name')}
           placeholder={t('users.fullNamePlaceholder')}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Jelszó</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            {...register('password', { 
+              required: 'A jelszó megadása kötelező',
+              minLength: {
+                value: 6,
+                message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie'
+              }
+            })}
+            placeholder="••••••••"
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {errors.password && (
+          <p className="text-sm text-destructive">{String(errors.password.message)}</p>
+        )}
       </div>
 
       <div className="space-y-2">

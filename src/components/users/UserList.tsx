@@ -152,6 +152,7 @@ export function UserList() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('users.fullName')}</TableHead>
+                  <TableHead>Kód</TableHead>
                   <TableHead>{t('users.role')}</TableHead>
                   <TableHead className="text-center">{t('users.isActive')}</TableHead>
                   <TableHead className="text-center">{t('users.canDelete')}</TableHead>
@@ -163,7 +164,7 @@ export function UserList() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       {t('users.noUsers')}
                     </TableCell>
                   </TableRow>
@@ -175,6 +176,9 @@ export function UserList() {
                     return (
                        <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
+                        <TableCell>
+                          <span className="font-mono text-xs">{user.user_code || '-'}</span>
+                        </TableCell>
                         <TableCell>
                           {canEdit && !isSelf ? (
                             <Select

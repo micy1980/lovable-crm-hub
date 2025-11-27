@@ -27,6 +27,7 @@ export const useUsers = () => {
       id, 
       role,
       full_name,
+      password,
       is_active, 
       can_delete, 
       can_view_logs 
@@ -34,10 +35,12 @@ export const useUsers = () => {
       id: string; 
       role?: 'super_admin' | 'admin' | 'normal' | 'viewer';
       full_name?: string;
+      password?: string;
       is_active?: boolean; 
       can_delete?: boolean; 
       can_view_logs?: boolean;
     }) => {
+      // Update profile fields
       const { data, error } = await supabase
         .from('profiles')
         .update({ role, full_name, is_active, can_delete, can_view_logs })
@@ -46,6 +49,27 @@ export const useUsers = () => {
         .single();
 
       if (error) throw error;
+
+      // Update password if provided
+      if (password && password.trim() !== '') {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No active session');
+        }
+
+        const { error: passwordError } = await supabase.functions.invoke('admin-update-password', {
+          body: {
+            userId: id,
+            password,
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (passwordError) throw passwordError;
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -98,13 +122,15 @@ export const useUsers = () => {
   const createUser = useMutation({
     mutationFn: async ({ 
       email, 
+      password,
       full_name, 
       role, 
       is_active, 
       can_delete, 
       can_view_logs 
     }: { 
-      email: string; 
+      email: string;
+      password: string;
       full_name?: string; 
       role: 'super_admin' | 'admin' | 'normal' | 'viewer'; 
       is_active: boolean; 
