@@ -26,6 +26,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [fullNameTouched, setFullNameTouched] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: user?.email || '',
@@ -110,14 +111,26 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         <Label htmlFor="full_name">{t('users.fullName')}</Label>
         <Input
           id="full_name"
-          {...register('full_name')}
+          {...register('full_name', {
+            required: t('users.fullNameRequired')
+          })}
           value={fullName}
-          onChange={(e) => setValue('full_name', e.target.value)}
+          className={(errors.full_name || (fullNameTouched && !fullName?.trim())) ? 'border-destructive' : ''}
+          onChange={(e) => {
+            setValue('full_name', e.target.value);
+            setFullNameTouched(true);
+          }}
+          onBlur={() => setFullNameTouched(true)}
         />
+        {(errors.full_name || (fullNameTouched && !fullName?.trim())) && (
+          <p className="text-sm text-destructive">
+            {t('users.fullNameRequired')}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Jelszó</Label>
+        <Label htmlFor="password">{t('users.password')}</Label>
         <div className="relative">
           <Input
             id="password"
