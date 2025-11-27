@@ -295,25 +295,25 @@ export function UserList() {
                             )}
                           >
                             {/* User Column */}
-                            <div className="flex flex-col justify-center min-w-0">
-                              <div className="flex items-center gap-3">
+                            <div className="relative flex flex-col justify-center min-w-0 pr-10">
+                              <div className="flex items-center gap-1">
                                 <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
-                                {isSA && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help shrink-0">
-                                          SA
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {t('users.saBadgeTooltip')}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
                               </div>
                               <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                              {isSA && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge className="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
+                                        SA
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {t('users.saBadgeTooltip')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                             </div>
 
                             {/* Active Column */}
