@@ -226,6 +226,10 @@
     "createdAt": "Létrehozva",
     "noUsers": "Nem található felhasználó",
     "isActive": "Aktív",
+    "user": "Felhasználó",
+    "permissions": "Jogosultságok",
+    "assignCompanies": "Cégek hozzárendelése",
+    "deleteUser": "Felhasználó törlése",
     "emailAlreadyExists": "Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.",
     "deleteDialog": {
       "title": "Felhasználó törlése",
