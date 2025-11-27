@@ -217,6 +217,7 @@
     "createdAt": "Létrehozva",
     "noUsers": "Nem található felhasználó",
     "isActive": "Aktív",
+    "emailAlreadyExists": "Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.",
     "roles": {
       "superAdmin": "SA",
       "admin": "Admin",

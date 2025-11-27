@@ -179,7 +179,16 @@ export const useUsers = () => {
       });
 
       if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error || 'Failed to create user');
+      if (!data?.ok) {
+        // Check for duplicate email error
+        if (data?.errorCode === 'EMAIL_ALREADY_REGISTERED' || 
+            data?.message?.toLowerCase().includes('already been registered')) {
+          const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
+          (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
+          throw duplicateError;
+        }
+        throw new Error(data?.error || 'Failed to create user');
+      }
 
       return { id: data.userId, email };
     },
@@ -188,6 +197,10 @@ export const useUsers = () => {
       toast({ title: t('users.userCreated') });
     },
     onError: (error: any) => {
+      // Don't show toast for duplicate email errors - the form will handle it
+      if (error.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+        return;
+      }
       toast({
         title: t('users.error'),
         description: error.message,
