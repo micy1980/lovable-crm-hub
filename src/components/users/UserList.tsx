@@ -436,7 +436,7 @@ export function UserList() {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                            {isSuperAdmin(currentProfile) && !isSelf && (
+                            {isSuperAdmin(currentProfile) && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -444,13 +444,20 @@ export function UserList() {
                                       variant="ghost"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => setDeletingUser(user)}
+                                      onClick={() => !isSelf && setDeletingUser(user)}
+                                      disabled={isSelf}
                                     >
-                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                      <Trash2 className={cn(
+                                        "h-4 w-4",
+                                        isSelf ? "text-muted-foreground" : "text-destructive"
+                                      )} />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {t('users.deleteUser')}
+                                    {isSelf 
+                                      ? "A saját SA felhasználói fiókot nem lehet törölni." 
+                                      : t('users.deleteUser')
+                                    }
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
