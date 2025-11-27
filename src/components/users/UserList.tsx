@@ -240,13 +240,16 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[280px_120px_60px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[280px_80px_120px_60px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
                 >
                   {t('users.user')}
                   {getSortIcon('fullName')}
+                </div>
+                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                  {/* SA column header left intentionally blank */}
                 </div>
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
@@ -289,22 +292,24 @@ export function UserList() {
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[280px_120px_60px_170px_120px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[280px_80px_120px_60px_170px_120px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
                           >
                             {/* User Column */}
-                            <div className="relative flex flex-col justify-center min-w-0 pr-10">
-                              <div className="flex items-center gap-1">
-                                <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
-                              </div>
+                            <div className="flex flex-col justify-center min-w-0">
+                              <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
                               <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                            </div>
+
+                            {/* SA Column */}
+                            <div className="flex items-center justify-center">
                               {isSA && (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Badge className="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
+                                      <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
                                         SA
                                       </Badge>
                                     </TooltipTrigger>
