@@ -296,13 +296,13 @@ export function UserList() {
                           >
                             {/* User Column */}
                             <div className="flex flex-col justify-center min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium text-sm truncate max-w-[70%]">{user.full_name || '-'}</span>
                                 {isSA && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help shrink-0">
+                                        <Badge className="ml-2 text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help shrink-0">
                                           SA
                                         </Badge>
                                       </TooltipTrigger>

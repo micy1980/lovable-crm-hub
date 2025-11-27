@@ -208,6 +208,7 @@ export const useUsers = () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
     onError: (error: any) => {
+      console.error('toggleUserFlag error', error);
       toast({
         title: t('users.error'),
         description: error.message,
