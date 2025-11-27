@@ -49,10 +49,17 @@ export function UserList() {
     });
   };
 
-  const handleCreateUser = (data: any) => {
-    createUser.mutate(data, {
-      onSuccess: () => setIsCreateOpen(false),
-    });
+  const handleCreateUser = async (data: any) => {
+    try {
+      await createUser.mutateAsync(data);
+      setIsCreateOpen(false);
+    } catch (error: any) {
+      // Email duplicate errors are handled in the form, other errors are already handled by the mutation's onError
+      if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+        // Re-throw to let the form handle it
+        throw error;
+      }
+    }
   };
 
   const filteredUsers = useMemo(() => {

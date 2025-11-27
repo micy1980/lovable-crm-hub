@@ -217,6 +217,7 @@
     "createdAt": "Created",
     "noUsers": "No users found",
     "isActive": "Active",
+    "emailAlreadyExists": "A user with this email address already exists. Please use a different email or edit the existing user.",
     "roles": {
       "superAdmin": "SA",
       "admin": "Admin",

@@ -24,6 +24,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
@@ -44,7 +45,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   
   const canCreateSA = isSuperAdmin(profile);
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = async (data: any) => {
     // Only validate password strength if password is non-empty
     if (data.password && data.password.trim() !== '') {
       const validation = validatePasswordStrength(data.password, t);
@@ -60,7 +61,19 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
     }
     
     setPasswordError(null);
-    onSubmit(data);
+    setEmailError(null);
+    
+    try {
+      await onSubmit(data);
+    } catch (error: any) {
+      // Check if this is a duplicate email error
+      if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+        setEmailError(t('users.emailAlreadyExists'));
+        return;
+      }
+      // Re-throw other errors to be handled by the caller
+      throw error;
+    }
   };
 
   return (
@@ -78,9 +91,19 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             }
           })}
           placeholder="user@example.com"
+          className={emailError ? 'border-destructive' : ''}
+          onChange={(e) => {
+            setValue('email', e.target.value);
+            // Clear email error when user starts editing
+            if (emailError) {
+              setEmailError(null);
+            }
+          }}
         />
-        {errors.email && (
-          <p className="text-sm text-destructive">{String(errors.email.message)}</p>
+        {(errors.email || emailError) && (
+          <p className="text-sm text-destructive">
+            {emailError || String(errors.email?.message)}
+          </p>
         )}
       </div>
 

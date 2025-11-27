@@ -157,6 +157,23 @@ Deno.serve(async (req) => {
 
     if (createError || !created.user) {
       console.error('[admin-create-user] Failed to create auth user:', createError?.message)
+      
+      // Check if this is a duplicate email error
+      const isDuplicateEmail = createError?.message?.toLowerCase().includes('already been registered') ||
+                               createError?.message?.toLowerCase().includes('user already registered')
+      
+      if (isDuplicateEmail) {
+        return new Response(
+          JSON.stringify({ 
+            errorCode: 'EMAIL_ALREADY_REGISTERED',
+            message: 'A user with this email address has already been registered',
+            message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
+            message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
       return new Response(
         JSON.stringify({ error: createError?.message ?? 'Failed to create user' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
