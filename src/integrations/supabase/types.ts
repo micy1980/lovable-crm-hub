@@ -710,11 +710,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_delete_in_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_user_edit_master_data_in_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_user_view_logs_in_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_admin_company_ids: {
         Args: { _user_id: string }
         Returns: {
           company_id: string
         }[]
+      }
+      get_admin_company_ids_new: {
+        Args: { _user_id: string }
+        Returns: {
+          company_id: string
+        }[]
+      }
+      get_company_role: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: string
       }
       get_user_role: {
         Args: { user_id: string }
@@ -723,6 +745,10 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_or_above: { Args: { _user_id: string }; Returns: boolean }
       is_company_admin: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_company_admin_new: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
