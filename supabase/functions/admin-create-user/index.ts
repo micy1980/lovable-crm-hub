@@ -133,25 +133,25 @@ Deno.serve(async (req) => {
     const newUserId = created.user.id
     console.log('[admin-create-user] Created auth user:', newUserId)
 
-    // Step 5: Insert profile row using service client
-    const { error: profileInsertError } = await serviceClient
+    // Step 5: Update the profile (already created by handle_new_user trigger)
+    // The trigger creates the profile automatically, so we just update it with the correct values
+    const { error: profileUpdateError } = await serviceClient
       .from('profiles')
-      .insert({
-        id: newUserId,
-        email: payload.email,
+      .update({
         full_name: payload.fullName,
         role: payload.role,
         is_active: payload.isActive,
         can_delete: payload.canDelete,
         can_view_logs: payload.canViewLogs,
       })
+      .eq('id', newUserId)
 
-    if (profileInsertError) {
-      console.error('[admin-create-user] Failed to insert profile:', profileInsertError.message)
+    if (profileUpdateError) {
+      console.error('[admin-create-user] Failed to update profile:', profileUpdateError.message)
       // Try to clean up the auth user
       await serviceClient.auth.admin.deleteUser(newUserId)
       return new Response(
-        JSON.stringify({ error: profileInsertError.message }),
+        JSON.stringify({ error: profileUpdateError.message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
