@@ -11,6 +11,7 @@ import { isSuperAdmin } from '@/lib/roleUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 
 interface UserCompanyPermissionsDialogProps {
   user: any;
@@ -366,6 +367,9 @@ export function UserCompanyPermissionsDialog({ user, open, onClose }: UserCompan
                               handlePermissionChange(company.id, 'canDelete', checked)
                             }
                             disabled={!isAssigned || isReadOnly || role === 'VIEWER'}
+                            className={cn(
+                              isAssigned && !isReadOnly && role !== 'VIEWER' && "data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center">
@@ -375,6 +379,9 @@ export function UserCompanyPermissionsDialog({ user, open, onClose }: UserCompan
                               handlePermissionChange(company.id, 'canViewLogs', checked)
                             }
                             disabled={!isAssigned || isReadOnly}
+                            className={cn(
+                              isAssigned && !isReadOnly && "data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                            )}
                           />
                         </TableCell>
                         <TableCell className="text-center">
@@ -384,6 +391,9 @@ export function UserCompanyPermissionsDialog({ user, open, onClose }: UserCompan
                               handlePermissionChange(company.id, 'canEditMasterData', checked)
                             }
                             disabled={!isAssigned || isReadOnly || role === 'ADMIN' || role === 'VIEWER'}
+                            className={cn(
+                              isAssigned && !isReadOnly && role !== 'ADMIN' && role !== 'VIEWER' && "data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                            )}
                           />
                         </TableCell>
                       </TableRow>
