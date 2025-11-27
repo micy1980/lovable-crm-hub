@@ -241,9 +241,9 @@ export function UserList() {
               </Select>
             </div>
 
-            <div className="border rounded-lg overflow-hidden inline-block">
+            <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[minmax(220px,max-content)_max-content_max-content_max-content_max-content] gap-3 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[280px_130px_260px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -291,14 +291,14 @@ export function UserList() {
                       return (
                         <div
                           key={user.id}
-                          className={`grid grid-cols-[minmax(220px,max-content)_max-content_max-content_max-content_max-content] gap-3 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
+                          className={`grid grid-cols-[280px_130px_260px_170px_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
                             index % 2 === 1 ? 'bg-muted/10' : ''
                           }`}
                         >
                           {/* User Column */}
-                          <div className="flex flex-col justify-center">
-                            <span className="font-medium text-sm">{user.full_name || '-'}</span>
-                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                          <div className="flex flex-col justify-center min-w-0">
+                            <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
+                            <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                           </div>
 
                           {/* Role Column */}
