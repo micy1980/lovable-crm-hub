@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useUserCompanies } from '@/hooks/useUserCompanies';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin } from '@/lib/roleUtils';
 
 const ACTIVE_COMPANY_KEY = 'mini_crm_active_company_id';
 
@@ -32,6 +34,7 @@ export const useCompany = () => {
 export const CompanyProvider = ({ children }: { children: ReactNode }) => {
   const [activeCompany, setActiveCompany] = useState<Company | null>(null);
   const { data: companies = [] } = useUserCompanies();
+  const { data: profile } = useUserProfile();
 
   // Load active company from localStorage or set first available
   useEffect(() => {
@@ -56,6 +59,12 @@ export const CompanyProvider = ({ children }: { children: ReactNode }) => {
 
   // Persist company selection to localStorage
   const handleSetActiveCompany = (company: Company | null) => {
+    // Prevent SA users from changing companies
+    if (isSuperAdmin(profile)) {
+      console.warn('Super admin users cannot change selected company');
+      return;
+    }
+    
     setActiveCompany(company);
     if (company) {
       localStorage.setItem(ACTIVE_COMPANY_KEY, company.id);

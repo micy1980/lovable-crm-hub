@@ -42,6 +42,26 @@ export const useCompanies = () => {
         if (assignError) throw assignError;
       }
 
+      // Assign all SA users to the newly created company
+      const { data: saUsers } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'super_admin')
+        .is('deleted_at', null);
+      
+      if (saUsers && saUsers.length > 0 && company) {
+        const saAssignments = saUsers
+          .filter(saUser => saUser.id !== user?.id) // Exclude current user if they're SA (already assigned above)
+          .map(saUser => ({
+            user_id: saUser.id,
+            company_id: company.id
+          }));
+        
+        if (saAssignments.length > 0) {
+          await supabase.from('user_companies').insert(saAssignments);
+        }
+      }
+
       return company;
     },
     onSuccess: () => {

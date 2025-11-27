@@ -90,6 +90,36 @@ export const useUsers = () => {
 
       if (error) throw error;
 
+      // If user was promoted to super_admin, assign them to all companies
+      if (role === 'super_admin') {
+        const { data: allCompanies } = await supabase
+          .from('companies')
+          .select('id')
+          .is('deleted_at', null);
+        
+        if (allCompanies && allCompanies.length > 0) {
+          // Get existing company assignments
+          const { data: existingAssignments } = await supabase
+            .from('user_companies')
+            .select('company_id')
+            .eq('user_id', id);
+          
+          const existingCompanyIds = new Set(existingAssignments?.map(a => a.company_id) || []);
+          
+          // Insert only missing assignments
+          const newAssignments = allCompanies
+            .filter(company => !existingCompanyIds.has(company.id))
+            .map(company => ({
+              user_id: id,
+              company_id: company.id
+            }));
+          
+          if (newAssignments.length > 0) {
+            await supabase.from('user_companies').insert(newAssignments);
+          }
+        }
+      }
+
       // Update password if provided
       if (password && password.trim() !== '') {
         const { data: { session } } = await supabase.auth.getSession();
