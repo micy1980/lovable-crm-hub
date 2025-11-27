@@ -188,25 +188,26 @@ export const useUsers = () => {
         },
       });
 
+      // When edge function returns 400, Supabase puts response body in data
+      // Check for our structured errors first before throwing
+      if (data?.errorCode === 'EMAIL_ALREADY_REGISTERED' || 
+          data?.message?.toLowerCase().includes('already been registered')) {
+        const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
+        (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
+        throw duplicateError;
+      }
+      
+      if (data?.errorCode === 'WEAK_PASSWORD' ||
+          data?.error?.toLowerCase().includes('weak') ||
+          data?.error?.toLowerCase().includes('easy to guess')) {
+        const weakPasswordError = new Error('WEAK_PASSWORD');
+        (weakPasswordError as any).isWeakPassword = true;
+        throw weakPasswordError;
+      }
+
+      // Now check for generic errors
       if (error) throw error;
       if (!data?.ok) {
-        // Check for duplicate email error
-        if (data?.errorCode === 'EMAIL_ALREADY_REGISTERED' || 
-            data?.message?.toLowerCase().includes('already been registered')) {
-          const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
-          (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
-          throw duplicateError;
-        }
-        
-        // Check for weak password error
-        if (data?.errorCode === 'WEAK_PASSWORD' ||
-            data?.error?.toLowerCase().includes('weak') ||
-            data?.error?.toLowerCase().includes('easy to guess')) {
-          const weakPasswordError = new Error('WEAK_PASSWORD');
-          (weakPasswordError as any).isWeakPassword = true;
-          throw weakPasswordError;
-        }
-        
         throw new Error(data?.error || 'Failed to create user');
       }
 

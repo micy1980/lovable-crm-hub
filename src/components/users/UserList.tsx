@@ -54,11 +54,12 @@ export function UserList() {
       await createUser.mutateAsync(data);
       setIsCreateOpen(false);
     } catch (error: any) {
-      // Email duplicate errors are handled in the form, other errors are already handled by the mutation's onError
-      if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
-        // Re-throw to let the form handle it
+      // Email duplicate and weak password errors should be re-thrown
+      // so the form component can handle them
+      if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED' || error?.isWeakPassword) {
         throw error;
       }
+      // Other errors will bubble up naturally
     }
   };
 
