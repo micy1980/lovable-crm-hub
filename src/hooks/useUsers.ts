@@ -193,15 +193,13 @@ export const useUsers = () => {
       field: 'is_active' | 'can_delete' | 'can_view_logs';
       value: boolean;
     }) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ [field]: value })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) throw error;
-      return data;
+      return { id, field, value };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
