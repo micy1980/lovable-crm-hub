@@ -27,6 +27,7 @@ export const useUsers = () => {
       id, 
       role,
       full_name,
+      email,
       password,
       is_active, 
       can_delete, 
@@ -35,11 +36,42 @@ export const useUsers = () => {
       id: string; 
       role?: 'super_admin' | 'admin' | 'normal' | 'viewer';
       full_name?: string;
+      email?: string;
       password?: string;
       is_active?: boolean; 
       can_delete?: boolean; 
       can_view_logs?: boolean;
     }) => {
+      // Update email if provided and different
+      if (email && email.trim() !== '') {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No active session');
+        }
+
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('admin-update-user', {
+          body: { userId: id, email },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        // Check for structured errors in the response
+        if (emailData?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+          const duplicateError = new Error('EMAIL_ALREADY_REGISTERED');
+          (duplicateError as any).errorCode = 'EMAIL_ALREADY_REGISTERED';
+          throw duplicateError;
+        }
+
+        if (emailError) {
+          throw new Error(emailError.message || 'Failed to update email');
+        }
+
+        if (!emailData?.ok) {
+          throw new Error(emailData?.error || 'Failed to update email');
+        }
+      }
+
       // Update profile fields
       const { data, error } = await supabase
         .from('profiles')

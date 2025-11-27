@@ -24,17 +24,20 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const { register, handleSubmit, setValue, watch } = useForm({
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
+      email: user?.email || '',
       full_name: user?.full_name || '',
       password: '',
     },
   });
 
+  const email = watch('email');
   const fullName = watch('full_name');
   const password = watch('password');
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     // Only validate password strength if password is provided
     if (data.password && data.password.trim() !== '') {
       const validation = validatePasswordStrength(data.password, t);
@@ -45,28 +48,61 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
     }
     
     setPasswordError(null);
-    updateUser.mutate({
-      id: user.id,
-      full_name: data.full_name,
-      password: data.password && data.password.trim() !== '' ? data.password : undefined,
-    }, {
-      onSuccess: () => onClose(),
-      onError: (error: any) => {
-        // Check if this is a weak password error from the backend
-        if (error.isWeakPassword) {
-          setPasswordError(t('auth.weakPasswordMessage'));
-          return;
-        }
-        // Other errors will be handled by the global error handler
+    setEmailError(null);
+    
+    try {
+      await updateUser.mutateAsync({
+        id: user.id,
+        email: data.email !== user.email ? data.email : undefined,
+        full_name: data.full_name,
+        password: data.password && data.password.trim() !== '' ? data.password : undefined,
+      });
+      onClose();
+    } catch (error: any) {
+      // Check if this is a duplicate email error
+      if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+        setEmailError(t('users.emailAlreadyExists'));
+        return;
       }
-    });
+      // Check if this is a weak password error from the backend
+      if (error?.isWeakPassword) {
+        setPasswordError(t('auth.weakPasswordMessage'));
+        return;
+      }
+      // Other errors will be handled by the global error handler
+      throw error;
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label>{t('users.email')}</Label>
-        <p className="text-sm text-muted-foreground">{user?.email}</p>
+        <Label htmlFor="email">{t('users.email')}</Label>
+        <Input
+          id="email"
+          type="email"
+          {...register('email', { 
+            required: t('users.emailRequired'),
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: t('users.emailInvalid')
+            }
+          })}
+          placeholder="user@example.com"
+          className={emailError ? 'border-destructive' : ''}
+          onChange={(e) => {
+            setValue('email', e.target.value);
+            // Clear email error when user starts editing
+            if (emailError) {
+              setEmailError(null);
+            }
+          }}
+        />
+        {(errors.email || emailError) && (
+          <p className="text-sm text-destructive">
+            {emailError || String(errors.email?.message)}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
