@@ -283,7 +283,7 @@ export function UserList() {
                       const isSA = user.role === 'super_admin';
                       const currentUserIsSA = currentProfile?.role === 'super_admin';
                       const nextUser = filteredUsers[index + 1];
-                      const isLastSA = isSA && nextUser && nextUser.role !== 'super_admin';
+                      const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
                       
                       return (
                         <div key={user.id}>
