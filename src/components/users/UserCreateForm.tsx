@@ -100,6 +100,9 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
         {errors.password && (
           <p className="text-sm text-destructive">{String(errors.password.message)}</p>
         )}
+        <p className="text-xs text-muted-foreground">
+          A jelszónak erősnek kell lennie (min. 8 karakter, betűk és számok kombinációja)
+        </p>
       </div>
 
       <div className="space-y-2">

@@ -57,7 +57,7 @@ export const useUsers = () => {
           throw new Error('No active session');
         }
 
-        const { error: passwordError } = await supabase.functions.invoke('admin-update-password', {
+        const { data: passwordData, error: passwordError } = await supabase.functions.invoke('admin-update-password', {
           body: {
             userId: id,
             password,
@@ -67,7 +67,16 @@ export const useUsers = () => {
           },
         });
 
-        if (passwordError) throw passwordError;
+        if (passwordError) {
+          // Extract the error message from the response
+          const errorMessage = passwordError.message || 'Failed to update password';
+          throw new Error(errorMessage);
+        }
+
+        // Check if the function returned an error in the response body
+        if (passwordData && typeof passwordData === 'object' && 'error' in passwordData) {
+          throw new Error(passwordData.error as string);
+        }
       }
 
       return data;
