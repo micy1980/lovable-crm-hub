@@ -68,14 +68,22 @@ export const useUsers = () => {
         });
 
         if (passwordError) {
-          // Extract the error message from the response
-          const errorMessage = passwordError.message || 'Failed to update password';
-          throw new Error(errorMessage);
+          throw new Error(passwordError.message || 'Failed to update password');
         }
 
-        // Check if the function returned an error in the response body
-        if (passwordData && typeof passwordData === 'object' && 'error' in passwordData) {
-          throw new Error(passwordData.error as string);
+        // Check if the function returned a structured error in the response body
+        if (passwordData && typeof passwordData === 'object') {
+          if ('code' in passwordData && passwordData.code === 'weak_password') {
+            // Get current language
+            const currentLang = localStorage.getItem('mini_crm_language') || 'en';
+            const message = currentLang === 'hu' 
+              ? (passwordData.message_hu as string)
+              : (passwordData.message_en as string);
+            throw new Error(message);
+          }
+          if ('error' in passwordData) {
+            throw new Error(passwordData.error as string);
+          }
         }
       }
 
