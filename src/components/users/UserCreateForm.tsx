@@ -26,6 +26,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [fullNameTouched, setFullNameTouched] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
@@ -43,17 +44,24 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const canDelete = watch('can_delete');
   const canViewLogs = watch('can_view_logs');
   const password = watch('password');
+  const fullName = watch('full_name');
   
   const canCreateSA = isSuperAdmin(profile);
 
   const handleFormSubmit = async (data: any) => {
-    // Only validate password strength if password is non-empty
-    if (data.password && data.password.trim() !== '') {
-      const validation = validatePasswordStrength(data.password, t);
-      if (!validation.valid) {
-        setPasswordError(validation.message);
-        return;
-      }
+    // Validate password is not empty (required on create)
+    if (!data.password || data.password.trim() === '') {
+      setPasswordError(t('users.passwordRequired'));
+      setPasswordTouched(true);
+      return;
+    }
+    
+    // Validate password strength
+    const validation = validatePasswordStrength(data.password, t);
+    if (!validation.valid) {
+      setPasswordError(validation.message);
+      setPasswordTouched(true);
+      return;
     }
     
     setPasswordError(null);
@@ -112,22 +120,34 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
         <Label htmlFor="full_name">{t('users.fullName')}</Label>
         <Input
           id="full_name"
-          {...register('full_name')}
+          {...register('full_name', {
+            required: t('users.fullNameRequired')
+          })}
           placeholder={t('users.fullNamePlaceholder')}
+          className={(errors.full_name || (fullNameTouched && !fullName?.trim())) ? 'border-destructive' : ''}
+          value={fullName}
+          onChange={(e) => {
+            setValue('full_name', e.target.value);
+            setFullNameTouched(true);
+          }}
+          onBlur={() => setFullNameTouched(true)}
         />
+        {(errors.full_name || (fullNameTouched && !fullName?.trim())) && (
+          <p className="text-sm text-destructive">
+            {t('users.fullNameRequired')}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Jelszó *</Label>
+        <Label htmlFor="password">{t('users.password')} *</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            {...register('password', { 
-              required: 'A jelszó megadása kötelező',
-            })}
+            {...register('password')}
             placeholder=""
-            className={passwordError && password && password.trim() !== '' ? 'pr-10 border-destructive' : 'pr-10'}
+            className={passwordError && passwordTouched ? 'pr-10 border-destructive' : 'pr-10'}
             onChange={(e) => {
               const newPassword = e.target.value;
               setValue('password', newPassword);
@@ -168,14 +188,9 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {passwordTouched && passwordError && password && password.trim() !== '' && (
+        {passwordTouched && passwordError && (
           <p className="text-sm text-destructive">
             {passwordError}
-          </p>
-        )}
-        {errors.password && !passwordTouched && (
-          <p className="text-sm text-destructive">
-            {String(errors.password?.message)}
           </p>
         )}
       </div>
