@@ -25,6 +25,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
@@ -130,6 +131,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             onChange={(e) => {
               const newPassword = e.target.value;
               setValue('password', newPassword);
+              setPasswordTouched(true);
               
               // Clear error when field becomes empty
               if (newPassword.trim() === '') {
@@ -146,6 +148,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             }}
             onBlur={(e) => {
               const currentPassword = e.target.value;
+              setPasswordTouched(true);
               // Validate on blur if field is not empty
               if (currentPassword.trim() !== '') {
                 const validation = validatePasswordStrength(currentPassword, t);
@@ -165,14 +168,16 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {(errors.password || (passwordError && password && password.trim() !== '')) && (
+        {passwordTouched && passwordError && password && password.trim() !== '' && (
           <p className="text-sm text-destructive">
-            {passwordError && password && password.trim() !== '' ? passwordError : String(errors.password?.message)}
+            {passwordError}
           </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          {t('auth.weakPasswordMessage')}
-        </p>
+        {errors.password && !passwordTouched && (
+          <p className="text-sm text-destructive">
+            {String(errors.password?.message)}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

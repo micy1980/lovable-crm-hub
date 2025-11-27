@@ -25,6 +25,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: user?.email || '',
@@ -127,6 +128,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             onChange={(e) => {
               const newPassword = e.target.value;
               setValue('password', newPassword);
+              setPasswordTouched(true);
               
               // Clear error when field becomes empty
               if (newPassword.trim() === '') {
@@ -143,6 +145,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             }}
             onBlur={(e) => {
               const currentPassword = e.target.value;
+              setPasswordTouched(true);
               // Validate on blur if field is not empty
               if (currentPassword.trim() !== '') {
                 const validation = validatePasswordStrength(currentPassword, t);
@@ -162,7 +165,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {passwordError && password && password.trim() !== '' && (
+        {passwordTouched && passwordError && password && password.trim() !== '' && (
           <p className="text-sm text-destructive">{passwordError}</p>
         )}
       </div>
