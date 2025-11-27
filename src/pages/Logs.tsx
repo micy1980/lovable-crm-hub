@@ -46,32 +46,13 @@ const UserCompanyAssignments = () => {
           user_id,
           company_id,
           profiles:user_id(email, full_name, role),
-          companies:company_id(name)
+          companies:company_id(name),
+          user_company_permissions!inner(role)
         `)
         .order('user_id');
       
       if (error) throw error;
-      
-      // Group by user
-      const grouped = data.reduce((acc: any, curr: any) => {
-        const userId = curr.user_id;
-        if (!acc[userId]) {
-          acc[userId] = {
-            userId,
-            email: curr.profiles?.email,
-            fullName: curr.profiles?.full_name,
-            role: curr.profiles?.role,
-            companies: []
-          };
-        }
-        acc[userId].companies.push({
-          id: curr.company_id,
-          name: curr.companies?.name || curr.company_id
-        });
-        return acc;
-      }, {});
-      
-      return Object.values(grouped);
+      return data;
     },
   });
 
@@ -97,36 +78,44 @@ const UserCompanyAssignments = () => {
         <TableHeader>
           <TableRow>
             <TableHead>{t('logs.userName')}</TableHead>
+            <TableHead>User ID</TableHead>
+            <TableHead>{t('logs.company')}</TableHead>
+            <TableHead>Company ID</TableHead>
             <TableHead>{t('settings.role')}</TableHead>
-            <TableHead>{t('logs.assignedCompanies')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {assignments.map((assignment: any) => (
-            <TableRow key={assignment.userId}>
+            <TableRow key={assignment.id}>
               <TableCell>
                 <div className="text-sm">
                   <div className="font-medium">
-                    {assignment.fullName || t('logs.unknown')}
+                    {assignment.profiles?.full_name || t('logs.unknown')}
                   </div>
                   <div className="text-muted-foreground text-xs">
-                    {assignment.email}
+                    {assignment.profiles?.email}
                   </div>
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="default" className="capitalize">
-                  {assignment.role === 'super_admin' ? 'SA' : assignment.role?.replace('_', ' ')}
-                </Badge>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {assignment.user_id}
+                </span>
               </TableCell>
               <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {assignment.companies.map((company: any) => (
-                    <Badge key={company.id} variant="secondary" className="text-xs">
-                      {company.name}
-                    </Badge>
-                  ))}
-                </div>
+                <span className="text-sm">
+                  {assignment.companies?.name || t('logs.unknown')}
+                </span>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {assignment.company_id}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary" className="capitalize text-xs">
+                  {assignment.user_company_permissions?.[0]?.role || 'N/A'}
+                </Badge>
               </TableCell>
             </TableRow>
           ))}
