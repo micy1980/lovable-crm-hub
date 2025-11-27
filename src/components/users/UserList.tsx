@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -20,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 export function UserList() {
   const { t } = useTranslation();
@@ -242,162 +242,201 @@ export function UserList() {
             </div>
 
             <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b bg-muted/30">
-                    <TableHead 
-                      className="cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider py-3 w-[35%]"
-                      onClick={() => handleSort('fullName')}
-                    >
-                      {t('users.user')}
-                      {getSortIcon('fullName')}
-                    </TableHead>
-                    <TableHead 
-                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[12%]"
-                      onClick={() => handleSort('role')}
-                    >
-                      {t('users.role')}
-                      {getSortIcon('role')}
-                    </TableHead>
-                    <TableHead className="text-center font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[20%] pl-6">
-                      {t('users.permissions')}
-                    </TableHead>
-                    <TableHead 
-                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[18%]"
-                      onClick={() => handleSort('createdAt')}
-                    >
-                      {t('users.createdAt')}
-                      {getSortIcon('createdAt')}
-                    </TableHead>
-                    <TableHead className="text-right font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[15%]">
-                      {t('common.actions')}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        {t('users.noUsers')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredUsers.map((user: any, index: number) => {
+              {/* Header Row */}
+              <div className="grid grid-cols-[3fr_1fr_1.6fr_1.2fr_0.8fr] gap-6 px-4 py-3 bg-muted/30 border-b border-border">
+                <div 
+                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                  onClick={() => handleSort('fullName')}
+                >
+                  {t('users.user')}
+                  {getSortIcon('fullName')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                  onClick={() => handleSort('role')}
+                >
+                  {t('users.role')}
+                  {getSortIcon('role')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                  onClick={() => handleSort('isActive')}
+                >
+                  {t('users.permissions')}
+                  {getSortIcon('isActive')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                  onClick={() => handleSort('createdAt')}
+                >
+                  {t('users.createdAt')}
+                  {getSortIcon('createdAt')}
+                </div>
+                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-end">
+                  {t('common.actions')}
+                </div>
+              </div>
+
+              {/* Body Rows */}
+              <div>
+                {filteredUsers.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    {t('users.noUsers')}
+                  </div>
+                ) : (
+                  filteredUsers.map((user: any, index: number) => {
                       const isSelf = user.id === currentUser?.id;
                       const canToggleActive = canEdit && !(isSelf && user.is_active);
                       
                       return (
-                        <TableRow 
+                        <div
                           key={user.id}
-                          className={`h-12 hover:bg-muted/50 transition-colors ${
-                            index % 2 === 0 ? 'bg-background' : 'bg-muted/20'
+                          className={`grid grid-cols-[3fr_1fr_1.6fr_1.2fr_0.8fr] gap-6 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
+                            index % 2 === 1 ? 'bg-muted/10' : ''
                           }`}
                         >
-                          <TableCell className="py-3 w-[35%]">
-                            <div className="flex flex-col">
-                              <span className="font-medium text-sm">{user.full_name || '-'}</span>
-                              <span className="text-xs text-muted-foreground">{user.email}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center py-3 w-[12%]">
-                            <div className="flex justify-center">
-                              {canEdit && !isSelf ? (
-                                <Select
-                                  value={user.role}
-                                  onValueChange={(value) => {
-                                    updateUser.mutate({ 
-                                      id: user.id, 
-                                      role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
-                                    });
-                                  }}
-                                >
-                                  <SelectTrigger className={`w-[110px] h-7 text-xs font-medium border-0 ${getRoleBadgeColor(user.role)}`}>
-                                    <SelectValue>
-                                      {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="super_admin">SA</SelectItem>
-                                    <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
-                                    <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
-                                    <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Badge className={`text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                                  {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 w-[20%] pl-6">
-                            <div className="flex items-center justify-center gap-2">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center">
-                                      <Switch
-                                        checked={user.is_active}
-                                        onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
-                                        disabled={!canToggleActive}
-                                        aria-label={t('users.isActive')}
-                                        className="scale-75"
-                                      />
-                                      <Power className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {t('users.isActive')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center">
-                                      <Switch
-                                        checked={user.can_delete}
-                                        onCheckedChange={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
-                                        disabled={!canEdit}
-                                        aria-label={t('users.canDelete')}
-                                        className="scale-75"
-                                      />
-                                      <Trash2 className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {t('users.canDelete')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center">
-                                      <Switch
-                                        checked={user.can_view_logs}
-                                        onCheckedChange={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
-                                        disabled={!canEdit}
-                                        aria-label={t('users.canViewLogs')}
-                                        className="scale-75"
-                                      />
-                                      <BookOpen className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {t('users.canViewLogs')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center py-3 w-[18%]">
+                          {/* User Column */}
+                          <div className="flex flex-col justify-center">
+                            <span className="font-medium text-sm">{user.full_name || '-'}</span>
+                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                          </div>
+
+                          {/* Role Column */}
+                          <div className="flex items-center justify-center">
+                            {canEdit && !isSelf ? (
+                              <Select
+                                value={user.role}
+                                onValueChange={(value) => {
+                                  updateUser.mutate({ 
+                                    id: user.id, 
+                                    role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className={`w-[110px] h-7 text-xs font-medium border-0 ${getRoleBadgeColor(user.role)}`}>
+                                  <SelectValue>
+                                    {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="super_admin">SA</SelectItem>
+                                  <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
+                                  <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
+                                  <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge className={`text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                                {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Permissions Column */}
+                          <div className="flex items-center justify-center gap-3">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center">
+                                    <Switch
+                                      checked={user.is_active}
+                                      onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
+                                      disabled={!canToggleActive}
+                                      aria-label={t('users.isActive')}
+                                      className="scale-75 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                                    />
+                                    <Power className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t('users.isActive')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center">
+                                    <Switch
+                                      checked={user.can_delete}
+                                      onCheckedChange={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
+                                      disabled={!canEdit}
+                                      aria-label={t('users.canDelete')}
+                                      className="scale-75 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                                    />
+                                    <Trash2 className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t('users.canDelete')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center">
+                                    <Switch
+                                      checked={user.can_view_logs}
+                                      onCheckedChange={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
+                                      disabled={!canEdit}
+                                      aria-label={t('users.canViewLogs')}
+                                      className="scale-75 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                                    />
+                                    <BookOpen className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t('users.canViewLogs')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+
+                          {/* Created At Column */}
+                          <div className="flex items-center justify-center">
                             <span className="text-xs text-muted-foreground">
                               {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
                             </span>
-                          </TableCell>
-                          <TableCell className="text-right py-3 w-[15%]">
-                            <div className="flex items-center justify-end gap-1">
+                          </div>
+
+                          {/* Actions Column */}
+                          <div className="flex items-center justify-end gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => setEditingUser(user)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t('users.editTitle')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => setCompanyAssignmentUser(user)}
+                                  >
+                                    <Building2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t('users.assignCompanies')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            {isSuperAdmin(currentProfile) && !isSelf && (
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -405,60 +444,23 @@ export function UserList() {
                                       variant="ghost"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => setEditingUser(user)}
+                                      onClick={() => setDeletingUser(user)}
                                     >
-                                      <Pencil className="h-4 w-4" />
+                                      <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {t('users.editTitle')}
+                                    {t('users.deleteUser')}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => setCompanyAssignmentUser(user)}
-                                    >
-                                      <Building2 className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {t('users.assignCompanies')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              {isSuperAdmin(currentProfile) && !isSelf && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => setDeletingUser(user)}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {t('users.deleteUser')}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                            )}
+                          </div>
+                        </div>
                       );
                     })
                   )}
-                </TableBody>
-              </Table>
+              </div>
             </div>
           </div>
         </CardContent>
