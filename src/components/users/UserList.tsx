@@ -288,9 +288,11 @@ export function UserList() {
                       return (
                         <div key={user.id}>
                           <div
-                            className={`grid grid-cols-[280px_120px_60px_170px_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
-                              index % 2 === 1 ? 'bg-muted/10' : ''
-                            }`}
+                            className={cn(
+                              "grid grid-cols-[280px_120px_60px_170px_120px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+                              index % 2 === 1 ? 'bg-muted/10' : '',
+                              isLastSA ? 'border-b-2 border-border' : 'border-border'
+                            )}
                           >
                             {/* User Column */}
                             <div className="flex flex-col justify-center min-w-0">
@@ -300,7 +302,7 @@ export function UserList() {
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
+                                        <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help shrink-0">
                                           SA
                                         </Badge>
                                       </TooltipTrigger>
@@ -402,7 +404,7 @@ export function UserList() {
                                       }}
                                       disabled={!canEdit || (isSA && (isSelf || !currentUserIsSA))}
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -417,10 +419,6 @@ export function UserList() {
                               </TooltipProvider>
                             </div>
                           </div>
-                          {/* Separator after last SA user */}
-                          {isLastSA && (
-                            <div className="border-b-2 border-border"></div>
-                          )}
                         </div>
                       );
                     })
