@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { format } from 'date-fns';
 import { Eye, EyeOff } from 'lucide-react';
+import { validatePasswordStrength } from '@/lib/passwordValidation';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserEditFormProps {
   user: any;
@@ -19,7 +21,9 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
   const { updateUser } = useUsers();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const { register, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       full_name: user?.full_name || '',
@@ -31,6 +35,21 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const password = watch('password');
 
   const onSubmit = (data: any) => {
+    // Validate password strength if password is provided
+    if (data.password && data.password.trim() !== '') {
+      const validation = validatePasswordStrength(data.password, t);
+      if (!validation.valid) {
+        setPasswordError(validation.message);
+        toast({
+          title: t('auth.weakPassword'),
+          description: validation.message || '',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+    
+    setPasswordError(null);
     updateUser.mutate({
       id: user.id,
       full_name: data.full_name,
@@ -63,14 +82,13 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            {...register('password', {
-              minLength: {
-                value: 6,
-                message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie'
-              }
-            })}
+            {...register('password')}
             placeholder="Hagyd üresen, ha nem változtatsz"
-            className="pr-10"
+            className={passwordError ? 'pr-10 border-destructive' : 'pr-10'}
+            onChange={(e) => {
+              setValue('password', e.target.value);
+              setPasswordError(null);
+            }}
           />
           <button
             type="button"
@@ -80,8 +98,11 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
+        {passwordError && (
+          <p className="text-sm text-destructive">{passwordError}</p>
+        )}
         <p className="text-xs text-muted-foreground">
-          A jelszónak erősnek kell lennie (min. 8 karakter, betűk és számok kombinációja). Hagyd üresen, ha nem változtatod.
+          {t('auth.weakPasswordMessage')} Hagyd üresen, ha nem változtatod.
         </p>
       </div>
 

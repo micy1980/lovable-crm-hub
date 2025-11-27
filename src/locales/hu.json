@@ -23,7 +23,9 @@
     "validationError": "Érvényesítési hiba",
     "invalidEmail": "Érvénytelen e-mail cím",
     "passwordMinLength": "A jelszónak legalább 6 karakter hosszúnak kell lennie",
-    "fullNameMinLength": "A teljes névnek legalább 2 karakter hosszúnak kell lennie"
+    "fullNameMinLength": "A teljes névnek legalább 2 karakter hosszúnak kell lennie",
+    "weakPassword": "Gyenge jelszó",
+    "weakPasswordMessage": "A jelszó túl gyenge. Használj legalább 8 karaktert, kis- és nagybetűt, valamint számot."
   },
   "nav": {
     "dashboard": "Vezérlőpult",

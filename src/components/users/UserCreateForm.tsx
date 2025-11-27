@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { Eye, EyeOff } from 'lucide-react';
+import { validatePasswordStrength } from '@/lib/passwordValidation';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserCreateFormProps {
   onSubmit: (data: any) => void;
@@ -19,7 +21,9 @@ interface UserCreateFormProps {
 export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFormProps) {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
@@ -40,6 +44,19 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const canCreateSA = isSuperAdmin(profile);
 
   const handleFormSubmit = (data: any) => {
+    // Validate password strength before submitting
+    const validation = validatePasswordStrength(data.password, t);
+    if (!validation.valid) {
+      setPasswordError(validation.message);
+      toast({
+        title: t('auth.weakPassword'),
+        description: validation.message || '',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setPasswordError(null);
     onSubmit(data);
   };
 
@@ -74,20 +91,20 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Jelszó</Label>
+        <Label htmlFor="password">Jelszó *</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
             {...register('password', { 
               required: 'A jelszó megadása kötelező',
-              minLength: {
-                value: 6,
-                message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie'
-              }
             })}
             placeholder="••••••••"
-            className="pr-10"
+            className={passwordError ? 'pr-10 border-destructive' : 'pr-10'}
+            onChange={(e) => {
+              setValue('password', e.target.value);
+              setPasswordError(null);
+            }}
           />
           <button
             type="button"
@@ -97,11 +114,11 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {errors.password && (
-          <p className="text-sm text-destructive">{String(errors.password.message)}</p>
+        {(errors.password || passwordError) && (
+          <p className="text-sm text-destructive">{passwordError || String(errors.password?.message)}</p>
         )}
         <p className="text-xs text-muted-foreground">
-          A jelszónak erősnek kell lennie (min. 8 karakter, betűk és számok kombinációja)
+          {t('auth.weakPasswordMessage')}
         </p>
       </div>
 

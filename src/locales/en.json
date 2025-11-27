@@ -23,7 +23,9 @@
     "validationError": "Validation Error",
     "invalidEmail": "Invalid email address",
     "passwordMinLength": "Password must be at least 6 characters",
-    "fullNameMinLength": "Full name must be at least 2 characters"
+    "fullNameMinLength": "Full name must be at least 2 characters",
+    "weakPassword": "Weak password",
+    "weakPasswordMessage": "The password is too weak. Please use at least 8 characters, including lowercase, uppercase letters and a number."
   },
   "nav": {
     "dashboard": "Dashboard",
