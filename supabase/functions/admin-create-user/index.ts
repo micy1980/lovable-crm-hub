@@ -174,6 +174,22 @@ Deno.serve(async (req) => {
         )
       }
       
+      // Check if this is a weak password error
+      const isWeakPassword = createError?.message?.toLowerCase().includes('weak') ||
+                            createError?.message?.toLowerCase().includes('easy to guess')
+      
+      if (isWeakPassword) {
+        return new Response(
+          JSON.stringify({ 
+            errorCode: 'WEAK_PASSWORD',
+            error: 'Password is too weak',
+            message_hu: 'A jelszó túl gyenge. Használj legalább 8 karaktert, kis- és nagybetűt, valamint számot.',
+            message_en: 'Password is too weak. Please use at least 8 characters, with lowercase and uppercase letters and a number.'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
       return new Response(
         JSON.stringify({ error: createError?.message ?? 'Failed to create user' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
