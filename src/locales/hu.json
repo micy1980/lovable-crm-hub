@@ -34,7 +34,7 @@
     "documents": "Dokumentumok",
     "calendar": "Naptár",
     "settings": "Beállítások",
-    "logs": "Audit Naplók"
+    "logs": "Audit"
   },
   "common": {
     "save": "Mentés",
@@ -274,10 +274,15 @@
     "logout": "Kijelentkezés"
   },
   "logs": {
-    "title": "Audit Naplók",
-    "description": "Rendszeraktivitás és változások megtekintése (csak Super Admin)",
+    "title": "Audit",
+    "description": "Rendszeraktivitás és felhasználói hozzárendelések megtekintése (csak Super Admin)",
     "auditLog": "Audit Napló",
     "auditDescription": "Rendszerszintű tevékenységi napló részletes változáskövetéssel",
+    "userAssignments": "Felhasználó-Vállalat Hozzárendelések",
+    "userAssignmentsDescription": "Megtekinthető, hogy melyik felhasználó melyik vállalathoz van hozzárendelve",
+    "userName": "Felhasználó",
+    "assignedCompanies": "Hozzárendelt vállalatok",
+    "noAssignments": "Nincs felhasználó-vállalat hozzárendelés",
     "filterCompany": "Szűrés cég szerint",
     "filterEvent": "Szűrés eseménytípus szerint",
     "allCompanies": "Minden cég",

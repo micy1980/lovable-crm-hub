@@ -34,7 +34,7 @@
     "documents": "Documents",
     "calendar": "Calendar",
     "settings": "Settings",
-    "logs": "Audit Logs"
+    "logs": "Audit"
   },
   "common": {
     "save": "Save",
@@ -274,10 +274,15 @@
     "logout": "Logout"
   },
   "logs": {
-    "title": "Audit Logs",
-    "description": "View system activity and changes (Super Admin only)",
+    "title": "Audit",
+    "description": "View system activity and user assignments (Super Admin only)",
     "auditLog": "Audit Log",
     "auditDescription": "System-wide activity log with detailed change tracking",
+    "userAssignments": "User-Company Assignments",
+    "userAssignmentsDescription": "View which users are assigned to which companies",
+    "userName": "User",
+    "assignedCompanies": "Assigned Companies",
+    "noAssignments": "No user-company assignments found",
     "filterCompany": "Filter by Company",
     "filterEvent": "Filter by Event Type",
     "allCompanies": "All Companies",
