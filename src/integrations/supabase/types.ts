@@ -654,6 +654,57 @@ export type Database = {
           },
         ]
       }
+      user_company_permissions: {
+        Row: {
+          can_delete: boolean
+          can_edit_master_data: boolean
+          can_view_logs: boolean
+          company_id: string
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["company_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          can_delete?: boolean
+          can_edit_master_data?: boolean
+          can_view_logs?: boolean
+          company_id: string
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["company_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          can_delete?: boolean
+          can_edit_master_data?: boolean
+          can_view_logs?: boolean
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["company_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_company_permissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_company_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -668,6 +719,7 @@ export type Database = {
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      company_role: "ADMIN" | "NORMAL" | "VIEWER"
       user_role: "super_admin" | "admin" | "normal" | "viewer"
     }
     CompositeTypes: {
@@ -796,6 +848,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      company_role: ["ADMIN", "NORMAL", "VIEWER"],
       user_role: ["super_admin", "admin", "normal", "viewer"],
     },
   },

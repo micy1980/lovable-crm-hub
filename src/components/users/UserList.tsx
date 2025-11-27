@@ -13,7 +13,7 @@ import { useCompanies } from '@/hooks/useCompanies';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserEditForm } from './UserEditForm';
 import { UserCreateForm } from './UserCreateForm';
-import { UserCompaniesDialog } from './UserCompaniesDialog';
+import { UserCompanyPermissionsDialog } from './UserCompanyPermissionsDialog';
 import { UserDeleteDialog } from './UserDeleteDialog';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -243,7 +243,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[280px_130px_260px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[280px_130px_120px_170px_120px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -262,7 +262,7 @@ export function UserList() {
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
                   onClick={() => handleSort('isActive')}
                 >
-                  {t('users.permissions')}
+                  {t('users.active')}
                   {getSortIcon('isActive')}
                 </div>
                 <div 
@@ -291,7 +291,7 @@ export function UserList() {
                       return (
                         <div
                           key={user.id}
-                          className={`grid grid-cols-[280px_130px_260px_170px_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
+                          className={`grid grid-cols-[280px_130px_120px_170px_120px] gap-4 px-4 py-3 border-b border-border hover:bg-muted/20 transition-colors ${
                             index % 2 === 1 ? 'bg-muted/10' : ''
                           }`}
                         >
@@ -332,8 +332,8 @@ export function UserList() {
                             )}
                           </div>
 
-                          {/* Permissions Column */}
-                          <div className="flex items-center justify-center gap-3">
+                          {/* Active Column */}
+                          <div className="flex items-center justify-center">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -343,51 +343,13 @@ export function UserList() {
                                       onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
                                       disabled={!canToggleActive}
                                       aria-label={t('users.isActive')}
-                                      className="scale-75 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                                      className="scale-90 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
                                     />
-                                    <Power className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                    <Power className="h-4 w-4 ml-1.5 text-muted-foreground" />
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   {t('users.isActive')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex items-center">
-                                    <Switch
-                                      checked={user.can_delete}
-                                      onCheckedChange={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
-                                      disabled={!canEdit}
-                                      aria-label={t('users.canDelete')}
-                                      className="scale-75 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
-                                    />
-                                    <Trash2 className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t('users.canDelete')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex items-center">
-                                    <Switch
-                                      checked={user.can_view_logs}
-                                      onCheckedChange={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
-                                      disabled={!canEdit}
-                                      aria-label={t('users.canViewLogs')}
-                                      className="scale-75 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
-                                    />
-                                    <BookOpen className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t('users.canViewLogs')}
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -505,11 +467,11 @@ export function UserList() {
         </DialogContent>
       </Dialog>
 
-      <UserCompaniesDialog
-        user={companyAssignmentUser}
-        open={!!companyAssignmentUser}
-        onClose={() => setCompanyAssignmentUser(null)}
-      />
+        <UserCompanyPermissionsDialog
+          user={companyAssignmentUser}
+          open={!!companyAssignmentUser}
+          onClose={() => setCompanyAssignmentUser(null)}
+        />
 
       <UserDeleteDialog
         user={deletingUser}
