@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -101,37 +101,41 @@ export function CompanyList() {
             />
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('companies.name')}</TableHead>
-                <TableHead>{t('companies.taxId')}</TableHead>
-                <TableHead>{t('companies.address')}</TableHead>
-                <TableHead>{t('companies.userCount')}</TableHead>
-                <TableHead>{t('companies.createdAt')}</TableHead>
-                <TableHead className="text-right">{t('common.actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCompanies.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    {t('companies.empty')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCompanies.map((company: any) => (
-                  <TableRow key={company.id} className="h-12">
-                    <TableCell className="font-medium py-2">{company.name}</TableCell>
-                    <TableCell className="py-2">{company.tax_id || '-'}</TableCell>
-                    <TableCell className="py-2">{company.address || '-'}</TableCell>
-                    <TableCell className="py-2">{company.user_count}</TableCell>
-                    <TableCell className="py-2">{format(new Date(company.created_at), 'PP')}</TableCell>
-                    <TableCell className="text-right py-2">
+          <div className="border rounded-lg overflow-hidden">
+            {/* Header Row */}
+            <div className="grid grid-cols-[200px_120px_1fr_80px_120px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="text-sm font-semibold text-muted-foreground">{t('companies.name')}</div>
+              <div className="text-sm font-semibold text-muted-foreground">{t('companies.taxId')}</div>
+              <div className="text-sm font-semibold text-muted-foreground">{t('companies.address')}</div>
+              <div className="text-sm font-semibold text-muted-foreground text-center">{t('companies.userCount')}</div>
+              <div className="text-sm font-semibold text-muted-foreground">{t('companies.createdAt')}</div>
+              <div className="text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>
+            </div>
+
+            {/* Body Rows */}
+            {filteredCompanies.length === 0 ? (
+              <div className="px-4 py-8 text-center text-muted-foreground">
+                {t('companies.empty')}
+              </div>
+            ) : (
+              filteredCompanies.map((company: any, index: number) => (
+                <div
+                  key={company.id}
+                  className={`grid grid-cols-[200px_120px_1fr_80px_120px_100px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors ${
+                    index % 2 === 1 ? 'bg-muted/10' : ''
+                  }`}
+                >
+                  <div className="font-medium flex items-center truncate">{company.name}</div>
+                  <div className="flex items-center text-sm">{company.tax_id || '-'}</div>
+                  <div className="flex items-center text-sm truncate">{company.address || '-'}</div>
+                  <div className="flex items-center justify-center text-sm">{company.user_count}</div>
+                  <div className="flex items-center text-sm">{format(new Date(company.created_at), 'PP')}</div>
+                  <div className="flex items-center justify-end gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => setEditingCompany(company)}
+                      className="h-8 w-8"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -139,15 +143,15 @@ export function CompanyList() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setDeletingCompany(company)}
+                      className="h-8 w-8"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </CardContent>
 
