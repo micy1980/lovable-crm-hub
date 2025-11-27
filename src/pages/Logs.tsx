@@ -47,7 +47,7 @@ const UserCompanyAssignments = () => {
           id,
           user_id,
           company_id,
-          profiles:user_id(email, full_name, role),
+          profiles:user_id(full_name, role),
           companies:company_id(name)
         `)
         .order('user_id');
@@ -78,12 +78,10 @@ const UserCompanyAssignments = () => {
   // Filter assignments
   const filteredAssignments = assignments.filter((assignment: any) => {
     const userName = assignment.profiles?.full_name?.toLowerCase() || '';
-    const userEmail = assignment.profiles?.email?.toLowerCase() || '';
     const companyName = assignment.companies?.name?.toLowerCase() || '';
     
     const matchesUser = userFilter === '' || 
-      userName.includes(userFilter.toLowerCase()) || 
-      userEmail.includes(userFilter.toLowerCase());
+      userName.includes(userFilter.toLowerCase());
     
     const matchesCompany = companyFilter === '' || 
       companyName.includes(companyFilter.toLowerCase());
@@ -105,11 +103,11 @@ const UserCompanyAssignments = () => {
       <div className="flex gap-4">
         <div className="flex-1">
           <label className="text-sm font-medium mb-2 block">
-            {t('users.searchPlaceholder')}
+            Felhasználó szűrő
           </label>
           <input
             type="text"
-            placeholder="Keresés névre vagy email-re..."
+            placeholder="Keresés névre..."
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
             className="w-full px-3 py-2 border rounded-md bg-background"
@@ -117,7 +115,7 @@ const UserCompanyAssignments = () => {
         </div>
         <div className="flex-1">
           <label className="text-sm font-medium mb-2 block">
-            {t('companies.searchPlaceholder')}
+            Vállalat szűrő
           </label>
           <input
             type="text"
@@ -137,44 +135,39 @@ const UserCompanyAssignments = () => {
         <div className="rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>{t('logs.userName')}</TableHead>
-                <TableHead>User ID</TableHead>
-                <TableHead>{t('logs.company')}</TableHead>
-                <TableHead>Company ID</TableHead>
-                <TableHead>{t('settings.role')}</TableHead>
+              <TableRow className="h-8">
+                <TableHead className="py-2">{t('logs.userName')}</TableHead>
+                <TableHead className="py-2">User ID</TableHead>
+                <TableHead className="py-2">{t('logs.company')}</TableHead>
+                <TableHead className="py-2">Company ID</TableHead>
+                <TableHead className="py-2">{t('settings.role')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAssignments.map((assignment: any) => (
-                <TableRow key={assignment.id}>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className="font-medium">
-                        {assignment.profiles?.full_name || t('logs.unknown')}
-                      </div>
-                      <div className="text-muted-foreground text-xs">
-                        {assignment.profiles?.email}
-                      </div>
-                    </div>
+                <TableRow key={assignment.id} className="h-10">
+                  <TableCell className="py-2">
+                    <span className="text-sm font-medium">
+                      {assignment.profiles?.full_name || t('logs.unknown')}
+                    </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <span className="font-mono text-xs text-muted-foreground">
                       {assignment.user_id}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <span className="text-sm">
                       {assignment.companies?.name || t('logs.unknown')}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     <span className="font-mono text-xs text-muted-foreground">
                       {assignment.company_id}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="capitalize text-xs">
+                  <TableCell className="py-2">
+                    <Badge variant="secondary" className="text-xs h-5">
                       {assignment.companyRole}
                     </Badge>
                   </TableCell>
