@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, GripVertical } from 'lucide-react';
@@ -7,6 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
 
 interface MasterDataItemListProps {
   items: any[];
@@ -34,23 +34,29 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const isEven = index % 2 === 0;
-
   return (
-    <TableRow ref={setNodeRef} style={style} className={`h-11 ${isEven ? 'bg-muted/30' : ''}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "grid gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+        canEdit ? "grid-cols-[40px_1fr_150px_100px]" : "grid-cols-[1fr_150px]",
+        index % 2 === 1 ? 'bg-muted/10' : ''
+      )}
+    >
       {canEdit && (
-        <TableCell className="w-12 py-2">
+        <div className="flex items-center">
           <div {...attributes} {...listeners} className="cursor-move">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
-        </TableCell>
+        </div>
       )}
-      <TableCell className="font-medium py-2">{item.label}</TableCell>
-      <TableCell className="py-2">
+      <div className="font-medium flex items-center">{item.label}</div>
+      <div className="flex items-center">
         {item.is_default && <Badge variant="secondary">{t('masterdata.isDefault')}</Badge>}
-      </TableCell>
+      </div>
       {canEdit && (
-        <TableCell className="text-right py-2">
+        <div className="flex items-center justify-end gap-1">
           <Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="h-8 w-8">
             <Pencil className="h-4 w-4" />
           </Button>
@@ -75,9 +81,9 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </TableCell>
+        </div>
       )}
-    </TableRow>
+    </div>
   );
 }
 
@@ -127,30 +133,32 @@ export function MasterDataItemList({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {canEdit && <TableHead className="w-12"></TableHead>}
-            <TableHead>{t('masterdata.label')}</TableHead>
-            <TableHead>{t('masterdata.isDefault')}</TableHead>
-            {canEdit && <TableHead className="text-right">{t('common.actions')}</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-            {items.map((item, index) => (
-              <SortableRow
-                key={item.id}
-                item={item}
-                canEdit={canEdit}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                index={index}
-              />
-            ))}
-          </SortableContext>
-        </TableBody>
-      </Table>
+      <div className="border rounded-lg overflow-hidden">
+        {/* Header Row */}
+        <div className={cn(
+          "grid gap-4 px-4 py-3 bg-muted/30 border-b border-border",
+          canEdit ? "grid-cols-[40px_1fr_150px_100px]" : "grid-cols-[1fr_150px]"
+        )}>
+          {canEdit && <div className="text-sm font-semibold text-muted-foreground"></div>}
+          <div className="text-sm font-semibold text-muted-foreground">{t('masterdata.label')}</div>
+          <div className="text-sm font-semibold text-muted-foreground">{t('masterdata.isDefault')}</div>
+          {canEdit && <div className="text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>}
+        </div>
+
+        {/* Body Rows */}
+        <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
+          {items.map((item, index) => (
+            <SortableRow
+              key={item.id}
+              item={item}
+              canEdit={canEdit}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              index={index}
+            />
+          ))}
+        </SortableContext>
+      </div>
     </DndContext>
   );
 }
