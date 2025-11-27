@@ -226,6 +226,10 @@
     "createdAt": "Created",
     "noUsers": "No users found",
     "isActive": "Active",
+    "user": "User",
+    "permissions": "Permissions",
+    "assignCompanies": "Assign companies",
+    "deleteUser": "Delete user",
     "emailAlreadyExists": "A user with this email address already exists. Please use a different email or edit the existing user.",
     "deleteDialog": {
       "title": "Delete user",

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -39,6 +40,28 @@ export function UserList() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
+
+  const getInitials = (fullName: string | null) => {
+    if (!fullName) return '?';
+    const names = fullName.trim().split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return 'bg-blue-600 text-white hover:bg-blue-700';
+      case 'admin':
+        return 'bg-purple-600 text-white hover:bg-purple-700';
+      case 'normal':
+        return 'bg-gray-500 text-white hover:bg-gray-600';
+      case 'viewer':
+        return 'bg-green-600 text-white hover:bg-green-700';
+      default:
+        return 'bg-gray-500 text-white hover:bg-gray-600';
+    }
+  };
 
   const handleToggleFlag = (userId: string, field: 'is_active' | 'can_delete' | 'can_view_logs', currentValue: boolean) => {
     // Prevent users from deactivating themselves
@@ -226,193 +249,232 @@ export function UserList() {
               </Select>
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('fullName')}
-                  >
-                    {t('users.fullName')}
-                    {getSortIcon('fullName')}
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('role')}
-                  >
-                    {t('users.role')}
-                    {getSortIcon('role')}
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50 select-none w-[100px]"
-                    onClick={() => handleSort('isActive')}
-                  >
-                    {t('users.isActive')}
-                    {getSortIcon('isActive')}
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50 select-none w-[100px]"
-                    onClick={() => handleSort('canDelete')}
-                  >
-                    {t('users.canDelete')}
-                    {getSortIcon('canDelete')}
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50 select-none w-[140px]"
-                    onClick={() => handleSort('canViewLogs')}
-                  >
-                    {t('users.canViewLogs')}
-                    {getSortIcon('canViewLogs')}
-                  </TableHead>
-                  <TableHead 
-                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('createdAt')}
-                  >
-                    {t('users.createdAt')}
-                    {getSortIcon('createdAt')}
-                  </TableHead>
-                  <TableHead className="text-right w-[120px]">{t('common.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      {t('users.noUsers')}
-                    </TableCell>
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b bg-muted/30">
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider py-3"
+                      onClick={() => handleSort('fullName')}
+                    >
+                      {t('users.user')}
+                      {getSortIcon('fullName')}
+                    </TableHead>
+                    <TableHead 
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[140px]"
+                      onClick={() => handleSort('role')}
+                    >
+                      {t('users.role')}
+                      {getSortIcon('role')}
+                    </TableHead>
+                    <TableHead className="text-center font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[180px]">
+                      {t('users.permissions')}
+                    </TableHead>
+                    <TableHead 
+                      className="text-center cursor-pointer hover:bg-muted/50 select-none font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[140px]"
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      {t('users.createdAt')}
+                      {getSortIcon('createdAt')}
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-xs text-muted-foreground uppercase tracking-wider w-[120px]">
+                      {t('common.actions')}
+                    </TableHead>
                   </TableRow>
-                ) : (
-                  filteredUsers.map((user: any) => {
-                    const isSelf = user.id === currentUser?.id;
-                    const canToggleActive = canEdit && !(isSelf && user.is_active);
-                    
-                    return (
-                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center">
-                            {canEdit && !isSelf ? (
-                              <Select
-                                value={user.role}
-                                onValueChange={(value) => {
-                                  updateUser.mutate({ 
-                                    id: user.id, 
-                                    role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
-                                  });
-                                }}
-                              >
-                                <SelectTrigger className="w-[140px] h-8">
-                                  <SelectValue>
-                                    {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="super_admin">SA</SelectItem>
-                                  <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
-                                  <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
-                                  <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Badge variant="outline" className="capitalize">
-                                {user.role === 'super_admin' ? 'SA' : user.role.replace('_', ' ')}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex justify-center">
-                                  <Switch
-                                    checked={user.is_active}
-                                    onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
-                                    disabled={!canToggleActive}
-                                    aria-label={user.is_active ? t('common.yes') : t('common.no')}
-                                  />
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {user.is_active ? t('common.yes') : t('common.no')}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex justify-center">
-                                  <Switch
-                                    checked={user.can_delete}
-                                    onCheckedChange={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
-                                    disabled={!canEdit}
-                                    aria-label={user.can_delete ? t('common.yes') : t('common.no')}
-                                  />
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {user.can_delete ? t('common.yes') : t('common.no')}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex justify-center">
-                                  <Switch
-                                    checked={user.can_view_logs}
-                                    onCheckedChange={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
-                                    disabled={!canEdit}
-                                    aria-label={user.can_view_logs ? t('common.yes') : t('common.no')}
-                                  />
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {user.can_view_logs ? t('common.yes') : t('common.no')}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground">
-                          {format(new Date(user.created_at), 'PP')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingUser(user)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setCompanyAssignmentUser(user)}
-                            >
-                              <Building2 className="h-4 w-4" />
-                            </Button>
-                            {isSuperAdmin(currentProfile) && !isSelf && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeletingUser(user)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        {t('users.noUsers')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user: any, index: number) => {
+                      const isSelf = user.id === currentUser?.id;
+                      const canToggleActive = canEdit && !(isSelf && user.is_active);
+                      
+                      return (
+                        <TableRow 
+                          key={user.id}
+                          className={`h-12 hover:bg-muted/50 transition-colors ${
+                            index % 2 === 0 ? 'bg-background' : 'bg-muted/20'
+                          }`}
+                        >
+                          <TableCell className="py-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-9 w-9">
+                                <AvatarFallback className="text-sm font-medium bg-primary/10 text-primary">
+                                  {getInitials(user.full_name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">{user.full_name || '-'}</span>
+                                <span className="text-xs text-muted-foreground">{user.email}</span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center py-3">
+                            <div className="flex justify-center">
+                              {canEdit && !isSelf ? (
+                                <Select
+                                  value={user.role}
+                                  onValueChange={(value) => {
+                                    updateUser.mutate({ 
+                                      id: user.id, 
+                                      role: value as 'super_admin' | 'admin' | 'normal' | 'viewer' 
+                                    });
+                                  }}
+                                >
+                                  <SelectTrigger className={`w-[110px] h-7 text-xs font-medium border-0 ${getRoleBadgeColor(user.role)}`}>
+                                    <SelectValue>
+                                      {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="super_admin">SA</SelectItem>
+                                    <SelectItem value="admin">{t('users.roles.admin')}</SelectItem>
+                                    <SelectItem value="normal">{t('users.roles.normal')}</SelectItem>
+                                    <SelectItem value="viewer">{t('users.roles.viewer')}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Badge className={`text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                                  {user.role === 'super_admin' ? 'SA' : t(`users.roles.${user.role}`)}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <div className="flex items-center justify-center gap-2">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center">
+                                      <Switch
+                                        checked={user.is_active}
+                                        onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
+                                        disabled={!canToggleActive}
+                                        aria-label={t('users.isActive')}
+                                        className="scale-75"
+                                      />
+                                      <Power className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.isActive')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center">
+                                      <Switch
+                                        checked={user.can_delete}
+                                        onCheckedChange={() => handleToggleFlag(user.id, 'can_delete', user.can_delete)}
+                                        disabled={!canEdit}
+                                        aria-label={t('users.canDelete')}
+                                        className="scale-75"
+                                      />
+                                      <Trash2 className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.canDelete')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center">
+                                      <Switch
+                                        checked={user.can_view_logs}
+                                        onCheckedChange={() => handleToggleFlag(user.id, 'can_view_logs', user.can_view_logs)}
+                                        disabled={!canEdit}
+                                        aria-label={t('users.canViewLogs')}
+                                        className="scale-75"
+                                      />
+                                      <BookOpen className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.canViewLogs')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center py-3">
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(user.created_at), 'yyyy-MM-dd')}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => setEditingUser(user)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.editTitle')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => setCompanyAssignmentUser(user)}
+                                    >
+                                      <Building2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('users.assignCompanies')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              {isSuperAdmin(currentProfile) && !isSelf && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => setDeletingUser(user)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {t('users.deleteUser')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
