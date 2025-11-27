@@ -35,7 +35,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const password = watch('password');
 
   const onSubmit = (data: any) => {
-    // Validate password strength if password is provided
+    // Only validate password strength if password is provided
     if (data.password && data.password.trim() !== '') {
       const validation = validatePasswordStrength(data.password, t);
       if (!validation.valid) {
@@ -53,7 +53,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
     updateUser.mutate({
       id: user.id,
       full_name: data.full_name,
-      password: data.password || undefined,
+      password: data.password && data.password.trim() !== '' ? data.password : undefined,
     }, {
       onSuccess: () => onClose(),
     });
@@ -77,17 +77,20 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Jelszó (opcionális)</Label>
+        <Label htmlFor="password">Jelszó</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
             {...register('password')}
-            placeholder="Hagyd üresen, ha nem változtatsz"
-            className={passwordError ? 'pr-10 border-destructive' : 'pr-10'}
+            placeholder=""
+            className={passwordError && password && password.trim() !== '' ? 'pr-10 border-destructive' : 'pr-10'}
             onChange={(e) => {
               setValue('password', e.target.value);
-              setPasswordError(null);
+              // Clear error when field becomes empty
+              if (e.target.value.trim() === '') {
+                setPasswordError(null);
+              }
             }}
           />
           <button
@@ -98,12 +101,9 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {passwordError && (
+        {passwordError && password && password.trim() !== '' && (
           <p className="text-sm text-destructive">{passwordError}</p>
         )}
-        <p className="text-xs text-muted-foreground">
-          {t('auth.weakPasswordMessage')} Hagyd üresen, ha nem változtatod.
-        </p>
       </div>
 
       {user?.user_code && (

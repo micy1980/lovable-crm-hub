@@ -40,20 +40,23 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const isActive = watch('is_active');
   const canDelete = watch('can_delete');
   const canViewLogs = watch('can_view_logs');
+  const password = watch('password');
   
   const canCreateSA = isSuperAdmin(profile);
 
   const handleFormSubmit = (data: any) => {
-    // Validate password strength before submitting
-    const validation = validatePasswordStrength(data.password, t);
-    if (!validation.valid) {
-      setPasswordError(validation.message);
-      toast({
-        title: t('auth.weakPassword'),
-        description: validation.message || '',
-        variant: 'destructive',
-      });
-      return;
+    // Only validate password strength if password is non-empty
+    if (data.password && data.password.trim() !== '') {
+      const validation = validatePasswordStrength(data.password, t);
+      if (!validation.valid) {
+        setPasswordError(validation.message);
+        toast({
+          title: t('auth.weakPassword'),
+          description: validation.message || '',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
     
     setPasswordError(null);
@@ -99,11 +102,14 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             {...register('password', { 
               required: 'A jelszó megadása kötelező',
             })}
-            placeholder="••••••••"
-            className={passwordError ? 'pr-10 border-destructive' : 'pr-10'}
+            placeholder=""
+            className={passwordError && password && password.trim() !== '' ? 'pr-10 border-destructive' : 'pr-10'}
             onChange={(e) => {
               setValue('password', e.target.value);
-              setPasswordError(null);
+              // Clear error when field becomes empty
+              if (e.target.value.trim() === '') {
+                setPasswordError(null);
+              }
             }}
           />
           <button
@@ -114,8 +120,10 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {(errors.password || passwordError) && (
-          <p className="text-sm text-destructive">{passwordError || String(errors.password?.message)}</p>
+        {(errors.password || (passwordError && password && password.trim() !== '')) && (
+          <p className="text-sm text-destructive">
+            {passwordError && password && password.trim() !== '' ? passwordError : String(errors.password?.message)}
+          </p>
         )}
         <p className="text-xs text-muted-foreground">
           {t('auth.weakPasswordMessage')}
