@@ -166,6 +166,7 @@ export const useUsers = () => {
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
         body: {
           email,
+          password,
           fullName: full_name || email,
           role,
           isActive: is_active,
