@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useUserProfile } from './useUserProfile';
 
 export const useLockedAccounts = () => {
   const queryClient = useQueryClient();
+  const { data: currentProfile } = useUserProfile();
 
   const { data: lockedAccounts = [], isLoading } = useQuery({
     queryKey: ['locked-accounts'],
@@ -14,9 +16,13 @@ export const useLockedAccounts = () => {
         .is('unlocked_at', null)
         .order('locked_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching locked accounts:', error);
+        throw error;
+      }
       return data || [];
     },
+    enabled: !!currentProfile && currentProfile.role === 'super_admin',
   });
 
   const unlockAccount = useMutation({
