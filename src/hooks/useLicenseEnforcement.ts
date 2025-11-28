@@ -6,6 +6,7 @@ export interface LicenseStatus {
   isLicensed: boolean;
   isExpired: boolean;
   isActive: boolean;
+  isReadOnly: boolean;
   maxUsers: number;
   usedSeats: number;
   daysUntilExpiry: number | null;
@@ -32,6 +33,7 @@ export const useLicenseEnforcement = (): LicenseStatus => {
         isLicensed: false,
         isExpired: true,
         isActive: false,
+        isReadOnly: true,
         maxUsers: 0,
         usedSeats: 0,
         daysUntilExpiry: null,
@@ -58,6 +60,7 @@ export const useLicenseEnforcement = (): LicenseStatus => {
         isLicensed: false,
         isExpired: true,
         isActive: false,
+        isReadOnly: true,
         maxUsers: 0,
         usedSeats: 0,
         daysUntilExpiry: null,
@@ -94,6 +97,7 @@ export const useLicenseEnforcement = (): LicenseStatus => {
       isLicensed: true,
       isExpired,
       isActive: isEffective,
+      isReadOnly: isExpired || !isEffective,
       maxUsers: license.max_users,
       usedSeats: 0, // This will be updated by components that need it
       daysUntilExpiry: daysLeft,

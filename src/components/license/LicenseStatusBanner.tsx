@@ -7,20 +7,20 @@ import { useState } from 'react';
 
 export const LicenseStatusBanner = () => {
   const { t } = useTranslation();
-  const { isExpired, daysUntilExpiry, isActive } = useLicenseEnforcement();
+  const { isExpired, daysUntilExpiry, isActive, isReadOnly } = useLicenseEnforcement();
   const [dismissed, setDismissed] = useState(false);
 
   if (dismissed) return null;
 
-  // Show banner if license is expired
-  if (isExpired || !isActive) {
+  // Show banner if license is expired or in read-only mode
+  if (isReadOnly || isExpired || !isActive) {
     return (
       <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="font-medium">
-              {t('license.expiredBanner')}
+              {t('license.readOnlyMode')}
             </AlertDescription>
           </div>
           <Button

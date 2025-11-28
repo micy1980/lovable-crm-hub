@@ -331,6 +331,8 @@
     "expiredAdminMessage": "This company's license has expired. Normal users cannot access this feature.",
     "featureDisabledAdminMessage": "The {{feature}} feature is disabled for this company. Normal users cannot access it.",
     "expiredBanner": "⚠️ Company license has expired. Write operations are blocked. Please renew the license.",
+    "readOnlyMode": "⚠️ License expired or inactive. The system is in read-only mode. Please activate a valid license to continue editing.",
+    "trialExpiredBanner": "⚠️ Your 14-day trial has expired. Please activate a license key to continue using the system with full functionality.",
     "expiringSoon": "⚠️ License expires in {{days}} days. Please renew to avoid service interruption.",
     "licenseSeatsExceeded": "Cannot add user: company has reached maximum licensed users ({{used}}/{{max}}). Please upgrade the license or deactivate another user."
   }

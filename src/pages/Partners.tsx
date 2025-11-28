@@ -7,16 +7,22 @@ import { useTranslation } from 'react-i18next';
 import { usePartners } from '@/hooks/usePartners';
 import { PartnerDialog } from '@/components/partners/PartnerDialog';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 
 const Partners = () => {
   const { t } = useTranslation();
   const { partners, isLoading, createPartner } = usePartners();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const { canEdit, checkReadOnly } = useReadOnlyMode();
 
   const handleCreate = (data: any) => {
     createPartner.mutate(data, {
       onSuccess: () => setIsCreateOpen(false),
     });
+  };
+
+  const handleOpenCreate = () => {
+    checkReadOnly(() => setIsCreateOpen(true));
   };
 
   return (
@@ -29,7 +35,7 @@ const Partners = () => {
             {t('partners.description')}
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
+        <Button onClick={handleOpenCreate} disabled={!canEdit}>
           <Plus className="mr-2 h-4 w-4" />
           {t('partners.add')}
         </Button>

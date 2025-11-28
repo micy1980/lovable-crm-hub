@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 
 const Documents = () => {
   const { t } = useTranslation();
+  const { canEdit } = useReadOnlyMode();
   
   return (
     <LicenseGuard feature="documents">
@@ -17,7 +19,7 @@ const Documents = () => {
             {t('documents.description')}
           </p>
         </div>
-        <Button>
+        <Button disabled={!canEdit}>
           <Upload className="mr-2 h-4 w-4" />
           {t('documents.uploadDocument')}
         </Button>
