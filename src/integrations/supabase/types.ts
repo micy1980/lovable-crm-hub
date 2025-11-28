@@ -946,6 +946,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      lock_account_for_email: {
+        Args: { _email: string; _minutes: number; _reason: string }
+        Returns: undefined
+      }
       unlock_account_by_user_id: {
         Args: { _unlocked_by: string; _user_id: string }
         Returns: undefined
