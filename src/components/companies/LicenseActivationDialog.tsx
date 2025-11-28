@@ -73,7 +73,21 @@ export function LicenseActivationDialog({
         },
       });
 
-      if (error) throw error;
+      // Check if the response contains an error message in the data
+      if (data && !data.success) {
+        const errorMessage = data.details || data.error || 'Ismeretlen hiba történt';
+        toast({
+          variant: 'destructive',
+          title: 'Licensz aktiválási hiba',
+          description: errorMessage,
+        });
+        setActivating(false);
+        return;
+      }
+
+      if (error) {
+        throw error;
+      }
 
       if (data.success) {
         toast({
@@ -85,8 +99,6 @@ export function LicenseActivationDialog({
         if (onSuccess) {
           onSuccess();
         }
-      } else {
-        throw new Error(data.error || 'Ismeretlen hiba');
       }
     } catch (error: any) {
       console.error('License activation error:', error);
