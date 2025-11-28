@@ -310,5 +310,28 @@
     "saveSuccess": "License saved successfully",
     "saveSuccessDescription": "The company license has been updated.",
     "saveError": "Error saving license"
+  },
+  "license": {
+    "details": "License Details",
+    "noLicense": "No license configured",
+    "currentLicenseInfo": "Current license information for this company",
+    "licenseKey": "License Key",
+    "notSet": "Not set",
+    "validityPeriod": "Validity Period",
+    "validUntil": "Valid until",
+    "maxUsers": "Maximum Users",
+    "users": "users",
+    "enabledFeatures": "Enabled Features",
+    "accessDenied": "Access Denied",
+    "expiredMessage": "The company's license has expired. Please renew to continue using this feature.",
+    "featureNotAvailable": "The {{feature}} feature is not included in your current license.",
+    "inactiveMessage": "The company's license is not active. Please contact support.",
+    "backToDashboard": "Back to Dashboard",
+    "adminWarning": "Super Admin Notice",
+    "expiredAdminMessage": "This company's license has expired. Normal users cannot access this feature.",
+    "featureDisabledAdminMessage": "The {{feature}} feature is disabled for this company. Normal users cannot access it.",
+    "expiredBanner": "⚠️ Company license has expired. Write operations are blocked. Please renew the license.",
+    "expiringSoon": "⚠️ License expires in {{days}} days. Please renew to avoid service interruption.",
+    "licenseSeatsExceeded": "Cannot add user: company has reached maximum licensed users ({{used}}/{{max}}). Please upgrade the license or deactivate another user."
   }
 }

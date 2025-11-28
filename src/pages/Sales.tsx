@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { Link } from 'react-router-dom';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -35,7 +36,8 @@ const Sales = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <LicenseGuard feature="sales">
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('sales.title')}</h1>
@@ -62,7 +64,8 @@ const Sales = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </LicenseGuard>
   );
 };
 

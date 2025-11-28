@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { Link } from 'react-router-dom';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -55,7 +56,8 @@ const Projects = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <LicenseGuard feature="projects">
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('projects.title')}</h1>
@@ -115,7 +117,8 @@ const Projects = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </LicenseGuard>
   );
 };
 

@@ -2,12 +2,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 
 const Documents = () => {
   const { t } = useTranslation();
   
   return (
-    <div className="space-y-6">
+    <LicenseGuard feature="documents">
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('documents.title')}</h1>
@@ -34,7 +36,8 @@ const Documents = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </LicenseGuard>
   );
 };
 

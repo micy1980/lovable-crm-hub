@@ -20,15 +20,23 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { CompanyLicenseWarning } from './CompanyLicenseWarning';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 export function TopBar() {
   const { user } = useAuth();
   const { activeCompany, companies, setActiveCompany } = useCompany();
   const { data: profile } = useUserProfile();
+  const { getLicenseForCompany, getLicenseStatus } = useCompanyLicenses();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+
+  const license = activeCompany ? getLicenseForCompany(activeCompany.id) : null;
+  const licenseStatus = license ? getLicenseStatus(license) : null;
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -56,7 +64,17 @@ export function TopBar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
-                  {activeCompany?.name || t('topbar.selectCompany')}
+                  <div className="flex items-center gap-2">
+                    <span>{activeCompany?.name || t('topbar.selectCompany')}</span>
+                    {license && licenseStatus && (
+                      <Badge 
+                        variant={licenseStatus.status === 'active' ? 'default' : 'secondary'} 
+                        className={`text-[10px] px-1 py-0 h-4 ${licenseStatus.color}`}
+                      >
+                        {licenseStatus.label}
+                      </Badge>
+                    )}
+                  </div>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -74,7 +92,25 @@ export function TopBar() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            {activeCompany && <CompanyLicenseWarning companyId={activeCompany.id} />}
+            {activeCompany && license && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <CompanyLicenseWarning companyId={activeCompany.id} />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <div className="space-y-1 text-xs">
+                      <p className="font-medium">
+                        {t('license.validUntil')}: {format(new Date(license.valid_until), 'yyyy-MM-dd')}
+                      </p>
+                      <p>
+                        {t('license.maxUsers')}: {license.max_users}
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         )}
 
