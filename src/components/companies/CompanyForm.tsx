@@ -138,29 +138,35 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Licensz beállítások</h3>
             
-            {initialData?.license?.license_key && (
-              <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
-                <Label>Licensz kulcs</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={initialData.license.license_key}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={copyLicenseKey}
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Ez a kulcs automatikusan generálódott és egyedi. Használható a licensz validálásához.
+            <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
+              <Label>Licensz kulcs</Label>
+              {initialData?.license?.license_key ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={initialData.license.license_key}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={copyLicenseKey}
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Ez a kulcs automatikusan generálódott és egyedi. Használható a licensz validálásához.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  A licensz kulcs automatikusan generálódik mentéskor.
                 </p>
-              </div>
-            )}
+              )}
+            </div>
             
             <div className="space-y-2">
               <Label htmlFor="license_type">Licensz típus</Label>
