@@ -134,7 +134,7 @@ export function CompanyLicenseManagementDialog({
               <Label>Felhasználók</Label>
               <div className="flex items-center gap-2">
                 <Input
-                  value={license ? `${usedSeats} / ${license.max_users}` : 'Nincs licensz'}
+                  value={license ? `${license.max_users}` : 'Nincs licensz'}
                   readOnly
                   className={usedSeats > (license?.max_users || 0) ? 'border-destructive' : ''}
                 />
