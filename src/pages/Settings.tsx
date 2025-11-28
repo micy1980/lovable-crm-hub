@@ -1,4 +1,5 @@
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserCompanies } from '@/hooks/useUserCompanies';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompanyList } from '@/components/companies/CompanyList';
@@ -7,13 +8,40 @@ import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Settings = () => {
   const { data: profile, isLoading } = useUserProfile();
+  const { data: userCompanies = [] } = useUserCompanies();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   const isSuperAdmin = checkSuperAdmin(profile);
   const isAdmin = isAdminOrAbove(profile);
+
+  // Update default company mutation
+  const updateDefaultCompany = useMutation({
+    mutationFn: async (companyId: string) => {
+      if (!profile?.id) throw new Error('No profile');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ default_company_id: companyId })
+        .eq('id', profile.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      toast.success(t('settings.defaultCompanyUpdated'));
+    },
+    onError: () => {
+      toast.error(t('settings.error'));
+    },
+  });
 
   if (isLoading) {
     return (
@@ -60,6 +88,30 @@ const Settings = () => {
                     <p className="text-sm text-muted-foreground">{profile?.full_name || '-'}</p>
                   </div>
                 </div>
+
+                {userCompanies.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('settings.defaultCompany')}</label>
+                    <Select
+                      value={profile?.default_company_id || userCompanies[0]?.id || ''}
+                      onValueChange={(value) => updateDefaultCompany.mutate(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t('settings.selectDefaultCompany')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userCompanies.map((company: any) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.defaultCompanyDescription')}
+                    </p>
+                  </div>
+                )}
                 
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium">{t('settings.permissions')}</h4>

@@ -351,6 +351,7 @@ export type Database = {
           can_delete: boolean | null
           can_view_logs: boolean | null
           created_at: string | null
+          default_company_id: string | null
           deleted_at: string | null
           email: string
           family_name: string | null
@@ -367,6 +368,7 @@ export type Database = {
           can_delete?: boolean | null
           can_view_logs?: boolean | null
           created_at?: string | null
+          default_company_id?: string | null
           deleted_at?: string | null
           email: string
           family_name?: string | null
@@ -383,6 +385,7 @@ export type Database = {
           can_delete?: boolean | null
           can_view_logs?: boolean | null
           created_at?: string | null
+          default_company_id?: string | null
           deleted_at?: string | null
           email?: string
           family_name?: string | null
@@ -395,7 +398,15 @@ export type Database = {
           updated_at?: string | null
           user_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_default_company_id_fkey"
+            columns: ["default_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
