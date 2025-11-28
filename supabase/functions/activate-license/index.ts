@@ -113,8 +113,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Érvénytelen licensz kulcs',
-          details: 'Nem sikerült a licensz dekódolása.',
+          error: 'Nem sikerült az aktiválás. A licenszkulcs nem megfelelő .',
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
