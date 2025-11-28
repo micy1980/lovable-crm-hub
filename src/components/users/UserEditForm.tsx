@@ -69,8 +69,9 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       return;
     }
 
-    // Only validate password strength if password is provided
-    if (data.password && data.password.trim() !== '') {
+    // Super Admin can set any password - skip validation if SA
+    const isSA = isSuperAdmin(profile);
+    if (data.password && data.password.trim() !== '' && !isSA) {
       const validation = validatePasswordStrength(data.password, t);
       if (!validation.valid) {
         setPasswordError(validation.message);
@@ -197,30 +198,41 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
               setValue('password', newPassword);
               setPasswordTouched(true);
               
+              const isSA = isSuperAdmin(profile);
+              
               // Clear error when field becomes empty
               if (newPassword.trim() === '') {
                 setPasswordError(null);
-              } else {
-                // Validate in real-time when field is not empty
+              } else if (!isSA) {
+                // Only validate for non-Super Admin users
                 const validation = validatePasswordStrength(newPassword, t);
                 if (!validation.valid) {
                   setPasswordError(validation.message);
                 } else {
                   setPasswordError(null);
                 }
+              } else {
+                // Super Admin can set any password
+                setPasswordError(null);
               }
             }}
             onBlur={(e) => {
               const currentPassword = e.target.value;
               setPasswordTouched(true);
-              // Validate on blur if field is not empty
-              if (currentPassword.trim() !== '') {
+              
+              const isSA = isSuperAdmin(profile);
+              
+              // Only validate on blur for non-Super Admin users
+              if (currentPassword.trim() !== '' && !isSA) {
                 const validation = validatePasswordStrength(currentPassword, t);
                 if (!validation.valid) {
                   setPasswordError(validation.message);
                 } else {
                   setPasswordError(null);
                 }
+              } else if (isSA) {
+                // Super Admin can set any password
+                setPasswordError(null);
               }
             }}
           />

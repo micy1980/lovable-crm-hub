@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
     console.log('[admin-update-password] Updating password for user:', payload.userId)
 
     // Step 4: Update the user's password using service client
+    // Super Admin can set any password - using service role bypasses password policies
     const { data: userData, error: updateError } = await serviceClient.auth.admin.updateUserById(
       payload.userId,
       { password: payload.password }
@@ -117,24 +118,6 @@ Deno.serve(async (req) => {
 
     if (updateError) {
       console.error('[admin-update-password] Failed to update password:', updateError.message)
-      
-      // Check if it's a weak password error
-      const isWeakPassword = updateError.message?.toLowerCase().includes('weak') || 
-                            updateError.message?.toLowerCase().includes('easy to guess')
-      
-      if (isWeakPassword) {
-        return new Response(
-          JSON.stringify({ 
-            code: 'weak_password',
-            message_en: 'The password is too weak. Please use at least 8 characters, including lowercase, uppercase letters and a number.',
-            message_hu: 'A jelszó túl gyenge. Használj legalább 8 karaktert, kis- és nagybetűt, valamint számot.'
-          }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
       
       return new Response(
         JSON.stringify({ error: updateError.message }),
