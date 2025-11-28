@@ -16,6 +16,7 @@ import Documents from "./pages/Documents";
 import CalendarPage from "./pages/CalendarPage";
 import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
+import LicenseGenerator from "./pages/LicenseGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
                 <Route path="/calendar" element={<MainLayout><CalendarPage /></MainLayout>} />
                 <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
                 <Route path="/logs" element={<MainLayout><Logs /></MainLayout>} />
+                <Route path="/license-generator" element={<LicenseGenerator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
