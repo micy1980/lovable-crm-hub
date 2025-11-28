@@ -69,16 +69,24 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       return;
     }
 
-    // Super Admin can set any password (no validation, min length 1)
+    // Super Admin minimum 6 chars (Supabase Auth requirement), no other validation
     const isSA = isSuperAdmin(profile);
-    if (data.password && data.password.trim() !== '' && !isSA) {
-      const validation = validatePasswordStrength(data.password, t);
-      if (!validation.valid) {
-        setPasswordError(validation.message);
-        return;
+    if (data.password && data.password.trim() !== '') {
+      if (isSA) {
+        // SA: only check minimum 6 chars (platform requirement)
+        if (data.password.length < 6) {
+          setPasswordError('A jelszónak legalább 6 karakter hosszúnak kell lennie (platform követelmény)');
+          return;
+        }
+      } else {
+        // Non-SA: full validation
+        const validation = validatePasswordStrength(data.password, t);
+        if (!validation.valid) {
+          setPasswordError(validation.message);
+          return;
+        }
       }
     }
-    // For SA: no minimum length, no character requirements
     
     setPasswordError(null);
     setEmailError(null);
@@ -204,17 +212,21 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
               // Clear error when field becomes empty
               if (newPassword.trim() === '') {
                 setPasswordError(null);
-              } else if (!isSA) {
-                // Only validate for non-Super Admin users
+              } else if (isSA) {
+                // SA: only check minimum 6 chars
+                if (newPassword.length < 6) {
+                  setPasswordError('Min. 6 karakter (platform követelmény)');
+                } else {
+                  setPasswordError(null);
+                }
+              } else {
+                // Non-SA: full validation
                 const validation = validatePasswordStrength(newPassword, t);
                 if (!validation.valid) {
                   setPasswordError(validation.message);
                 } else {
                   setPasswordError(null);
                 }
-              } else {
-                // Super Admin can set any password
-                setPasswordError(null);
               }
             }}
             onBlur={(e) => {
@@ -223,17 +235,23 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
               
               const isSA = isSuperAdmin(profile);
               
-              // Only validate on blur for non-Super Admin users
-              if (currentPassword.trim() !== '' && !isSA) {
-                const validation = validatePasswordStrength(currentPassword, t);
-                if (!validation.valid) {
-                  setPasswordError(validation.message);
+              if (currentPassword.trim() !== '') {
+                if (isSA) {
+                  // SA: only check minimum 6 chars
+                  if (currentPassword.length < 6) {
+                    setPasswordError('Min. 6 karakter (platform követelmény)');
+                  } else {
+                    setPasswordError(null);
+                  }
                 } else {
-                  setPasswordError(null);
+                  // Non-SA: full validation
+                  const validation = validatePasswordStrength(currentPassword, t);
+                  if (!validation.valid) {
+                    setPasswordError(validation.message);
+                  } else {
+                    setPasswordError(null);
+                  }
                 }
-              } else if (isSA) {
-                // Super Admin can set any password
-                setPasswordError(null);
               }
             }}
           />
