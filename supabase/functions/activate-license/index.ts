@@ -45,15 +45,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse license key format: ORB-XXXXXXXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXX (3x25)
+    // Parse license key format: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX (5x5)
     const parts = license_key.split('-');
     
-    if (parts.length !== 4) {
+    if (parts.length !== 6) {
       return new Response(
         JSON.stringify({ 
           success: false,
           error: 'Érvénytelen licensz kulcs formátum',
-          details: 'A kulcs formátuma nem megfelelő. Elvárt: ORB-{25 kar}-{25 kar}-{25 kar}'
+          details: 'A kulcs formátuma nem megfelelő. Elvárt: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract encrypted data (join the 3 blocks of 25 characters)
+    // Extract encrypted data (join the 5 blocks of 5 characters = 25 total)
     const encryptedKey = parts.slice(1).join('');
 
     // Decrypt and decode license data
