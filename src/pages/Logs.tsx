@@ -57,6 +57,14 @@ const UserCompanyAssignments = () => {
       // Fetch company permissions for each user-company pair
       const enrichedData = await Promise.all(
         userCompaniesData.map(async (uc: any) => {
+          // If user is super_admin, show SA instead of fetching permissions
+          if (uc.profiles?.role === 'super_admin') {
+            return {
+              ...uc,
+              companyRole: 'SA'
+            };
+          }
+
           const { data: permData } = await supabase
             .from('user_company_permissions')
             .select('role')
@@ -136,37 +144,37 @@ const UserCompanyAssignments = () => {
           <Table>
             <TableHeader>
               <TableRow className="h-8">
-                <TableHead className="py-2">{t('logs.userName')}</TableHead>
-                <TableHead className="py-2">User ID</TableHead>
-                <TableHead className="py-2">{t('logs.company')}</TableHead>
-                <TableHead className="py-2">Company ID</TableHead>
-                <TableHead className="py-2">{t('settings.role')}</TableHead>
+                <TableHead className="py-2 w-auto">{t('logs.userName')}</TableHead>
+                <TableHead className="py-2 w-auto">User ID</TableHead>
+                <TableHead className="py-2 w-auto">{t('logs.company')}</TableHead>
+                <TableHead className="py-2 w-auto">Company ID</TableHead>
+                <TableHead className="py-2 w-[100px]">{t('settings.role')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAssignments.map((assignment: any) => (
                 <TableRow key={assignment.id} className="h-10">
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 w-auto">
                     <span className="text-sm font-medium">
                       {assignment.profiles?.full_name || t('logs.unknown')}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 w-auto">
                     <span className="font-mono text-xs text-muted-foreground">
                       {assignment.user_id}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 w-auto">
                     <span className="text-sm">
                       {assignment.companies?.name || t('logs.unknown')}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 w-auto">
                     <span className="font-mono text-xs text-muted-foreground">
                       {assignment.company_id}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 w-[100px]">
                     <Badge variant="secondary" className="text-xs h-5">
                       {assignment.companyRole}
                     </Badge>
