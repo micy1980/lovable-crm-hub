@@ -4,6 +4,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
 import { useAuth } from '@/contexts/AuthContext';
+import { LicenseStatusBanner } from '@/components/license/LicenseStatusBanner';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -30,6 +31,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <TopBar />
+          <LicenseStatusBanner />
           <main className="flex-1 overflow-auto bg-background p-6">
             {children}
           </main>

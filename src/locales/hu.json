@@ -310,5 +310,28 @@
     "saveSuccess": "Licensz sikeresen mentve",
     "saveSuccessDescription": "A vállalat licence frissítésre került.",
     "saveError": "Hiba a licensz mentése során"
+  },
+  "license": {
+    "details": "Licensz Részletek",
+    "noLicense": "Nincs licenc beállítva",
+    "currentLicenseInfo": "Aktuális licenc információk ehhez a vállalathoz",
+    "licenseKey": "Licensz Kulcs",
+    "notSet": "Nincs beállítva",
+    "validityPeriod": "Érvényességi Időszak",
+    "validUntil": "Érvényes eddig",
+    "maxUsers": "Maximum Felhasználók",
+    "users": "felhasználó",
+    "enabledFeatures": "Engedélyezett Funkciók",
+    "accessDenied": "Hozzáférés Megtagadva",
+    "expiredMessage": "A vállalat licensze lejárt. Kérjük, hosszabbítsa meg a funkció használatához.",
+    "featureNotAvailable": "A {{feature}} funkció nem szerepel a jelenlegi licenszben.",
+    "inactiveMessage": "A vállalat licensze nem aktív. Kérjük, lépjen kapcsolatba az ügyfélszolgálattal.",
+    "backToDashboard": "Vissza a Főoldalra",
+    "adminWarning": "Super Admin Értesítés",
+    "expiredAdminMessage": "Ennek a vállalatnak a licensze lejárt. A normál felhasználók nem férhetnek hozzá ehhez a funkcióhoz.",
+    "featureDisabledAdminMessage": "A {{feature}} funkció le van tiltva ennél a vállalatnál. A normál felhasználók nem férhetnek hozzá.",
+    "expiredBanner": "⚠️ A vállalat licensze lejárt. Az írási műveletek blokkolva vannak. Kérjük, hosszabbítsa meg a licenszt.",
+    "expiringSoon": "⚠️ A licensz {{days}} napon belül lejár. Kérjük, hosszabbítsa meg a szolgáltatás megszakadásának elkerülése érdekében.",
+    "licenseSeatsExceeded": "Nem lehet felhasználót hozzáadni: a vállalat elérte a maximális licenszált felhasználók számát ({{used}}/{{max}}). Kérjük, frissítse a licenszt vagy inaktiváljon egy másik felhasználót."
   }
 }

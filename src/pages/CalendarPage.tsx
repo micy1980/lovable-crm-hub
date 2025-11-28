@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 
 const CalendarPage = () => {
   const { t } = useTranslation();
   
   return (
-    <div className="space-y-6">
+    <LicenseGuard feature="calendar">
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{t('calendar.title')}</h1>
         <p className="text-muted-foreground">
@@ -26,7 +28,8 @@ const CalendarPage = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </LicenseGuard>
   );
 };
 

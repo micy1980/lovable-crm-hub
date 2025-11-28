@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePartners } from '@/hooks/usePartners';
 import { PartnerDialog } from '@/components/partners/PartnerDialog';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 
 const Partners = () => {
   const { t } = useTranslation();
@@ -19,7 +20,8 @@ const Partners = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <LicenseGuard feature="partners">
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('partners.title')}</h1>
@@ -78,7 +80,8 @@ const Partners = () => {
         onSubmit={handleCreate}
         isSubmitting={createPartner.isPending}
       />
-    </div>
+      </div>
+    </LicenseGuard>
   );
 };
 
