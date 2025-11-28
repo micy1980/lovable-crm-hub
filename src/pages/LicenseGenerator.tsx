@@ -70,12 +70,12 @@ const LicenseGenerator = () => {
     // Encrypt the license data
     const encryptedData = encryptData(jsonString, SECRET_KEY);
     
-    // Generate 75 character license key (ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX format)
+    // Generate 75 character license key (ORB-XXXXX...-XXXXX...-XXXXX... = 3x25)
     // The encrypted data is embedded in the key blocks
     const keyData = encryptedData.replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 75);
     const paddedKeyData = (keyData + generateRandomString(75)).substring(0, 75);
     
-    const licenseKey = `ORB-${paddedKeyData.substring(0, 5)}-${paddedKeyData.substring(5, 10)}-${paddedKeyData.substring(10, 15)}-${paddedKeyData.substring(15, 20)}-${paddedKeyData.substring(20, 25)}-${paddedKeyData.substring(25, 30)}-${paddedKeyData.substring(30, 35)}-${paddedKeyData.substring(35, 40)}-${paddedKeyData.substring(40, 45)}-${paddedKeyData.substring(45, 50)}-${paddedKeyData.substring(50, 55)}-${paddedKeyData.substring(55, 60)}-${paddedKeyData.substring(60, 65)}-${paddedKeyData.substring(65, 70)}-${paddedKeyData.substring(70, 75)}`;
+    const licenseKey = `ORB-${paddedKeyData.substring(0, 25)}-${paddedKeyData.substring(25, 50)}-${paddedKeyData.substring(50, 75)}`;
 
     setGeneratedKey(licenseKey);
     setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil} | Titkosított: ${encryptedData.substring(0, 20)}...`);
