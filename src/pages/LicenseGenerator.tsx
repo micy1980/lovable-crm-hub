@@ -54,12 +54,11 @@ const LicenseGenerator = () => {
       .filter(([_, enabled]) => enabled)
       .map(([feature]) => feature);
 
+    // Compact license data format for shorter encoding
     const licenseData = {
-      max_users: maxUsers,
-      features: selectedFeatures,
-      valid_from: validFrom,
-      valid_until: validUntil,
-      generated_at: new Date().toISOString()
+      u: maxUsers, // max_users
+      f: selectedFeatures.map(f => f[0].toUpperCase()).join(''), // features as initials (P=partners, P=projects, etc)
+      v: validUntil // valid_until (only end date matters for validation)
     };
 
     const jsonString = JSON.stringify(licenseData);
@@ -71,11 +70,8 @@ const LicenseGenerator = () => {
     const encryptedData = encryptData(jsonString, SECRET_KEY);
     
     // Generate 25 character license key (ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX = 5x5)
-    // The encrypted data is embedded in the key blocks
-    const keyData = encryptedData.replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 25);
-    const paddedKeyData = (keyData + generateRandomString(25)).substring(0, 25);
-    
-    const licenseKey = `ORB-${paddedKeyData.substring(0, 5)}-${paddedKeyData.substring(5, 10)}-${paddedKeyData.substring(10, 15)}-${paddedKeyData.substring(15, 20)}-${paddedKeyData.substring(20, 25)}`;
+    // Use the full base64 encoded encrypted data
+    const licenseKey = `ORB-${encryptedData.substring(0, 5)}-${encryptedData.substring(5, 10)}-${encryptedData.substring(10, 15)}-${encryptedData.substring(15, 20)}-${encryptedData.substring(20, 25)}`;
 
     setGeneratedKey(licenseKey);
     setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil} | Titkosított: ${encryptedData.substring(0, 20)}...`);
