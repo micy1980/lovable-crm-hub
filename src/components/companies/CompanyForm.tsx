@@ -10,8 +10,9 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const AVAILABLE_FEATURES = [
   { value: 'partners', label: 'Partnerek' },
@@ -49,6 +50,8 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
   const { data: profile } = useUserProfile();
   const userIsSuperAdmin = isSuperAdmin(profile);
   const [copied, setCopied] = useState(false);
+  const [activatingLicense, setActivatingLicense] = useState(false);
+  const [licenseKeyInput, setLicenseKeyInput] = useState('');
   
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
     initialData?.license?.features || AVAILABLE_FEATURES.map(f => f.value)
@@ -84,6 +87,60 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
         description: 'A licensz kulcs a vágólapra került.',
       });
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const activateLicenseKey = async () => {
+    if (!licenseKeyInput.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Hiba',
+        description: 'Adjon meg egy licensz kulcsot!',
+      });
+      return;
+    }
+
+    if (!initialData?.id) {
+      toast({
+        variant: 'destructive',
+        title: 'Hiba',
+        description: 'Először mentse el a vállalatot!',
+      });
+      return;
+    }
+
+    setActivatingLicense(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('activate-license', {
+        body: {
+          company_id: initialData.id,
+          license_key: licenseKeyInput.trim(),
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: 'Licensz aktiválva',
+          description: `A licensz sikeresen aktiválva lett: ${data.license.max_users} felhasználó, ${data.license.features.length} funkció`,
+        });
+        setLicenseKeyInput('');
+        // Refresh the page to show updated license
+        window.location.reload();
+      } else {
+        throw new Error(data.error || 'Ismeretlen hiba');
+      }
+    } catch (error: any) {
+      console.error('License activation error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Licensz aktiválási hiba',
+        description: error.message || 'Nem sikerült aktiválni a licensz kulcsot',
+      });
+    } finally {
+      setActivatingLicense(false);
     }
   };
 
@@ -140,8 +197,43 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Licensz beállítások</h3>
             
+            {/* License Key Activation */}
+            <div className="space-y-2 bg-primary/5 p-4 rounded-lg border-2 border-primary/20">
+              <Label className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                Licensz kulcs aktiválása
+              </Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Illessze be a licensz generátorból kapott kulcsot a vállalat licensz beállításainak frissítéséhez.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={licenseKeyInput}
+                  onChange={(e) => setLicenseKeyInput(e.target.value)}
+                  placeholder="ORBIX-... vagy ORB-..."
+                  className="font-mono text-sm"
+                  disabled={activatingLicense}
+                />
+                <Button
+                  type="button"
+                  onClick={activateLicenseKey}
+                  disabled={activatingLicense || !licenseKeyInput.trim()}
+                  className="whitespace-nowrap"
+                >
+                  {activatingLicense ? 'Aktiválás...' : 'Aktiválás'}
+                </Button>
+              </div>
+              {!initialData?.id && (
+                <p className="text-xs text-amber-600">
+                  ⚠️ Először mentse el a vállalatot, mielőtt licensz kulcsot aktiválna!
+                </p>
+              )}
+            </div>
+            
+            <Separator />
+            
             <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
-              <Label>Licensz kulcs</Label>
+              <Label>Jelenlegi licensz kulcs</Label>
               {initialData?.license?.license_key ? (
                 <>
                   <div className="flex items-center gap-2">
@@ -160,12 +252,12 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Ez a kulcs automatikusan generálódott és egyedi. Használható a licensz validálásához.
+                    Ez a kulcs jelenleg aktív ennél a vállalatnál.
                   </p>
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground italic">
-                  A licensz kulcs automatikusan generálódik mentéskor.
+                  Nincs aktív licensz kulcs.
                 </p>
               )}
             </div>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORBIX License Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+    
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    label {
+      display: block;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    .checkbox-item label {
+      margin: 0;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-generate {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-reset {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    .btn-reset:hover {
+      background: #d0d0d0;
+    }
+    
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f0f7ff;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      display: none;
+    }
+    
+    .result.show {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .result h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    
+    .license-key {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      word-break: break-all;
+      color: #333;
+      border: 1px solid #667eea;
+      position: relative;
+    }
+    
+    .copy-button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .copy-button:hover {
+      background: #5568d3;
+    }
+    
+    .copy-button.copied {
+      background: #10b981;
+    }
+    
+    .info-section {
+      margin-top: 15px;
+      padding: 15px;
+      background: white;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .info-section strong {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔑 ORBIX License Generator</h1>
+    <p class="subtitle">Mini CRM Licensz Kulcs Generáló</p>
+    
+    <form id="licenseForm">
+      <div class="form-group">
+        <label for="prefix">Kulcs előtag:</label>
+        <select id="prefix" required>
+          <option value="ORBIX">ORBIX</option>
+          <option value="ORB">ORB</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="maxUsers">Maximum felhasználók száma:</label>
+        <input type="number" id="maxUsers" min="1" max="1000" value="5" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="validFrom">Érvényes-től:</label>
+        <input type="date" id="validFrom" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="validUntil">Érvényes-ig:</label>
+        <input type="date" id="validUntil" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Elérhető funkciók:</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="partners" value="partners" checked>
+            <label for="partners">Partnerek</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="projects" value="projects" checked>
+            <label for="projects">Projektek</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="sales" value="sales" checked>
+            <label for="sales">Értékesítés</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="documents" value="documents" checked>
+            <label for="documents">Dokumentumok</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="calendar" value="calendar" checked>
+            <label for="calendar">Naptár</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="logs" value="logs">
+            <label for="logs">Naplók</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="button-group">
+        <button type="submit" class="btn-generate">Licensz Generálása</button>
+        <button type="button" class="btn-reset" onclick="resetForm()">Alaphelyzet</button>
+      </div>
+    </form>
+    
+    <div id="result" class="result">
+      <h3>✅ Licensz kulcs sikeresen generálva!</h3>
+      <div class="license-key" id="licenseKey"></div>
+      <button class="copy-button" id="copyButton" onclick="copyToClipboard()">
+        Másolás vágólapra
+      </button>
+      <div class="info-section">
+        <strong>Beállítások:</strong><br>
+        <span id="licenseInfo"></span>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Set default dates
+    document.addEventListener('DOMContentLoaded', function() {
+      const today = new Date();
+      const oneYearLater = new Date(today);
+      oneYearLater.setFullYear(today.getFullYear() + 1);
+      
+      document.getElementById('validFrom').valueAsDate = today;
+      document.getElementById('validUntil').valueAsDate = oneYearLater;
+    });
+    
+    document.getElementById('licenseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      generateLicense();
+    });
+    
+    function generateLicense() {
+      const prefix = document.getElementById('prefix').value;
+      const maxUsers = parseInt(document.getElementById('maxUsers').value);
+      const validFrom = document.getElementById('validFrom').value;
+      const validUntil = document.getElementById('validUntil').value;
+      
+      const features = [];
+      ['partners', 'projects', 'sales', 'documents', 'calendar', 'logs'].forEach(feature => {
+        if (document.getElementById(feature).checked) {
+          features.push(feature);
+        }
+      });
+      
+      const licenseData = {
+        max_users: maxUsers,
+        features: features,
+        valid_from: validFrom,
+        valid_until: validUntil,
+        generated_at: new Date().toISOString()
+      };
+      
+      // Encode to base64
+      const jsonString = JSON.stringify(licenseData);
+      const base64 = btoa(jsonString);
+      
+      // Generate checksum (simple hash)
+      const checksum = generateChecksum(base64);
+      
+      // Format: PREFIX-BASE64DATA-CHECKSUM
+      const licenseKey = `${prefix}-${base64}-${checksum}`;
+      
+      // Display result
+      document.getElementById('licenseKey').textContent = licenseKey;
+      document.getElementById('licenseInfo').innerHTML = `
+        Max felhasználók: <strong>${maxUsers}</strong><br>
+        Funkciók: <strong>${features.join(', ')}</strong><br>
+        Érvényes: <strong>${validFrom}</strong> - <strong>${validUntil}</strong>
+      `;
+      
+      document.getElementById('result').classList.add('show');
+      
+      // Reset copy button
+      const copyButton = document.getElementById('copyButton');
+      copyButton.textContent = 'Másolás vágólapra';
+      copyButton.classList.remove('copied');
+    }
+    
+    function generateChecksum(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash).toString(16).substring(0, 6).toUpperCase();
+    }
+    
+    function copyToClipboard() {
+      const licenseKey = document.getElementById('licenseKey').textContent;
+      navigator.clipboard.writeText(licenseKey).then(() => {
+        const button = document.getElementById('copyButton');
+        button.textContent = '✓ Másolva!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.textContent = 'Másolás vágólapra';
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+    
+    function resetForm() {
+      document.getElementById('licenseForm').reset();
+      const today = new Date();
+      const oneYearLater = new Date(today);
+      oneYearLater.setFullYear(today.getFullYear() + 1);
+      
+      document.getElementById('validFrom').valueAsDate = today;
+      document.getElementById('validUntil').valueAsDate = oneYearLater;
+      document.getElementById('maxUsers').value = 5;
+      
+      // Check all features by default except logs
+      ['partners', 'projects', 'sales', 'documents', 'calendar'].forEach(feature => {
+        document.getElementById(feature).checked = true;
+      });
+      document.getElementById('logs').checked = false;
+      
+      document.getElementById('result').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
