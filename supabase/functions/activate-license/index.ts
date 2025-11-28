@@ -45,15 +45,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse license key format: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-BASE64DATA
+    // Parse license key format: ORB-XXXXXXXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXX (3x25)
     const parts = license_key.split('-');
     
-    if (parts.length < 7) {
+    if (parts.length !== 4) {
       return new Response(
         JSON.stringify({ 
           success: false,
           error: 'Érvénytelen licensz kulcs formátum',
-          details: 'A kulcs formátuma nem megfelelő. Elvárt: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-...'
+          details: 'A kulcs formátuma nem megfelelő. Elvárt: ORB-{25 kar}-{25 kar}-{25 kar}'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -73,14 +73,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract base64 data (everything after the 6th part)
-    const base64Data = parts.slice(6).join('-');
+    // Extract encrypted data (join the 3 blocks of 25 characters)
+    const encryptedKey = parts.slice(1).join('');
 
-    // Decode license data
+    // Decrypt and decode license data
     let licenseData: LicenseData;
     try {
-      const decodedString = atob(base64Data);
-      licenseData = JSON.parse(decodedString);
+      const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
+      
+      // Reconstruct base64 by adding padding if needed
+      let base64Data = encryptedKey;
+      while (base64Data.length % 4 !== 0) {
+        base64Data += '=';
+      }
+      
+      // Decode base64
+      const encryptedString = atob(base64Data);
+      
+      // Decrypt with XOR
+      let decrypted = '';
+      for (let i = 0; i < encryptedString.length; i++) {
+        decrypted += String.fromCharCode(encryptedString.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
+      }
+      
+      licenseData = JSON.parse(decrypted);
       console.log('Decoded license data:', licenseData);
     } catch (error) {
       console.error('Failed to decode license:', error);
