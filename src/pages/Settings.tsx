@@ -96,7 +96,7 @@ const Settings = () => {
                       value={profile?.default_company_id || userCompanies[0]?.id || ''}
                       onValueChange={(value) => updateDefaultCompany.mutate(value)}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-[480px]">
                         <SelectValue placeholder={t('settings.selectDefaultCompany')} />
                       </SelectTrigger>
                       <SelectContent>
