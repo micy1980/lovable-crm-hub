@@ -4,12 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Check, Key } from 'lucide-react';
+import { Copy, Check, Key, CheckCircle2, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LicenseActivationDialog } from './LicenseActivationDialog';
 import { formatLicenseKey } from '@/lib/license';
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+
+const ALL_FEATURES = [
+  { value: 'partners', labelEn: 'Partners', labelHu: 'Partnerek' },
+  { value: 'projects', labelEn: 'Projects', labelHu: 'Projektek' },
+  { value: 'sales', labelEn: 'Sales', labelHu: 'Értékesítés' },
+  { value: 'documents', labelEn: 'Documents', labelHu: 'Dokumentumok' },
+  { value: 'calendar', labelEn: 'Calendar', labelHu: 'Naptár' },
+  { value: 'logs', labelEn: 'Logs', labelHu: 'Naplók' },
+];
 
 interface CompanyLicenseManagementDialogProps {
   open: boolean;
@@ -24,6 +34,7 @@ export function CompanyLicenseManagementDialog({
   companyId,
   companyName,
 }: CompanyLicenseManagementDialogProps) {
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { getLicenseForCompany, getLicenseStatus, getUsedSeats } = useCompanyLicenses();
   const [copied, setCopied] = useState(false);
@@ -32,6 +43,17 @@ export function CompanyLicenseManagementDialog({
   
   const license = getLicenseForCompany(companyId);
   const status = getLicenseStatus(license);
+
+  const enabledFeatures = ALL_FEATURES.filter(f => 
+    Array.isArray(license?.features) && license.features.includes(f.value)
+  );
+  const disabledFeatures = ALL_FEATURES.filter(f => 
+    !Array.isArray(license?.features) || !license.features.includes(f.value)
+  );
+
+  const getFeatureLabel = (feature: typeof ALL_FEATURES[0]) => {
+    return i18n.language === 'hu' ? feature.labelHu : feature.labelEn;
+  };
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -147,18 +169,47 @@ export function CompanyLicenseManagementDialog({
             )}
 
             {/* Features */}
-            {license && (
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Elérhető funkciók</Label>
-                <div className="flex flex-wrap gap-2">
-                  {Array.isArray(license.features) && license.features.map((feature: string) => (
-                    <Badge key={feature} variant="outline">
-                      {feature}
-                    </Badge>
-                  ))}
+                <Label className="text-green-600 dark:text-green-500 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t('license.availableModules')}
+                </Label>
+                <div className="flex flex-wrap gap-2 min-h-[32px]">
+                  {enabledFeatures.length > 0 ? (
+                    enabledFeatures.map((feature) => (
+                      <Badge key={feature.value} variant="outline" className="bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300">
+                        {getFeatureLabel(feature)}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground italic">
+                      {t('license.noModulesAvailable')}
+                    </span>
+                  )}
                 </div>
               </div>
-            )}
+
+              <div className="space-y-2">
+                <Label className="text-red-600 dark:text-red-500 flex items-center gap-2">
+                  <XCircle className="h-4 w-4" />
+                  {t('license.unavailableModules')}
+                </Label>
+                <div className="flex flex-wrap gap-2 min-h-[32px]">
+                  {disabledFeatures.length > 0 ? (
+                    disabledFeatures.map((feature) => (
+                      <Badge key={feature.value} variant="outline" className="bg-red-50 dark:bg-red-950 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300">
+                        {getFeatureLabel(feature)}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground italic">
+                      {t('license.allModulesAvailable')}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Activate License Button */}
             <div className="flex justify-end pt-4">
