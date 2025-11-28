@@ -31,7 +31,7 @@ export const useLoginAttempts = () => {
     const { data, error } = await supabase
       .rpc('count_recent_failed_attempts', { 
         _email: email, 
-        _minutes: 30 
+        _minutes: 15  // Check last 15 minutes
       });
 
     if (error) {

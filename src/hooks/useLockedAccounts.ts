@@ -26,18 +26,25 @@ export const useLockedAccounts = () => {
     mutationFn: async (userId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
 
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+
       const { error } = await supabase.rpc('unlock_account_by_user_id', {
         _user_id: userId,
-        _unlocked_by: user?.id,
+        _unlocked_by: user.id,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error unlocking account:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
       toast.success('Felhasználó sikeresen feloldva');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error unlocking account:', error);
       toast.error('Hiba a felhasználó feloldása során');
     },

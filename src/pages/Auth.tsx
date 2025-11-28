@@ -14,7 +14,6 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { useLoginAttempts } from '@/hooks/useLoginAttempts';
-import { useAccountLock } from '@/hooks/useAccountLock';
 import { validatePasswordStrength } from '@/lib/passwordValidation';
 
 const Auth = () => {
@@ -26,8 +25,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const { logLoginAttempt, checkFailedAttempts, lockAccount } = useLoginAttempts();
-  const { checkAccountLock } = useAccountLock();
+  const { logLoginAttempt, checkFailedAttempts } = useLoginAttempts();
   
   const authSchema = z.object({
     email: z.string().email({ message: t('auth.invalidEmail') }),
@@ -42,6 +40,17 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  /**
+   * Account Lock Flow:
+   * 1. Check if email is already locked (BEFORE attempting sign-in)
+   * 2. If locked: show error and stop
+   * 3. Attempt sign-in with Supabase Auth
+   * 4. If sign-in fails:
+   *    a. Log the failed attempt in login_attempts table
+   *    b. Count recent failed attempts (last 15 minutes)
+   *    c. If >= 5 attempts: lock the account via lock_account_for_email RPC
+   * 5. If sign-in succeeds: log successful attempt and proceed
+   */
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -49,28 +58,27 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password });
       
-      // Try to find profile by email (for locking by user_id)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', validated.email)
-        .maybeSingle();
+      // FIRST: Check if account is already locked (before attempting sign-in)
+      const { data: isLocked, error: lockCheckError } = await supabase.rpc('is_account_locked_by_email', {
+        _email: validated.email
+      });
       
-      // If we know the user, first check if the account is already locked
-      if (profile?.id) {
-        const alreadyLocked = await checkAccountLock(profile.id);
-        if (alreadyLocked) {
-          toast({
-            title: t('auth.accountLocked'),
-            description: t('auth.accountLockedDescription'),
-            variant: 'destructive',
-          });
-          setLoading(false);
-          return;
-        }
+      if (lockCheckError) {
+        console.error('Error checking lock status:', lockCheckError);
       }
       
-      // Load settings for lock threshold (used after failed attempts)
+      if (isLocked) {
+        console.log(`Account locked for email: ${validated.email}`);
+        toast({
+          title: t('auth.accountLocked'),
+          description: t('auth.accountLockedDescription'),
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Load settings for lock threshold
       const { data: settings } = await supabase
         .from('system_settings')
         .select('setting_value')
@@ -78,26 +86,35 @@ const Auth = () => {
         .maybeSingle();
       
       const maxAttempts = settings?.setting_value ? parseInt(settings.setting_value) : 5;
+      console.log(`Max login attempts allowed: ${maxAttempts}`);
 
+      // Try to sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password,
       });
 
       if (error) {
-        // Log failed attempt
+        console.log('Sign-in failed, logging attempt...');
+        // Log failed attempt (works even for non-existent users)
         await logLoginAttempt({ email: validated.email, success: false });
         
-        // Check if we need to lock the account
-        const newFailedAttempts = await checkFailedAttempts(validated.email);
+        // Check how many failed attempts exist
+        const failedAttempts = await checkFailedAttempts(validated.email);
+        console.log(`Failed attempts for ${validated.email}: ${failedAttempts}/${maxAttempts}`);
         
-        if (newFailedAttempts >= maxAttempts) {
-          // Lock the account directly by email
-          await supabase.rpc('lock_account_for_email', {
+        // If we've reached the threshold, lock the account
+        if (failedAttempts >= maxAttempts) {
+          console.log(`Locking account for email: ${validated.email}`);
+          const { error: lockError } = await supabase.rpc('lock_account_for_email', {
             _email: validated.email,
             _minutes: 30,
             _reason: 'Too many failed login attempts',
           });
+          
+          if (lockError) {
+            console.error('Error locking account:', lockError);
+          }
 
           toast({
             title: t('auth.accountLocked'),
@@ -105,7 +122,7 @@ const Auth = () => {
             variant: 'destructive',
           });
         } else if (error.message.includes('Invalid login credentials')) {
-          const remaining = Math.max(maxAttempts - newFailedAttempts, 0);
+          const remaining = Math.max(maxAttempts - failedAttempts, 0);
           toast({
             title: t('auth.loginFailed'),
             description: `${t('auth.invalidCredentials')} (${remaining} ${t('auth.attemptsRemaining')})`,
@@ -119,22 +136,13 @@ const Auth = () => {
           });
         }
       } else if (data?.user) {
-        // Check if account is locked
-        const isLocked = await checkAccountLock(data.user.id);
-        
-        if (isLocked) {
-          await supabase.auth.signOut();
-          toast({
-            title: t('auth.accountLocked'),
-            description: t('auth.accountLockedDescription'),
-            variant: 'destructive',
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Log successful attempt
-        await logLoginAttempt({ email: validated.email, success: true, userId: data.user.id });
+        console.log('Sign-in successful, logging attempt...');
+        // Success! Log it
+        await logLoginAttempt({ 
+          email: validated.email, 
+          success: true, 
+          userId: data.user.id 
+        });
         
         toast({
           title: t('auth.success'),

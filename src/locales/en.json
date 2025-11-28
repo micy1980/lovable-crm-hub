@@ -38,7 +38,7 @@
     "passwordResetEmailSent": "Password reset email sent! Check your inbox.",
     "passwordResetError": "Failed to send password reset email. Please try again.",
     "accountLocked": "Account Locked",
-    "accountLockedDescription": "Your account has been locked due to too many failed login attempts. Please try again later or contact support.",
+    "accountLockedDescription": "This user account is locked. Please contact a Super Admin (SA) to unlock it.",
     "attemptsRemaining": "attempts remaining"
   },
   "nav": {
