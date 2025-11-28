@@ -81,14 +81,8 @@ Deno.serve(async (req) => {
     try {
       const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
       
-      // Reconstruct base64 by adding padding if needed
-      let base64Data = encryptedKey;
-      while (base64Data.length % 4 !== 0) {
-        base64Data += '=';
-      }
-      
       // Decode base64
-      const encryptedString = atob(base64Data);
+      const encryptedString = atob(encryptedKey);
       
       // Decrypt with XOR
       let decrypted = '';
@@ -96,7 +90,46 @@ Deno.serve(async (req) => {
         decrypted += String.fromCharCode(encryptedString.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
       }
       
-      licenseData = JSON.parse(decrypted);
+      // Parse compact format
+      const compactData = JSON.parse(decrypted);
+      
+      // Convert compact format to full format
+      const featureMap: Record<string, string> = {
+        'P': 'partners',
+        'S': 'sales',
+        'D': 'documents',
+        'C': 'calendar',
+        'L': 'logs'
+      };
+      
+      // Handle 'projects' which also starts with P - check for PP
+      const featureString = compactData.f || '';
+      const features: string[] = [];
+      
+      for (let i = 0; i < featureString.length; i++) {
+        const char = featureString[i];
+        if (char === 'P') {
+          // Check if next char is also P (projects)
+          if (i + 1 < featureString.length && featureString[i + 1] === 'P') {
+            features.push('projects');
+            i++; // Skip next P
+          } else {
+            features.push('partners');
+          }
+        } else {
+          const feature = featureMap[char];
+          if (feature) features.push(feature);
+        }
+      }
+      
+      licenseData = {
+        max_users: compactData.u,
+        features: features,
+        valid_from: new Date().toISOString().split('T')[0], // Current date as valid_from
+        valid_until: compactData.v,
+        generated_at: new Date().toISOString()
+      };
+      
       console.log('Decoded license data:', licenseData);
     } catch (error) {
       console.error('Failed to decode license:', error);
