@@ -5,6 +5,8 @@ import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { LicenseStatusBanner } from '@/components/license/LicenseStatusBanner';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { useInactivityLogout } from '@/hooks/useInactivityLogout';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -12,6 +14,15 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, loading } = useAuth();
+  const { settings } = useSystemSettings();
+  
+  // Get auto-logout timeout from settings (default to 300 seconds = 5 minutes)
+  const timeoutSeconds = settings?.auto_logout_timeout 
+    ? parseInt(settings.auto_logout_timeout) 
+    : 300;
+  
+  // Enable inactivity logout
+  useInactivityLogout(timeoutSeconds);
 
   if (loading) {
     return (

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompanyList } from '@/components/companies/CompanyList';
 import { UserList } from '@/components/users/UserList';
 import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
+import { SystemSettings } from '@/components/settings/SystemSettings';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,7 @@ const Settings = () => {
           {isAdmin && <TabsTrigger value="users">{t('settings.users')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="companies">{t('settings.companies')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="masterdata">{t('settings.masterdata')}</TabsTrigger>}
+          {isSuperAdmin && <TabsTrigger value="system">{t('settings.system')}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile">
@@ -165,6 +167,10 @@ const Settings = () => {
 
             <TabsContent value="masterdata">
               <MasterDataManager />
+            </TabsContent>
+
+            <TabsContent value="system">
+              <SystemSettings />
             </TabsContent>
           </>
         )}
