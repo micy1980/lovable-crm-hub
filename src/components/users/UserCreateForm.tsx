@@ -82,13 +82,18 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       return;
     }
     
-    // Validate password strength
-    const validation = validatePasswordStrength(data.password, t);
-    if (!validation.valid) {
-      setPasswordError(validation.message);
-      setPasswordTouched(true);
-      return;
+    // Super Admin can set any password (no validation, min length 1)
+    const isSA = isSuperAdmin(profile);
+    if (!isSA) {
+      // Validate password strength for non-SA users
+      const validation = validatePasswordStrength(data.password, t);
+      if (!validation.valid) {
+        setPasswordError(validation.message);
+        setPasswordTouched(true);
+        return;
+      }
     }
+    // For SA: no minimum length, no character requirements
     
     setPasswordError(null);
     setEmailError(null);
@@ -202,30 +207,41 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
               setValue('password', newPassword);
               setPasswordTouched(true);
               
+              const isSA = isSuperAdmin(profile);
+              
               // Clear error when field becomes empty
               if (newPassword.trim() === '') {
                 setPasswordError(null);
-              } else {
-                // Validate in real-time when field is not empty
+              } else if (!isSA) {
+                // Only validate for non-Super Admin users
                 const validation = validatePasswordStrength(newPassword, t);
                 if (!validation.valid) {
                   setPasswordError(validation.message);
                 } else {
                   setPasswordError(null);
                 }
+              } else {
+                // Super Admin can set any password
+                setPasswordError(null);
               }
             }}
             onBlur={(e) => {
               const currentPassword = e.target.value;
               setPasswordTouched(true);
-              // Validate on blur if field is not empty
-              if (currentPassword.trim() !== '') {
+              
+              const isSA = isSuperAdmin(profile);
+              
+              // Only validate on blur for non-Super Admin users
+              if (currentPassword.trim() !== '' && !isSA) {
                 const validation = validatePasswordStrength(currentPassword, t);
                 if (!validation.valid) {
                   setPasswordError(validation.message);
                 } else {
                   setPasswordError(null);
                 }
+              } else if (isSA) {
+                // Super Admin can set any password
+                setPasswordError(null);
               }
             }}
           />

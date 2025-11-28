@@ -69,7 +69,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       return;
     }
 
-    // Super Admin can set any password - skip validation if SA
+    // Super Admin can set any password (no validation, min length 1)
     const isSA = isSuperAdmin(profile);
     if (data.password && data.password.trim() !== '' && !isSA) {
       const validation = validatePasswordStrength(data.password, t);
@@ -78,6 +78,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         return;
       }
     }
+    // For SA: no minimum length, no character requirements
     
     setPasswordError(null);
     setEmailError(null);
