@@ -105,15 +105,17 @@ const Auth = () => {
         
         // If we've reached the threshold, lock the account
         if (failedAttempts >= maxAttempts) {
-          console.log(`Locking account for email: ${validated.email}`);
-          const { error: lockError } = await supabase.rpc('lock_account_for_email', {
+          console.log(`🔒 LOCKING ACCOUNT: ${validated.email} (${failedAttempts}/${maxAttempts} attempts)`);
+          const { data: lockResult, error: lockError } = await supabase.rpc('lock_account_for_email', {
             _email: validated.email,
             _minutes: 30,
             _reason: 'Too many failed login attempts',
           });
           
           if (lockError) {
-            console.error('Error locking account:', lockError);
+            console.error('❌ Error locking account:', lockError);
+          } else {
+            console.log('✅ Account locked successfully');
           }
 
           toast({
