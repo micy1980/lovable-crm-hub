@@ -12,6 +12,7 @@ export interface CompanyLicense {
   valid_until: string;
   is_active: boolean;
   features: string[];
+  license_key: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
+import { Copy, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const AVAILABLE_FEATURES = [
   { value: 'partners', label: 'Partnerek' },
@@ -33,6 +35,7 @@ interface CompanyFormProps {
       valid_until: string;
       is_active: boolean;
       features: string[];
+      license_key?: string;
     };
   };
   onSubmit: (data: any) => void;
@@ -42,8 +45,10 @@ interface CompanyFormProps {
 
 export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: CompanyFormProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const { data: profile } = useUserProfile();
   const userIsSuperAdmin = isSuperAdmin(profile);
+  const [copied, setCopied] = useState(false);
   
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
     initialData?.license?.features || AVAILABLE_FEATURES.map(f => f.value)
@@ -68,6 +73,18 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
         ? prev.filter(f => f !== feature)
         : [...prev, feature]
     );
+  };
+
+  const copyLicenseKey = () => {
+    if (initialData?.license?.license_key) {
+      navigator.clipboard.writeText(initialData.license.license_key);
+      setCopied(true);
+      toast({
+        title: 'Licensz kulcs másolva',
+        description: 'A licensz kulcs a vágólapra került.',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleFormSubmit = (data: any) => {
@@ -120,6 +137,30 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
           
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Licensz beállítások</h3>
+            
+            {initialData?.license?.license_key && (
+              <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
+                <Label>Licensz kulcs</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={initialData.license.license_key}
+                    readOnly
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={copyLicenseKey}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ez a kulcs automatikusan generálódott és egyedi. Használható a licensz validálásához.
+                </p>
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label htmlFor="license_type">Licensz típus</Label>
