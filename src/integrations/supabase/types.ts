@@ -51,6 +51,7 @@ export type Database = {
           features: Json
           id: string
           is_active: boolean
+          license_key: string | null
           license_type: string
           max_users: number
           updated_at: string
@@ -63,6 +64,7 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean
+          license_key?: string | null
           license_type: string
           max_users: number
           updated_at?: string
@@ -75,6 +77,7 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean
+          license_key?: string | null
           license_type?: string
           max_users?: number
           updated_at?: string
@@ -781,6 +784,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      generate_license_key: { Args: never; Returns: string }
       get_admin_company_ids: {
         Args: { _user_id: string }
         Returns: {

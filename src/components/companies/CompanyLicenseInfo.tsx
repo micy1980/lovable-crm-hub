@@ -28,15 +28,15 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
   }, [companyId, license]);
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{license?.license_type || 'Nincs licenc'}</span>
-          <Badge variant={status.status === 'active' ? 'default' : 'secondary'} className={status.color}>
-            {status.label}
-          </Badge>
-        </div>
-        {license && (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">{license?.license_type || 'Nincs licenc'}</span>
+        <Badge variant={status.status === 'active' ? 'default' : 'secondary'} className={status.color}>
+          {status.label}
+        </Badge>
+      </div>
+      {license && (
+        <>
           <span className="text-sm text-muted-foreground">
             {usedSeats} / {license.max_users} felhasználó
             {usedSeats > license.max_users && (
@@ -45,8 +45,13 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
               </span>
             )}
           </span>
-        )}
-      </div>
+          {license.license_key && (
+            <span className="text-xs text-muted-foreground font-mono">
+              {license.license_key}
+            </span>
+          )}
+        </>
+      )}
     </div>
   );
 };
