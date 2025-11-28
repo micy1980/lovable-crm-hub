@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen, LockKeyhole, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useLockedAccounts } from '@/hooks/useLockedAccounts';
 import { UserEditForm } from './UserEditForm';
 import { UserCreateForm } from './UserCreateForm';
 import { UserCompanyPermissionsDialog } from './UserCompanyPermissionsDialog';
@@ -27,6 +28,7 @@ export function UserList() {
   const { data: currentProfile } = useUserProfile();
   const { users, isLoading, toggleUserFlag, updateUser, createUser, deleteUser } = useUsers();
   const { companies } = useCompanies();
+  const { lockedAccounts, isUserLocked, unlockAccount } = useLockedAccounts();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
@@ -39,6 +41,7 @@ export function UserList() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
+  const currentUserIsSA = isSuperAdmin(currentProfile);
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -240,7 +243,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[220px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[220px_80px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -250,6 +253,9 @@ export function UserList() {
                 </div>
                 <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
                   {t('users.saStatus')}
+                </div>
+                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                  {t('users.status')}
                 </div>
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
@@ -284,15 +290,15 @@ export function UserList() {
                       const isSelf = user.id === currentUser?.id;
                       const canToggleActive = canEdit && !(isSelf && user.is_active);
                       const isSA = user.role === 'super_admin';
-                      const currentUserIsSA = currentProfile?.role === 'super_admin';
                       const nextUser = filteredUsers[index + 1];
                       const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
+                      const userIsLocked = isUserLocked(user.id);
                       
                       return (
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[220px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[220px_80px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
@@ -315,6 +321,27 @@ export function UserList() {
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       {t('users.saBadgeTooltip')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </div>
+
+                            {/* Status Column (Locked) */}
+                            <div className="flex items-center justify-center">
+                              {userIsLocked ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="destructive" className="text-xs font-medium cursor-help gap-1">
+                                        <LockKeyhole className="h-3 w-3" />
+                                        {t('users.locked')}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {t('users.lockedTooltip')}
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -376,6 +403,25 @@ export function UserList() {
 
                             {/* Actions Column */}
                             <div className="flex items-center justify-end gap-1">
+                              {userIsLocked && currentUserIsSA && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-green-600 hover:text-green-700"
+                                        onClick={() => unlockAccount.mutate(user.id)}
+                                      >
+                                        <Unlock className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {t('users.unlockAccount')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
