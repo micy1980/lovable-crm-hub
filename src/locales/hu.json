@@ -334,6 +334,10 @@
     "readOnlyMode": "⚠️ A licensz lejárt vagy inaktív. A rendszer csak olvasható módban működik. Kérjük, aktiváljon érvényes licensz kulcsot a szerkesztés folytatásához.",
     "trialExpiredBanner": "⚠️ A 14 napos próbaidőszak lejárt. Kérjük, aktiváljon licensz kulcsot a rendszer teljes funkcionalitású használatához.",
     "expiringSoon": "⚠️ A licensz {{days}} napon belül lejár. Kérjük, hosszabbítsa meg a szolgáltatás megszakadásának elkerülése érdekében.",
-    "licenseSeatsExceeded": "Nem lehet felhasználót hozzáadni: a vállalat elérte a maximális licenszált felhasználók számát ({{used}}/{{max}}). Kérjük, frissítse a licenszt vagy inaktiváljon egy másik felhasználót."
+    "licenseSeatsExceeded": "Nem lehet felhasználót hozzáadni: a vállalat elérte a maximális licenszált felhasználók számát ({{used}}/{{max}}). Kérjük, frissítse a licenszt vagy inaktiváljon egy másik felhasználót.",
+    "availableModules": "Elérhető modulok",
+    "unavailableModules": "Nem elérhető modulok",
+    "noModulesAvailable": "Nincs elérhető modul",
+    "allModulesAvailable": "Minden modul elérhető"
   }
 }

@@ -334,6 +334,10 @@
     "readOnlyMode": "⚠️ License expired or inactive. The system is in read-only mode. Please activate a valid license to continue editing.",
     "trialExpiredBanner": "⚠️ Your 14-day trial has expired. Please activate a license key to continue using the system with full functionality.",
     "expiringSoon": "⚠️ License expires in {{days}} days. Please renew to avoid service interruption.",
-    "licenseSeatsExceeded": "Cannot add user: company has reached maximum licensed users ({{used}}/{{max}}). Please upgrade the license or deactivate another user."
+    "licenseSeatsExceeded": "Cannot add user: company has reached maximum licensed users ({{used}}/{{max}}). Please upgrade the license or deactivate another user.",
+    "availableModules": "Available Modules",
+    "unavailableModules": "Unavailable Modules",
+    "noModulesAvailable": "No modules available",
+    "allModulesAvailable": "All modules available"
   }
 }
