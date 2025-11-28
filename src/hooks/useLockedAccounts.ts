@@ -18,11 +18,11 @@ export const useLockedAccounts = () => {
 
       if (error) {
         console.error('Error fetching locked accounts:', error);
-        throw error;
+        return [];
       }
       return data || [];
     },
-    enabled: !!currentProfile && currentProfile.role === 'super_admin',
+    // Always run query, RLS will handle permissions
   });
 
   const unlockAccount = useMutation({
