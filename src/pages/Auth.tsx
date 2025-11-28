@@ -56,8 +56,21 @@ const Auth = () => {
         .eq('email', validated.email)
         .maybeSingle();
       
-      // Check failed attempts before login
-      const failedAttempts = await checkFailedAttempts(validated.email);
+      // If we know the user, first check if the account is already locked
+      if (profile?.id) {
+        const alreadyLocked = await checkAccountLock(profile.id);
+        if (alreadyLocked) {
+          toast({
+            title: t('auth.accountLocked'),
+            description: t('auth.accountLockedDescription'),
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // Load settings for lock threshold (used after failed attempts)
       const { data: settings } = await supabase
         .from('system_settings')
         .select('setting_value')
@@ -65,20 +78,6 @@ const Auth = () => {
         .maybeSingle();
       
       const maxAttempts = settings?.setting_value ? parseInt(settings.setting_value) : 5;
-
-      if (failedAttempts >= maxAttempts) {
-        // Ensure account is marked as locked if we know the user
-        if (profile?.id) {
-          await lockAccount(profile.id, 'Too many failed login attempts');
-        }
-        toast({
-          title: t('auth.accountLocked'),
-          description: t('auth.accountLockedDescription'),
-          variant: 'destructive',
-        });
-        setLoading(false);
-        return;
-      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
