@@ -164,7 +164,13 @@
     "masterData": "Master Data",
     "masterDataDescription": "Manage system-wide master data lists",
     "masterDataComingSoon": "Master data management interface coming soon.",
-    "masterDataReadOnly": "You can view master data but only Super Admins can edit it."
+    "masterDataReadOnly": "You can view master data but only Super Admins can edit it.",
+    "system": "System",
+    "systemSettings": "System Settings",
+    "systemSettingsDescription": "Configure global system settings",
+    "autoLogoutTimeout": "Auto Logout Timeout",
+    "autoLogoutDescription": "Users will be automatically logged out after this period of inactivity",
+    "minutes": "minutes"
   },
   "companies": {
     "title": "Companies",

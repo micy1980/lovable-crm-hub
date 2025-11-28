@@ -164,7 +164,13 @@
     "masterData": "Törzsadatok",
     "masterDataDescription": "Rendszerszintű törzsadatok kezelése",
     "masterDataComingSoon": "A törzsadat-kezelési felület hamarosan elérhető lesz.",
-    "masterDataReadOnly": "Megtekintheti a törzsadatokat, de csak a Szuper Adminok szerkeszthetik azokat."
+    "masterDataReadOnly": "Megtekintheti a törzsadatokat, de csak a Szuper Adminok szerkeszthetik azokat.",
+    "system": "Rendszer",
+    "systemSettings": "Rendszerbeállítások",
+    "systemSettingsDescription": "Globális rendszerbeállítások konfigurálása",
+    "autoLogoutTimeout": "Automatikus Kijelentkezés Időkorlátja",
+    "autoLogoutDescription": "A felhasználók automatikusan kijelentkeznek ennyi inaktivitás után",
+    "minutes": "perc"
   },
   "companies": {
     "title": "Vállalatok",
