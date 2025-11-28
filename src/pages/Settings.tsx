@@ -35,7 +35,7 @@ const Settings = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       toast.success(t('settings.defaultCompanyUpdated'));
     },
     onError: () => {
