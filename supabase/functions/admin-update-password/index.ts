@@ -109,8 +109,22 @@ Deno.serve(async (req) => {
 
     console.log('[admin-update-password] Updating password for user:', payload.userId)
 
-    // Step 4: Update the user's password using service client
-    // Super Admin can set any password - using service role bypasses password policies
+    // Step 4: Validate minimum length (Supabase Auth requires min 6 chars even with service role)
+    if (payload.password.length < 6) {
+      console.error('[admin-update-password] Password too short:', payload.password.length)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Password must be at least 6 characters (Supabase Auth platform requirement)',
+          minLength: 6
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Step 5: Update the user's password using service client
     const { data: userData, error: updateError } = await serviceClient.auth.admin.updateUserById(
       payload.userId,
       { password: payload.password }
