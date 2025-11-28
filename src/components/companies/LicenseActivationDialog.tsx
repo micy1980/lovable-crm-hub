@@ -77,11 +77,12 @@ export function LicenseActivationDialog({
       // When edge function returns non-2xx status, both error and data are set
       // Check data first for detailed error messages from the edge function
       if (error) {
-        console.error('License activation error:', error);
+        // Várt hiba (pl. hibás licensz kulcs) – ne dobjunk globális hibát, csak jelenítsük meg a mező alatt
+        console.warn('License activation warning:', error);
         
         // Check if data contains detailed error information
         if (data && typeof data === 'object' && 'error' in data) {
-          const errorMessage = data.details || data.error || 'Ismeretlen hiba történt';
+          const errorMessage = (data as any).details || (data as any).error || 'Ismeretlen hiba történt';
           setErrorMessage(errorMessage);
         } else {
           // Fallback to generic error message
@@ -103,7 +104,7 @@ export function LicenseActivationDialog({
         }
       }
     } catch (error: any) {
-      console.error('License activation error:', error);
+      console.warn('License activation warning (exception):', error);
       setErrorMessage(error.message || 'Nem sikerült aktiválni a licensz kulcsot');
     } finally {
       setActivating(false);
