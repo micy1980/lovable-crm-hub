@@ -2,3 +2,6 @@ project_id = "klhebfqxfgepacruplxy"
 
 [functions.validate-license]
 verify_jwt = false
+
+[functions.activate-license]
+verify_jwt = true
