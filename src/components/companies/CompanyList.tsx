@@ -105,7 +105,7 @@ export function CompanyList() {
         .from('company_licenses')
         .select('*')
         .eq('company_id', company.id)
-        .single();
+        .maybeSingle();
       
       setEditingCompany({ ...company, license });
     } else {
