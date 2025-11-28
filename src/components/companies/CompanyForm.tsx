@@ -88,13 +88,15 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
   };
 
   const handleFormSubmit = (data: any) => {
+    const { license_type, max_users, valid_from, valid_until, ...companyData } = data;
+    
     const formData = {
-      ...data,
+      ...companyData,
       license: userIsSuperAdmin ? {
-        license_type: data.license_type,
-        max_users: parseInt(data.max_users),
-        valid_from: new Date(data.valid_from).toISOString(),
-        valid_until: new Date(data.valid_until + 'T23:59:59').toISOString(),
+        license_type,
+        max_users: parseInt(max_users),
+        valid_from: new Date(valid_from).toISOString(),
+        valid_until: new Date(valid_until + 'T23:59:59').toISOString(),
         is_active: isActive,
         features: selectedFeatures,
       } : undefined,
