@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { verifyAndDecodeLicenseKey } from './license-validator.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,7 +34,6 @@ Deno.serve(async (req) => {
 
     console.log('Activating license for company:', company_id);
 
-    // Normalize and validate license key format: 25 alphanumeric chars, typically shown as 5x5 groups
     if (!license_key) {
       return new Response(
         JSON.stringify({
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Remove all non-alphanumeric characters and uppercase (hyphens/spaces ignored, case-insensitive)
+    // Normalize the license key
     const normalizedKey = license_key.replace(/[^A-Z0-9]/gi, '').toUpperCase();
 
     if (normalizedKey.length !== 25) {
@@ -53,71 +53,43 @@ Deno.serve(async (req) => {
         JSON.stringify({
           success: false,
           error: 'Érvénytelen licensz kulcs formátum',
-          details: 'A kulcs formátuma nem megfelelő. Elvárt: 5×5 karakteres kód (25 betű/szám).',
+          details: 'A kulcs formátuma nem megfelelő. Elvárt: 25 karakteres kód.',
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Encrypted payload is the normalized 25-character key
-    const encryptedKey = normalizedKey;
+    // Verify and decode the license key using cryptographic validation
+    console.log('Verifying license key:', normalizedKey);
+    const decodedLicense = await verifyAndDecodeLicenseKey(normalizedKey);
 
-    // Decrypt and decode license data
-    let licenseData: LicenseData;
-    try {
-      const SECRET_KEY = 'ORBIX_LICENSE_SECRET_2025';
-
-      // Convert uppercase hex string to decrypted string
-      const hexString = encryptedKey.toUpperCase();
-      let decrypted = '';
-
-      // Process hex pairs (each 2 hex chars = 1 byte)
-      for (let i = 0; i < hexString.length; i += 2) {
-        const hexByte = hexString.substring(i, i + 2);
-        const charCode = parseInt(hexByte, 16) ^ SECRET_KEY.charCodeAt((i / 2) % SECRET_KEY.length);
-        decrypted += String.fromCharCode(charCode);
-      }
-
-      // Parse compact format
-      const compactData = JSON.parse(decrypted);
-
-      // Convert compact format to full format
-      const featureMap: Record<string, string> = {
-        P: 'partners',
-        R: 'projects', // R for pRojects
-        S: 'sales',
-        D: 'documents',
-        C: 'calendar',
-        L: 'logs',
-      };
-
-      const featureString = compactData.f || '';
-      const features: string[] = [];
-
-      for (let i = 0; i < featureString.length; i++) {
-        const char = featureString[i];
-        const feature = featureMap[char];
-        if (feature) features.push(feature);
-      }
-
-      licenseData = {
-        max_users: compactData.u,
-        features,
-        valid_from: new Date().toISOString().split('T')[0], // Current date as valid_from
-        valid_until: compactData.v,
-      };
-
-      console.log('Decoded license data:', licenseData);
-    } catch (error) {
-      console.error('Failed to decode license:', error);
+    if (!decodedLicense) {
+      console.log('License verification failed - invalid signature or format');
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Nem sikerült az aktiválás. A licenszkulcs nem megfelelő .',
+          error: 'Érvénytelen licensz kulcs',
+          details: 'A licensz kulcs nem megfelelő vagy meghamisított.',
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
+
+    console.log('License decoded successfully:', {
+      version: decodedLicense.version,
+      maxUsers: decodedLicense.maxUsers,
+      validFrom: decodedLicense.validFrom.toISOString(),
+      validUntil: decodedLicense.validUntil.toISOString(),
+      features: decodedLicense.features
+    });
+
+    // Convert decoded license to the format expected by the database
+    const licenseData: LicenseData = {
+      max_users: decodedLicense.maxUsers,
+      features: decodedLicense.features,
+      valid_from: decodedLicense.validFrom.toISOString().split('T')[0],
+      valid_until: decodedLicense.validUntil.toISOString().split('T')[0],
+    };
 
     // Validate license data structure
     if (!licenseData.max_users || !licenseData.features || !licenseData.valid_from || !licenseData.valid_until) {

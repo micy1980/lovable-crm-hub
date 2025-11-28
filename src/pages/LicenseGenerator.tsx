@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Copy, Key } from "lucide-react";
+import { generateLicenseKey, type LicenseFeature } from "@/lib/license";
 
 const LicenseGenerator = () => {
   const [maxUsers, setMaxUsers] = useState(5);
@@ -28,68 +28,67 @@ const LicenseGenerator = () => {
   
   const [generatedKey, setGeneratedKey] = useState("");
   const [licenseInfo, setLicenseInfo] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateRandomString = (length: number): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // Simple encryption function using XOR with a secret key, returns hex string (only alphanumeric)
-  const encryptData = (data: string, secretKey: string): string => {
-    let encrypted = '';
-    for (let i = 0; i < data.length; i++) {
-      const charCode = data.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length);
-      // Convert to hex (always 2 digits, uppercase)
-      encrypted += charCode.toString(16).padStart(2, '0').toUpperCase();
-    }
-    return encrypted;
-  };
-
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const selectedFeatures = Object.entries(features)
-      .filter(([_, enabled]) => enabled)
-      .map(([feature]) => feature);
-
-    // Compact license data format for shorter encoding
-    const licenseData = {
-      u: maxUsers, // max_users
-      f: selectedFeatures.map(f => {
-        // Map features to unique single characters
-        const featureMap: Record<string, string> = {
-          'partners': 'P',
-          'projects': 'R', // R for pRojects to avoid conflict with Partners
-          'sales': 'S',
-          'documents': 'D',
-          'calendar': 'C',
-          'logs': 'L'
-        };
-        return featureMap[f] || 'X';
-      }).join(''),
-      v: validUntil // valid_until (only end date matters for validation)
-    };
-
-    const jsonString = JSON.stringify(licenseData);
+    // Validate dates
+    const fromDate = new Date(validFrom);
+    const toDate = new Date(validUntil);
     
-    // SECRET KEY - Ez csak a generátorban van, a CRM-ben az edge functionben is be kell állítani!
-    const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
+    if (toDate < fromDate) {
+      toast.error("Az 'Érvényes-ig' dátumnak nagyobbnak vagy egyenlőnek kell lennie az 'Érvényes-től' dátumnál!");
+      return;
+    }
     
-    // Encrypt the license data (returns hex string with only 0-9, A-F)
-    const encryptedData = encryptData(jsonString, SECRET_KEY);
+    if (maxUsers < 1 || maxUsers > 1023) {
+      toast.error("A maximum felhasználók száma 1 és 1023 között kell legyen!");
+      return;
+    }
     
-    // Generate 25 character license key (ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX = 5x5)
-    // Use the first 25 characters of encrypted hex data (all uppercase alphanumeric)
-    const keyData = encryptedData.substring(0, 25);
-    const licenseKey = `ORB-${keyData.substring(0, 5)}-${keyData.substring(5, 10)}-${keyData.substring(10, 15)}-${keyData.substring(15, 20)}-${keyData.substring(20, 25)}`;
+    setIsGenerating(true);
+    
+    try {
+      const selectedFeatures = Object.entries(features)
+        .filter(([_, enabled]) => enabled)
+        .map(([feature]) => feature as LicenseFeature);
 
-    setGeneratedKey(licenseKey);
-    setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil} | Titkosított: ${encryptedData.substring(0, 20)}...`);
-    toast.success("Licensz kulcs sikeresen generálva!");
+      if (selectedFeatures.length === 0) {
+        toast.error("Legalább egy funkciót ki kell választani!");
+        setIsGenerating(false);
+        return;
+      }
+
+      // Generate cryptographic license key
+      const licenseKey = await generateLicenseKey({
+        maxUsers,
+        validFrom: fromDate,
+        validUntil: toDate,
+        features: selectedFeatures
+      });
+
+      setGeneratedKey(licenseKey);
+      
+      // Format feature names for display
+      const featureNames: Record<string, string> = {
+        'partners': 'Partnerek',
+        'sales': 'Értékesítés',
+        'calendar': 'Naptár',
+        'projects': 'Projektek',
+        'documents': 'Dokumentumok',
+        'logs': 'Naplók'
+      };
+      
+      const featureList = selectedFeatures.map(f => featureNames[f] || f).join(', ');
+      setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${featureList} | Érvényes: ${validFrom} - ${validUntil}`);
+      toast.success("Licensz kulcs sikeresen generálva!");
+    } catch (error) {
+      console.error('License generation error:', error);
+      toast.error(error instanceof Error ? error.message : "Hiba a licensz generálása során");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleCopy = () => {
@@ -193,10 +192,10 @@ const LicenseGenerator = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button type="submit" className="flex-1">
-                Licensz Generálása
+              <Button type="submit" className="flex-1" disabled={isGenerating}>
+                {isGenerating ? "Generálás..." : "Licensz Generálása"}
               </Button>
-              <Button type="button" variant="outline" onClick={handleReset}>
+              <Button type="button" variant="outline" onClick={handleReset} disabled={isGenerating}>
                 Alaphelyzet
               </Button>
             </div>
