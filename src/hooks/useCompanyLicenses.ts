@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 export interface CompanyLicense {
   id: string;
   company_id: string;
-  license_type: string;
   max_users: number;
   valid_from: string;
   valid_until: string;
@@ -37,7 +36,6 @@ export const useCompanyLicenses = () => {
   const createOrUpdateLicense = useMutation({
     mutationFn: async (license: {
       company_id: string;
-      license_type: string;
       max_users: number;
       valid_from: string;
       valid_until: string;

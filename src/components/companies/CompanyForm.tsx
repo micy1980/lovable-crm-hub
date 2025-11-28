@@ -3,16 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { Copy, Check, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { LicenseActivationDialog } from './LicenseActivationDialog';
 
 const AVAILABLE_FEATURES = [
   { value: 'partners', label: 'Partnerek' },
@@ -30,7 +29,6 @@ interface CompanyFormProps {
     tax_id?: string;
     address?: string;
     license?: {
-      license_type: string;
       max_users: number;
       valid_from: string;
       valid_until: string;
@@ -50,33 +48,15 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
   const { data: profile } = useUserProfile();
   const userIsSuperAdmin = isSuperAdmin(profile);
   const [copied, setCopied] = useState(false);
-  const [activatingLicense, setActivatingLicense] = useState(false);
-  const [licenseKeyInput, setLicenseKeyInput] = useState('');
-  
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(
-    initialData?.license?.features || AVAILABLE_FEATURES.map(f => f.value)
-  );
-  const [isActive, setIsActive] = useState(initialData?.license?.is_active ?? true);
+  const [showLicenseDialog, setShowLicenseDialog] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       name: initialData?.name || '',
       tax_id: initialData?.tax_id || '',
       address: initialData?.address || '',
-      license_type: initialData?.license?.license_type || 'basic',
-      max_users: initialData?.license?.max_users || 5,
-      valid_from: initialData?.license?.valid_from?.split('T')[0] || new Date().toISOString().split('T')[0],
-      valid_until: initialData?.license?.valid_until?.split('T')[0] || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     },
   });
-
-  const toggleFeature = (feature: string) => {
-    setSelectedFeatures(prev =>
-      prev.includes(feature)
-        ? prev.filter(f => f !== feature)
-        : [...prev, feature]
-    );
-  };
 
   const copyLicenseKey = () => {
     if (initialData?.license?.license_key) {
@@ -90,75 +70,12 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
     }
   };
 
-  const activateLicenseKey = async () => {
-    if (!licenseKeyInput.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Hiba',
-        description: 'Adjon meg egy licensz kulcsot!',
-      });
-      return;
-    }
-
-    if (!initialData?.id) {
-      toast({
-        variant: 'destructive',
-        title: 'Hiba',
-        description: 'Először mentse el a vállalatot!',
-      });
-      return;
-    }
-
-    setActivatingLicense(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('activate-license', {
-        body: {
-          company_id: initialData.id,
-          license_key: licenseKeyInput.trim(),
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: 'Licensz aktiválva',
-          description: `A licensz sikeresen aktiválva lett: ${data.license.max_users} felhasználó, ${data.license.features.length} funkció`,
-        });
-        setLicenseKeyInput('');
-        // Refresh the page to show updated license
-        window.location.reload();
-      } else {
-        throw new Error(data.error || 'Ismeretlen hiba');
-      }
-    } catch (error: any) {
-      console.error('License activation error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Licensz aktiválási hiba',
-        description: error.message || 'Nem sikerült aktiválni a licensz kulcsot',
-      });
-    } finally {
-      setActivatingLicense(false);
-    }
+  const handleFormSubmit = (data: any) => {
+    onSubmit(data);
   };
 
-  const handleFormSubmit = (data: any) => {
-    const { license_type, max_users, valid_from, valid_until, ...companyData } = data;
-    
-    const formData = {
-      ...companyData,
-      license: userIsSuperAdmin ? {
-        license_type,
-        max_users: parseInt(max_users),
-        valid_from: new Date(valid_from).toISOString(),
-        valid_until: new Date(valid_until + 'T23:59:59').toISOString(),
-        is_active: isActive,
-        features: selectedFeatures,
-      } : undefined,
-    };
-    onSubmit(formData);
+  const handleLicenseSuccess = () => {
+    window.location.reload();
   };
 
   return (
@@ -195,47 +112,24 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
           <Separator />
           
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Licensz beállítások</h3>
-            
-            {/* License Key Activation */}
-            <div className="space-y-2 bg-primary/5 p-4 rounded-lg border-2 border-primary/20">
-              <Label className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Licensz</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLicenseDialog(true)}
+                className="gap-2"
+              >
                 <Key className="h-4 w-4" />
-                Licensz kulcs aktiválása
-              </Label>
-              <p className="text-xs text-muted-foreground mb-3">
-                Illessze be a licensz generátorból kapott kulcsot a vállalat licensz beállításainak frissítéséhez.
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  value={licenseKeyInput}
-                  onChange={(e) => setLicenseKeyInput(e.target.value)}
-                  placeholder="ORBIX-... vagy ORB-..."
-                  className="font-mono text-sm"
-                  disabled={activatingLicense}
-                />
-                <Button
-                  type="button"
-                  onClick={activateLicenseKey}
-                  disabled={activatingLicense || !licenseKeyInput.trim()}
-                  className="whitespace-nowrap"
-                >
-                  {activatingLicense ? 'Aktiválás...' : 'Aktiválás'}
-                </Button>
-              </div>
-              {!initialData?.id && (
-                <p className="text-xs text-amber-600">
-                  ⚠️ Először mentse el a vállalatot, mielőtt licensz kulcsot aktiválna!
-                </p>
-              )}
+                Licenszkulcs megadása
+              </Button>
             </div>
             
-            <Separator />
-            
-            <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
-              <Label>Jelenlegi licensz kulcs</Label>
-              {initialData?.license?.license_key ? (
-                <>
+            <div className="space-y-4 bg-muted/30 p-4 rounded-lg border">
+              <div className="space-y-2">
+                <Label>Licenszkulcs</Label>
+                {initialData?.license?.license_key ? (
                   <div className="flex items-center gap-2">
                     <Input
                       value={initialData.license.license_key}
@@ -251,85 +145,73 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
                       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Ez a kulcs jelenleg aktív ennél a vállalatnál.
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Nincs aktív licensz kulcs.
                   </p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">
-                  Nincs aktív licensz kulcs.
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="license_type">Licensz típus</Label>
-              <Input
-                id="license_type"
-                {...register('license_type')}
-                placeholder="pl. basic, professional, enterprise"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="max_users">Maximum felhasználók száma</Label>
-              <Input
-                id="max_users"
-                type="number"
-                min="1"
-                {...register('max_users', { min: 1 })}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="valid_from">Érvényes-től</Label>
-                <Input
-                  id="valid_from"
-                  type="date"
-                  {...register('valid_from')}
-                />
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="valid_until">Érvényes-ig</Label>
+                <Label>Maximum felhasználók száma</Label>
                 <Input
-                  id="valid_until"
-                  type="date"
-                  {...register('valid_until')}
+                  value={initialData?.license?.max_users || '-'}
+                  readOnly
+                  disabled
+                  className="bg-muted"
                 />
               </div>
-            </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_active"
-                checked={isActive}
-                onCheckedChange={setIsActive}
-              />
-              <Label htmlFor="is_active">Aktív</Label>
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Érvényes-től</Label>
+                  <Input
+                    value={initialData?.license?.valid_from?.split('T')[0] || '-'}
+                    readOnly
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>Elérhető funkciók</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {AVAILABLE_FEATURES.map(feature => (
-                  <div key={feature.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={feature.value}
-                      checked={selectedFeatures.includes(feature.value)}
-                      onCheckedChange={() => toggleFeature(feature.value)}
-                    />
-                    <Label htmlFor={feature.value} className="font-normal cursor-pointer">
-                      {feature.label}
-                    </Label>
-                  </div>
-                ))}
+                <div className="space-y-2">
+                  <Label>Érvényes-ig</Label>
+                  <Input
+                    value={initialData?.license?.valid_until?.split('T')[0] || '-'}
+                    readOnly
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Elérhető funkciók</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {AVAILABLE_FEATURES.map(feature => (
+                    <div key={feature.value} className="flex items-center space-x-2 opacity-60">
+                      <Checkbox
+                        id={`${feature.value}-readonly`}
+                        checked={initialData?.license?.features?.includes(feature.value) || false}
+                        disabled
+                      />
+                      <Label htmlFor={`${feature.value}-readonly`} className="font-normal">
+                        {feature.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </>
       )}
+
+      <LicenseActivationDialog
+        open={showLicenseDialog}
+        onOpenChange={setShowLicenseDialog}
+        companyId={initialData?.id}
+        onSuccess={handleLicenseSuccess}
+      />
 
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>

@@ -28,7 +28,6 @@ export const useCompanies = () => {
       tax_id?: string; 
       address?: string;
       license?: {
-        license_type: string;
         max_users: number;
         valid_from: string;
         valid_until: string;
@@ -112,7 +111,6 @@ export const useCompanies = () => {
       tax_id?: string; 
       address?: string;
       license?: {
-        license_type: string;
         max_users: number;
         valid_from: string;
         valid_until: string;
