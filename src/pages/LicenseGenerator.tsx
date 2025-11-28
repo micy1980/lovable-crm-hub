@@ -38,6 +38,15 @@ const LicenseGenerator = () => {
     return result;
   };
 
+  // Simple encryption function using XOR with a secret key
+  const encryptData = (data: string, secretKey: string): string => {
+    let encrypted = '';
+    for (let i = 0; i < data.length; i++) {
+      encrypted += String.fromCharCode(data.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length));
+    }
+    return btoa(encrypted); // Base64 encode the encrypted data
+  };
+
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -54,16 +63,22 @@ const LicenseGenerator = () => {
     };
 
     const jsonString = JSON.stringify(licenseData);
-    const base64 = btoa(jsonString);
     
-    // Generate 25 character random string in 5 blocks of 5
-    const randomPart = generateRandomString(25);
-    const formattedRandom = `${randomPart.substring(0, 5)}-${randomPart.substring(5, 10)}-${randomPart.substring(10, 15)}-${randomPart.substring(15, 20)}-${randomPart.substring(20, 25)}`;
+    // SECRET KEY - Ez csak a generátorban van, a CRM-ben az edge functionben is be kell állítani!
+    const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
     
-    const licenseKey = `ORB-${formattedRandom}-${base64}`;
+    // Encrypt the license data
+    const encryptedData = encryptData(jsonString, SECRET_KEY);
+    
+    // Generate 75 character license key (ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX format)
+    // The encrypted data is embedded in the key blocks
+    const keyData = encryptedData.replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 75);
+    const paddedKeyData = (keyData + generateRandomString(75)).substring(0, 75);
+    
+    const licenseKey = `ORB-${paddedKeyData.substring(0, 5)}-${paddedKeyData.substring(5, 10)}-${paddedKeyData.substring(10, 15)}-${paddedKeyData.substring(15, 20)}-${paddedKeyData.substring(20, 25)}-${paddedKeyData.substring(25, 30)}-${paddedKeyData.substring(30, 35)}-${paddedKeyData.substring(35, 40)}-${paddedKeyData.substring(40, 45)}-${paddedKeyData.substring(45, 50)}-${paddedKeyData.substring(50, 55)}-${paddedKeyData.substring(55, 60)}-${paddedKeyData.substring(60, 65)}-${paddedKeyData.substring(65, 70)}-${paddedKeyData.substring(70, 75)}`;
 
     setGeneratedKey(licenseKey);
-    setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil}`);
+    setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil} | Titkosított: ${encryptedData.substring(0, 20)}...`);
     toast.success("Licensz kulcs sikeresen generálva!");
   };
 
