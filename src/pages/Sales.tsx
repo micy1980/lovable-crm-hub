@@ -7,11 +7,13 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { Link } from 'react-router-dom';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
+  const { canEdit } = useReadOnlyMode();
 
   if (!activeCompany) {
     return (
@@ -45,7 +47,7 @@ const Sales = () => {
             {t('sales.description', { companyName: activeCompany.name })}
           </p>
         </div>
-        <Button>
+        <Button disabled={!canEdit}>
           <Plus className="mr-2 h-4 w-4" />
           {t('sales.newOpportunity')}
         </Button>
