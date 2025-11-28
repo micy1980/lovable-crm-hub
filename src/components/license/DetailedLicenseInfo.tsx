@@ -5,6 +5,7 @@ import { useLicenseEnforcement } from '@/hooks/useLicenseEnforcement';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, Calendar, Users, Key } from 'lucide-react';
 import { format } from 'date-fns';
+import { formatLicenseKey } from '@/lib/license';
 
 interface DetailedLicenseInfoProps {
   companyId: string;
@@ -55,7 +56,7 @@ export const DetailedLicenseInfo = ({ companyId }: DetailedLicenseInfoProps) => 
           <Key className="h-5 w-5 text-muted-foreground mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-medium mb-1">{t('license.licenseKey')}</p>
-            <p className="text-xs font-mono text-muted-foreground break-all">{license.license_key || t('license.notSet')}</p>
+            <p className="text-xs font-mono text-muted-foreground">{license.license_key ? formatLicenseKey(license.license_key) : t('license.notSet')}</p>
           </div>
         </div>
 
