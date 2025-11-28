@@ -12,8 +12,9 @@ export const useUserCompanies = () => {
       
       const { data, error } = await supabase
         .from('user_companies')
-        .select('company_id, companies(id, name, tax_id)')
-        .eq('user_id', user.id);
+        .select('company_id, companies!inner(id, name, tax_id)')
+        .eq('user_id', user.id)
+        .is('companies.deleted_at', null);
 
       if (error) throw error;
       return data?.map(uc => uc.companies).filter(Boolean) || [];
