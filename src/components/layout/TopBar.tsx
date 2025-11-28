@@ -64,17 +64,7 @@ export function TopBar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
-                  <div className="flex items-center gap-2">
-                    <span>{activeCompany?.name || t('topbar.selectCompany')}</span>
-                    {license && licenseStatus && (
-                      <Badge 
-                        variant={licenseStatus.status === 'active' ? 'default' : 'secondary'} 
-                        className={`text-[10px] px-1 py-0 h-4 ${licenseStatus.color}`}
-                      >
-                        {licenseStatus.label}
-                      </Badge>
-                    )}
-                  </div>
+                  <span>{activeCompany?.name || t('topbar.selectCompany')}</span>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
