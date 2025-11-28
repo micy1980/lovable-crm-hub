@@ -30,14 +30,19 @@ export function CompanyList() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const userIsSuperAdmin = isSuperAdmin(profile);
-  const { getUsedSeats } = useCompanyLicenses();
+  const { getUsedSeats, getLicenseForCompany } = useCompanyLicenses();
 
   useMemo(() => {
     const fetchUserCounts = async () => {
       const companiesWithCount = await Promise.all(
         companies.map(async (company: any) => {
           const usedSeats = await getUsedSeats(company.id);
-          return { ...company, user_count: usedSeats };
+          const license = getLicenseForCompany(company.id);
+          return { 
+            ...company, 
+            user_count: usedSeats,
+            max_users: license?.max_users || 0
+          };
         })
       );
       setCompaniesWithUserCount(companiesWithCount);
@@ -46,7 +51,7 @@ export function CompanyList() {
     if (companies.length > 0) {
       fetchUserCounts();
     }
-  }, [companies, getUsedSeats]);
+  }, [companies, getUsedSeats, getLicenseForCompany]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -219,7 +224,9 @@ export function CompanyList() {
                       isSuperAdmin={userIsSuperAdmin}
                     />
                   </div>
-                  <div className="flex items-center text-sm">{company.user_count}</div>
+                  <div className="flex items-center text-sm">
+                    {company.user_count} / {company.max_users || '-'}
+                  </div>
                   <div className="flex items-center text-sm">{format(new Date(company.created_at), 'PP')}</div>
                   <div className="flex items-center justify-end gap-1">
                     <Button
