@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
+import { formatLicenseKey } from '@/lib/license';
 
 interface CompanyLicenseInfoProps {
   companyId: string;
@@ -46,7 +47,7 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
           </span>
           {license.license_key && (
             <span className="text-xs text-muted-foreground font-mono">
-              {license.license_key}
+              {formatLicenseKey(license.license_key)}
             </span>
           )}
         </>

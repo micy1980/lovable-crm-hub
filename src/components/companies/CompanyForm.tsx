@@ -12,6 +12,7 @@ import { isSuperAdmin } from '@/lib/roleUtils';
 import { Copy, Check, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LicenseActivationDialog } from './LicenseActivationDialog';
+import { formatLicenseKey } from '@/lib/license';
 
 const AVAILABLE_FEATURES = [
   { value: 'partners', label: 'Partnerek' },
@@ -132,7 +133,7 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
                 {initialData?.license?.license_key ? (
                   <div className="flex items-center gap-2">
                     <Input
-                      value={initialData.license.license_key}
+                      value={formatLicenseKey(initialData.license.license_key)}
                       readOnly
                       className="font-mono text-sm"
                     />
