@@ -7,11 +7,11 @@ export function validatePasswordStrength(
   password: string,
   t: (key: string) => string
 ): PasswordValidationResult {
-  // Check minimum length
+  // Check minimum length (8 chars)
   if (password.length < 8) {
     return {
       valid: false,
-      message: t('auth.weakPasswordMessage'),
+      message: t('auth.passwordMinLength8'),
     };
   }
 
@@ -19,7 +19,7 @@ export function validatePasswordStrength(
   if (!/[a-z]/.test(password)) {
     return {
       valid: false,
-      message: t('auth.weakPasswordMessage'),
+      message: t('auth.passwordRequireLowercase'),
     };
   }
 
@@ -27,7 +27,7 @@ export function validatePasswordStrength(
   if (!/[A-Z]/.test(password)) {
     return {
       valid: false,
-      message: t('auth.weakPasswordMessage'),
+      message: t('auth.passwordRequireUppercase'),
     };
   }
 
@@ -35,7 +35,15 @@ export function validatePasswordStrength(
   if (!/[0-9]/.test(password)) {
     return {
       valid: false,
-      message: t('auth.weakPasswordMessage'),
+      message: t('auth.passwordRequireNumber'),
+    };
+  }
+
+  // Check for special character
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return {
+      valid: false,
+      message: t('auth.passwordRequireSpecial'),
     };
   }
 

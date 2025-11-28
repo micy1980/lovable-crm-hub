@@ -267,6 +267,69 @@ export type Database = {
         }
         Relationships: []
       }
+      locked_accounts: {
+        Row: {
+          id: string
+          locked_at: string
+          locked_by_system: boolean
+          locked_until: string | null
+          reason: string | null
+          unlocked_at: string | null
+          unlocked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          locked_at?: string
+          locked_by_system?: boolean
+          locked_until?: string | null
+          reason?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          locked_at?: string
+          locked_by_system?: boolean
+          locked_until?: string | null
+          reason?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          attempt_time: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempt_time?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempt_time?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       logs: {
         Row: {
           action: string
@@ -790,6 +853,33 @@ export type Database = {
           },
         ]
       }
+      user_recovery_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used: boolean
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -807,6 +897,10 @@ export type Database = {
       can_user_view_logs_in_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
+      }
+      count_recent_failed_attempts: {
+        Args: { _email: string; _minutes: number }
+        Returns: number
       }
       generate_license_key: { Args: never; Returns: string }
       get_admin_company_ids: {
@@ -830,6 +924,7 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      is_account_locked: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_or_above: { Args: { _user_id: string }; Returns: boolean }
       is_company_admin: {
