@@ -23,6 +23,7 @@ export function LicenseActivationDialog({
   const { toast } = useToast();
   const [licenseKey, setLicenseKey] = useState('');
   const [activating, setActivating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const formatLicenseKey = (value: string) => {
     // Remove all non-alphanumeric characters and convert to uppercase
@@ -40,17 +41,16 @@ export function LicenseActivationDialog({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatLicenseKey(e.target.value);
     setLicenseKey(formatted);
+    if (errorMessage) {
+      setErrorMessage('');
+    }
   };
 
   const handleActivate = async () => {
     const cleanKey = licenseKey.replace(/-/g, '');
     
     if (cleanKey.length !== 25) {
-      toast({
-        variant: 'destructive',
-        title: 'Hiba',
-        description: 'A licensz kulcsnak pontosan 25 karakterből kell állnia!',
-      });
+      setErrorMessage('A licensz kulcsnak pontosan 25 karakterből kell állnia!');
       return;
     }
 
@@ -64,6 +64,7 @@ export function LicenseActivationDialog({
     }
 
     setActivating(true);
+    setErrorMessage('');
 
     try {
       const { data, error } = await supabase.functions.invoke('activate-license', {
@@ -76,17 +77,17 @@ export function LicenseActivationDialog({
       // Check if the response contains an error message in the data
       if (data && !data.success) {
         const errorMessage = data.details || data.error || 'Ismeretlen hiba történt';
-        toast({
-          variant: 'destructive',
-          title: 'Licensz aktiválási hiba',
-          description: errorMessage,
-        });
+        setErrorMessage(errorMessage);
         setActivating(false);
         return;
       }
 
       if (error) {
-        throw error;
+        // Network or unexpected error
+        console.error('License activation error:', error);
+        setErrorMessage(error.message || 'Nem sikerült aktiválni a licensz kulcsot');
+        setActivating(false);
+        return;
       }
 
       if (data.success) {
@@ -102,11 +103,7 @@ export function LicenseActivationDialog({
       }
     } catch (error: any) {
       console.error('License activation error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Licensz aktiválási hiba',
-        description: error.message || 'Nem sikerült aktiválni a licensz kulcsot',
-      });
+      setErrorMessage(error.message || 'Nem sikerült aktiválni a licensz kulcsot');
     } finally {
       setActivating(false);
     }
@@ -137,6 +134,9 @@ export function LicenseActivationDialog({
               maxLength={29}
               disabled={activating}
             />
+            {errorMessage && (
+              <p className="text-sm text-destructive mt-1">{errorMessage}</p>
+            )}
           </div>
 
           {!companyId && (
