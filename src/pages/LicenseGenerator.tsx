@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { Copy, Key } from "lucide-react";
 
 const LicenseGenerator = () => {
-  const [prefix, setPrefix] = useState("ORBIX");
   const [maxUsers, setMaxUsers] = useState(5);
   const [validFrom, setValidFrom] = useState(new Date().toISOString().split('T')[0]);
   const [validUntil, setValidUntil] = useState(() => {
@@ -30,14 +29,13 @@ const LicenseGenerator = () => {
   const [generatedKey, setGeneratedKey] = useState("");
   const [licenseInfo, setLicenseInfo] = useState("");
 
-  const generateChecksum = (str: string): string => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
+  const generateRandomString = (length: number): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return Math.abs(hash).toString(16).substring(0, 6).toUpperCase();
+    return result;
   };
 
   const handleGenerate = (e: React.FormEvent) => {
@@ -57,8 +55,12 @@ const LicenseGenerator = () => {
 
     const jsonString = JSON.stringify(licenseData);
     const base64 = btoa(jsonString);
-    const checksum = generateChecksum(base64);
-    const licenseKey = `${prefix}-${base64}-${checksum}`;
+    
+    // Generate 25 character random string in 5 blocks of 5
+    const randomPart = generateRandomString(25);
+    const formattedRandom = `${randomPart.substring(0, 5)}-${randomPart.substring(5, 10)}-${randomPart.substring(10, 15)}-${randomPart.substring(15, 20)}-${randomPart.substring(20, 25)}`;
+    
+    const licenseKey = `ORB-${formattedRandom}-${base64}`;
 
     setGeneratedKey(licenseKey);
     setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil}`);
@@ -71,7 +73,6 @@ const LicenseGenerator = () => {
   };
 
   const handleReset = () => {
-    setPrefix("ORBIX");
     setMaxUsers(5);
     const today = new Date().toISOString().split('T')[0];
     const nextYear = new Date();
@@ -102,19 +103,6 @@ const LicenseGenerator = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleGenerate} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="prefix">Kulcs előtag</Label>
-              <Select value={prefix} onValueChange={setPrefix}>
-                <SelectTrigger id="prefix">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ORBIX">ORBIX</SelectItem>
-                  <SelectItem value="ORB">ORB</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="maxUsers">Maximum felhasználók száma</Label>
               <Input

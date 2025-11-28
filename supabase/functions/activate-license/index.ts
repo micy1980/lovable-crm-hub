@@ -45,48 +45,43 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Parse license key format: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-BASE64DATA
     const parts = license_key.split('-');
-    if (parts.length !== 3) {
+    
+    if (parts.length < 7) {
       return new Response(
-        JSON.stringify({
+        JSON.stringify({ 
           success: false,
-          error: 'Érvénytelen licensz kulcs szerkezet'
+          error: 'Érvénytelen licensz kulcs formátum',
+          details: 'A kulcs formátuma nem megfelelő. Elvárt: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-...'
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const [prefix, base64Data, checksum] = parts;
+    const prefix = parts[0].toUpperCase();
 
     // Validate prefix
-    if (prefix !== 'ORBIX' && prefix !== 'ORB') {
+    if (prefix !== 'ORB') {
       return new Response(
-        JSON.stringify({
+        JSON.stringify({ 
           success: false,
-          error: 'Érvénytelen licensz kulcs előtag'
+          error: 'Érvénytelen licensz kulcs előtag',
+          details: `Az előtag "${prefix}" nem támogatott. Csak ORB elfogadott.`
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify checksum
-    const calculatedChecksum = generateChecksum(base64Data);
-    if (checksum !== calculatedChecksum) {
-      console.log('Checksum mismatch:', checksum, 'vs', calculatedChecksum);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Érvénytelen licensz kulcs (checksum hiba)'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+    // Extract base64 data (everything after the 6th part)
+    const base64Data = parts.slice(6).join('-');
 
     // Decode license data
     let licenseData: LicenseData;
     try {
       const decodedString = atob(base64Data);
       licenseData = JSON.parse(decodedString);
+      console.log('Decoded license data:', licenseData);
     } catch (error) {
       console.error('Failed to decode license:', error);
       return new Response(
@@ -224,13 +219,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
-function generateChecksum(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).substring(0, 6).toUpperCase();
-}
