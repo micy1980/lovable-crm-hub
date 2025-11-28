@@ -10,7 +10,6 @@ interface LicenseData {
   features: string[];
   valid_from: string;
   valid_until: string;
-  generated_at: string;
 }
 
 interface ActivationRequest {
@@ -34,103 +33,90 @@ Deno.serve(async (req) => {
 
     console.log('Activating license for company:', company_id);
 
-    // Validate license key format
-    if (!license_key || !license_key.includes('-')) {
+    // Normalize and validate license key format: 25 alphanumeric chars, typically shown as 5x5 groups
+    if (!license_key) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Érvénytelen licensz kulcs formátum'
+          error: 'Érvénytelen licensz kulcs',
+          details: 'A kulcs nem lehet üres.',
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
-    // Parse license key format: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX (5x5)
-    const parts = license_key.split('-');
-    
-    if (parts.length !== 6) {
+    // Remove all non-alphanumeric characters and uppercase (hyphens/spaces ignored, case-insensitive)
+    const normalizedKey = license_key.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
+    if (normalizedKey.length !== 25) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: false,
           error: 'Érvénytelen licensz kulcs formátum',
-          details: 'A kulcs formátuma nem megfelelő. Elvárt: ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX'
+          details: 'A kulcs formátuma nem megfelelő. Elvárt: 5×5 karakteres kód (25 betű/szám).',
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const prefix = parts[0].toUpperCase();
-
-    // Validate prefix
-    if (prefix !== 'ORB') {
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Érvénytelen licensz kulcs előtag',
-          details: `Az előtag "${prefix}" nem támogatott. Csak ORB elfogadott.`
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Extract encrypted data (join the 5 blocks of 5 characters = 25 total)
-    const encryptedKey = parts.slice(1).join('');
+    // Encrypted payload is the normalized 25-character key
+    const encryptedKey = normalizedKey;
 
     // Decrypt and decode license data
     let licenseData: LicenseData;
     try {
-      const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
-      
+      const SECRET_KEY = 'ORBIX_LICENSE_SECRET_2025';
+
       // Convert uppercase hex string to decrypted string
       const hexString = encryptedKey.toUpperCase();
       let decrypted = '';
-      
+
       // Process hex pairs (each 2 hex chars = 1 byte)
       for (let i = 0; i < hexString.length; i += 2) {
         const hexByte = hexString.substring(i, i + 2);
         const charCode = parseInt(hexByte, 16) ^ SECRET_KEY.charCodeAt((i / 2) % SECRET_KEY.length);
         decrypted += String.fromCharCode(charCode);
       }
-      
+
       // Parse compact format
       const compactData = JSON.parse(decrypted);
-      
+
       // Convert compact format to full format
       const featureMap: Record<string, string> = {
-        'P': 'partners',
-        'R': 'projects', // R for pRojects
-        'S': 'sales',
-        'D': 'documents',
-        'C': 'calendar',
-        'L': 'logs'
+        P: 'partners',
+        R: 'projects', // R for pRojects
+        S: 'sales',
+        D: 'documents',
+        C: 'calendar',
+        L: 'logs',
       };
-      
+
       const featureString = compactData.f || '';
       const features: string[] = [];
-      
+
       for (let i = 0; i < featureString.length; i++) {
         const char = featureString[i];
         const feature = featureMap[char];
         if (feature) features.push(feature);
       }
-      
+
       licenseData = {
         max_users: compactData.u,
-        features: features,
+        features,
         valid_from: new Date().toISOString().split('T')[0], // Current date as valid_from
         valid_until: compactData.v,
-        generated_at: new Date().toISOString()
       };
-      
+
       console.log('Decoded license data:', licenseData);
     } catch (error) {
       console.error('Failed to decode license:', error);
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Nem sikerült a licensz dekódolása'
+          error: 'Érvénytelen licensz kulcs',
+          details: 'Nem sikerült a licensz dekódolása.',
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -139,9 +125,9 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Hiányos licensz adatok'
+          error: 'Hiányos licensz adatok',
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -158,9 +144,9 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Vállalat nem található'
+          error: 'Vállalat nem található',
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
@@ -168,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: existingLicense } = await supabase
       .from('company_licenses')
       .select('company_id')
-      .eq('license_key', license_key)
+      .eq('license_key', normalizedKey)
       .neq('company_id', company_id)
       .single();
 
@@ -176,22 +162,21 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Ez a licensz kulcs már használatban van másik vállalatnál'
+          error: 'Ez a licensz kulcs már használatban van másik vállalatnál',
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
-    // Create or update license
+    // Prepare license record for persistence
     const licenseRecord = {
       company_id,
-      license_type: prefix.toLowerCase(),
       max_users: licenseData.max_users,
       valid_from: new Date(licenseData.valid_from).toISOString(),
       valid_until: new Date(licenseData.valid_until + 'T23:59:59').toISOString(),
       is_active: true,
       features: licenseData.features,
-      license_key,
+      license_key: normalizedKey,
     };
 
     // Check if company already has a license
@@ -201,7 +186,6 @@ Deno.serve(async (req) => {
       .eq('company_id', company_id)
       .single();
 
-    let result;
     if (currentLicense) {
       // Update existing license
       const { data, error } = await supabase
@@ -215,7 +199,8 @@ Deno.serve(async (req) => {
         console.error('Failed to update license:', error);
         throw error;
       }
-      result = data;
+
+      console.log('Existing license updated:', data);
     } else {
       // Create new license
       const { data, error } = await supabase
@@ -228,7 +213,8 @@ Deno.serve(async (req) => {
         console.error('Failed to create license:', error);
         throw error;
       }
-      result = data;
+
+      console.log('New license created:', data);
     }
 
     console.log('License activated successfully for company:', company.name);
@@ -239,22 +225,20 @@ Deno.serve(async (req) => {
         message: 'Licensz sikeresen aktiválva',
         license: {
           company_name: company.name,
-          license_type: licenseRecord.license_type,
           max_users: licenseRecord.max_users,
           features: licenseRecord.features,
           valid_from: licenseRecord.valid_from,
           valid_until: licenseRecord.valid_until,
-        }
+        },
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
-
   } catch (error) {
     console.error('Error activating license:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Belső szerver hiba'
+        error: error instanceof Error ? error.message : 'Belső szerver hiba',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );

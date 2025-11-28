@@ -47,7 +47,7 @@ export function LicenseActivationDialog({
   };
 
   const handleActivate = async () => {
-    const cleanKey = licenseKey.replace(/-/g, '');
+    const cleanKey = licenseKey.replace(/[^A-Z0-9]/gi, '').toUpperCase();
     
     if (cleanKey.length !== 25) {
       setErrorMessage('A licensz kulcsnak pontosan 25 karakterből kell állnia!');
@@ -70,25 +70,21 @@ export function LicenseActivationDialog({
       const { data, error } = await supabase.functions.invoke('activate-license', {
         body: {
           company_id: companyId,
-          license_key: `ORB-${cleanKey}`,
+          license_key: cleanKey,
         },
       });
 
-      // When edge function returns non-2xx status, both error and data are set
-      // Check data first for detailed error messages from the edge function
+      // Expected validation / business rule errors are returned with success: false and no error object
+      if (data && !data.success) {
+        const message = (data as any).details || (data as any).error || 'Nem sikerült aktiválni a licensz kulcsot';
+        setErrorMessage(message);
+        return;
+      }
+
       if (error) {
-        // Várt hiba (pl. hibás licensz kulcs) – ne dobjunk globális hibát, csak jelenítsük meg a mező alatt
-        console.warn('License activation warning:', error);
-        
-        // Check if data contains detailed error information
-        if (data && typeof data === 'object' && 'error' in data) {
-          const errorMessage = (data as any).details || (data as any).error || 'Ismeretlen hiba történt';
-          setErrorMessage(errorMessage);
-        } else {
-          // Fallback to generic error message
-          setErrorMessage('Nem sikerült aktiválni a licensz kulcsot');
-        }
-        setActivating(false);
+        // Váratlan hiba – logoljuk, és mutassunk általános üzenetet
+        console.warn('License activation unexpected error:', error);
+        setErrorMessage('Nem sikerült aktiválni a licensz kulcsot');
         return;
       }
 
@@ -110,7 +106,6 @@ export function LicenseActivationDialog({
       setActivating(false);
     }
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
