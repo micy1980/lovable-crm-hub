@@ -25,15 +25,11 @@ export const useLockedAccounts = () => {
   const unlockAccount = useMutation({
     mutationFn: async (userId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      const { error } = await supabase
-        .from('locked_accounts')
-        .update({ 
-          unlocked_at: new Date().toISOString(),
-          unlocked_by: user?.id 
-        })
-        .eq('user_id', userId)
-        .is('unlocked_at', null);
+
+      const { error } = await supabase.rpc('unlock_account_by_user_id', {
+        _user_id: userId,
+        _unlocked_by: user?.id,
+      });
 
       if (error) throw error;
     },
@@ -48,11 +44,7 @@ export const useLockedAccounts = () => {
   });
 
   const isUserLocked = (userId: string): boolean => {
-    return lockedAccounts.some((locked: any) => 
-      locked.user_id === userId && 
-      !locked.unlocked_at &&
-      (!locked.locked_until || new Date(locked.locked_until) > new Date())
-    );
+    return lockedAccounts.some((locked: any) => locked.user_id === userId);
   };
 
   return {
