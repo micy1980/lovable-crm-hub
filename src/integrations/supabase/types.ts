@@ -946,6 +946,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      unlock_account_by_user_id: {
+        Args: { _unlocked_by: string; _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       company_role: "ADMIN" | "NORMAL" | "VIEWER"
