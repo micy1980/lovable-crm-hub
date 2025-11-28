@@ -169,7 +169,7 @@
     "systemSettings": "Rendszerbeállítások",
     "systemSettingsDescription": "Globális rendszerbeállítások konfigurálása",
     "autoLogoutTimeout": "Automatikus Kijelentkezés Időkorlátja",
-    "autoLogoutDescription": "A felhasználók automatikusan kijelentkeznek ennyi inaktivitás után",
+    "autoLogoutDescription": "A felhasználók automatikusan kijelentkeznek ennyi idő inaktivitás után",
     "minutes": "perc"
   },
   "companies": {
