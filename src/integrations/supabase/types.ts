@@ -44,6 +44,53 @@ export type Database = {
         }
         Relationships: []
       }
+      company_licenses: {
+        Row: {
+          company_id: string
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean
+          license_type: string
+          max_users: number
+          updated_at: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          license_type: string
+          max_users: number
+          updated_at?: string
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          license_type?: string
+          max_users?: number
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_licenses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       costs: {
         Row: {
           amount: number
@@ -721,6 +768,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_add_seat: { Args: { _company_id: string }; Returns: boolean }
       can_user_delete_in_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
@@ -749,6 +797,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: string
       }
+      get_company_used_seats: { Args: { _company_id: string }; Returns: number }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -761,6 +810,10 @@ export type Database = {
       }
       is_company_admin_new: {
         Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_company_license_effective: {
+        Args: { _company_id: string }
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }

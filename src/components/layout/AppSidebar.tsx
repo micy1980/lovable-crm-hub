@@ -24,25 +24,32 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 
 export function AppSidebar() {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
+  const { hasFeatureAccess } = useFeatureAccess();
   
-  const menuItems = [
-    { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard },
-    { title: t('nav.partners'), url: '/partners', icon: Users },
-    { title: t('nav.projects'), url: '/projects', icon: FolderKanban },
-    { title: t('nav.sales'), url: '/sales', icon: TrendingUp },
-    { title: t('nav.documents'), url: '/documents', icon: FileText },
-    { title: t('nav.calendar'), url: '/calendar', icon: Calendar },
-    { title: t('nav.settings'), url: '/settings', icon: Settings },
+  const allMenuItems = [
+    { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard, feature: null },
+    { title: t('nav.partners'), url: '/partners', icon: Users, feature: 'partners' },
+    { title: t('nav.projects'), url: '/projects', icon: FolderKanban, feature: 'projects' },
+    { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
+    { title: t('nav.documents'), url: '/documents', icon: FileText, feature: 'documents' },
+    { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
+    { title: t('nav.settings'), url: '/settings', icon: Settings, feature: null },
   ];
 
   // Only show Logs to super_admin
   if (isSuperAdmin(profile)) {
-    menuItems.push({ title: t('nav.logs'), url: '/logs', icon: ScrollText });
+    allMenuItems.splice(6, 0, { title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'logs' });
   }
+
+  // Filter menu items based on license features
+  const menuItems = allMenuItems.filter(item => 
+    item.feature === null || hasFeatureAccess(item.feature)
+  );
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
