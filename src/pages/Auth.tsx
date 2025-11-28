@@ -91,9 +91,14 @@ const Auth = () => {
         // Check if we need to lock the account
         const newFailedAttempts = await checkFailedAttempts(validated.email);
         
-        if (newFailedAttempts >= maxAttempts && profile?.id) {
-          // Lock the account
-          await lockAccount(profile.id, 'Too many failed login attempts');
+        if (newFailedAttempts >= maxAttempts) {
+          // Lock the account directly by email
+          await supabase.rpc('lock_account_for_email', {
+            _email: validated.email,
+            _minutes: 30,
+            _reason: 'Too many failed login attempts',
+          });
+
           toast({
             title: t('auth.accountLocked'),
             description: t('auth.accountLockedDescription'),
