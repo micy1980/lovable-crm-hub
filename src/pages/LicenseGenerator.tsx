@@ -38,13 +38,15 @@ const LicenseGenerator = () => {
     return result;
   };
 
-  // Simple encryption function using XOR with a secret key
+  // Simple encryption function using XOR with a secret key, returns hex string (only alphanumeric)
   const encryptData = (data: string, secretKey: string): string => {
     let encrypted = '';
     for (let i = 0; i < data.length; i++) {
-      encrypted += String.fromCharCode(data.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length));
+      const charCode = data.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length);
+      // Convert to hex (always 2 digits, uppercase)
+      encrypted += charCode.toString(16).padStart(2, '0').toUpperCase();
     }
-    return btoa(encrypted); // Base64 encode the encrypted data
+    return encrypted;
   };
 
   const handleGenerate = (e: React.FormEvent) => {
@@ -57,7 +59,18 @@ const LicenseGenerator = () => {
     // Compact license data format for shorter encoding
     const licenseData = {
       u: maxUsers, // max_users
-      f: selectedFeatures.map(f => f[0].toUpperCase()).join(''), // features as initials (P=partners, P=projects, etc)
+      f: selectedFeatures.map(f => {
+        // Map features to unique single characters
+        const featureMap: Record<string, string> = {
+          'partners': 'P',
+          'projects': 'R', // R for pRojects to avoid conflict with Partners
+          'sales': 'S',
+          'documents': 'D',
+          'calendar': 'C',
+          'logs': 'L'
+        };
+        return featureMap[f] || 'X';
+      }).join(''),
       v: validUntil // valid_until (only end date matters for validation)
     };
 
@@ -66,12 +79,13 @@ const LicenseGenerator = () => {
     // SECRET KEY - Ez csak a generátorban van, a CRM-ben az edge functionben is be kell állítani!
     const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
     
-    // Encrypt the license data
+    // Encrypt the license data (returns hex string with only 0-9, A-F)
     const encryptedData = encryptData(jsonString, SECRET_KEY);
     
     // Generate 25 character license key (ORB-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX = 5x5)
-    // Use the full base64 encoded encrypted data
-    const licenseKey = `ORB-${encryptedData.substring(0, 5)}-${encryptedData.substring(5, 10)}-${encryptedData.substring(10, 15)}-${encryptedData.substring(15, 20)}-${encryptedData.substring(20, 25)}`;
+    // Use the first 25 characters of encrypted hex data (all uppercase alphanumeric)
+    const keyData = encryptedData.substring(0, 25);
+    const licenseKey = `ORB-${keyData.substring(0, 5)}-${keyData.substring(5, 10)}-${keyData.substring(10, 15)}-${keyData.substring(15, 20)}-${keyData.substring(20, 25)}`;
 
     setGeneratedKey(licenseKey);
     setLicenseInfo(`Max felhasználók: ${maxUsers} | Funkciók: ${selectedFeatures.join(', ')} | Érvényes: ${validFrom} - ${validUntil} | Titkosított: ${encryptedData.substring(0, 20)}...`);

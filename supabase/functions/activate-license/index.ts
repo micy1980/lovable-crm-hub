@@ -81,13 +81,15 @@ Deno.serve(async (req) => {
     try {
       const SECRET_KEY = "ORBIX_LICENSE_SECRET_2025";
       
-      // Decode base64
-      const encryptedString = atob(encryptedKey);
-      
-      // Decrypt with XOR
+      // Convert uppercase hex string to decrypted string
+      const hexString = encryptedKey.toUpperCase();
       let decrypted = '';
-      for (let i = 0; i < encryptedString.length; i++) {
-        decrypted += String.fromCharCode(encryptedString.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
+      
+      // Process hex pairs (each 2 hex chars = 1 byte)
+      for (let i = 0; i < hexString.length; i += 2) {
+        const hexByte = hexString.substring(i, i + 2);
+        const charCode = parseInt(hexByte, 16) ^ SECRET_KEY.charCodeAt((i / 2) % SECRET_KEY.length);
+        decrypted += String.fromCharCode(charCode);
       }
       
       // Parse compact format
@@ -96,30 +98,20 @@ Deno.serve(async (req) => {
       // Convert compact format to full format
       const featureMap: Record<string, string> = {
         'P': 'partners',
+        'R': 'projects', // R for pRojects
         'S': 'sales',
         'D': 'documents',
         'C': 'calendar',
         'L': 'logs'
       };
       
-      // Handle 'projects' which also starts with P - check for PP
       const featureString = compactData.f || '';
       const features: string[] = [];
       
       for (let i = 0; i < featureString.length; i++) {
         const char = featureString[i];
-        if (char === 'P') {
-          // Check if next char is also P (projects)
-          if (i + 1 < featureString.length && featureString[i + 1] === 'P') {
-            features.push('projects');
-            i++; // Skip next P
-          } else {
-            features.push('partners');
-          }
-        } else {
-          const feature = featureMap[char];
-          if (feature) features.push(feature);
-        }
+        const feature = featureMap[char];
+        if (feature) features.push(feature);
       }
       
       licenseData = {
