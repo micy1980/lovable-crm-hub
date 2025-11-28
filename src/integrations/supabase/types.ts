@@ -931,6 +931,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       is_account_locked: { Args: { _user_id: string }; Returns: boolean }
+      is_account_locked_by_email: { Args: { _email: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_or_above: { Args: { _user_id: string }; Returns: boolean }
       is_company_admin: {

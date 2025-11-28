@@ -38,7 +38,7 @@
     "passwordResetEmailSent": "Jelszó visszaállítási e-mail elküldve! Nézd meg a postaládád.",
     "passwordResetError": "Nem sikerült elküldeni a jelszó visszaállítási e-mailt. Kérjük, próbáld újra.",
     "accountLocked": "Fiók zárolva",
-    "accountLockedDescription": "A fiókod túl sok sikertelen bejelentkezési kísérlet miatt zárolva lett. Kérjük, próbáld később vagy lépj kapcsolatba a támogatással.",
+    "accountLockedDescription": "A felhasználói fiók zárolva van. Kérlek keresd a rendszergazdát (SA) a feloldáshoz.",
     "attemptsRemaining": "kísérlet maradt"
   },
   "nav": {
