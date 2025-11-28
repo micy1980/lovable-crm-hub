@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,6 +97,21 @@ export function CompanyList() {
       return 0;
     });
   }, [companiesWithUserCount, searchQuery, sortField, sortDirection]);
+
+  const handleEdit = async (company: any) => {
+    // Fetch license data if user is SA
+    if (userIsSuperAdmin) {
+      const { data: license } = await supabase
+        .from('company_licenses')
+        .select('*')
+        .eq('company_id', company.id)
+        .single();
+      
+      setEditingCompany({ ...company, license });
+    } else {
+      setEditingCompany(company);
+    }
+  };
 
   const handleCreate = (data: any) => {
     createCompany.mutate(data, {
@@ -221,7 +236,7 @@ export function CompanyList() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setEditingCompany(company)}
+                      onClick={() => handleEdit(company)}
                       className="h-8 w-8"
                     >
                       <Pencil className="h-4 w-4" />
@@ -243,7 +258,7 @@ export function CompanyList() {
       </CardContent>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('companies.createTitle')}</DialogTitle>
           </DialogHeader>
@@ -256,7 +271,7 @@ export function CompanyList() {
       </Dialog>
 
       <Dialog open={!!editingCompany} onOpenChange={() => setEditingCompany(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('companies.editTitle')}</DialogTitle>
           </DialogHeader>

@@ -23,14 +23,40 @@ export const useCompanies = () => {
   });
 
   const createCompany = useMutation({
-    mutationFn: async (values: { name: string; tax_id?: string; address?: string }) => {
+    mutationFn: async (values: { 
+      name: string; 
+      tax_id?: string; 
+      address?: string;
+      license?: {
+        license_type: string;
+        max_users: number;
+        valid_from: string;
+        valid_until: string;
+        is_active: boolean;
+        features: string[];
+      };
+    }) => {
+      const { license, ...companyData } = values;
+      
       const { data: company, error: companyError } = await supabase
         .from('companies')
-        .insert(values)
+        .insert(companyData)
         .select()
         .single();
 
       if (companyError) throw companyError;
+
+      // Create license if provided
+      if (license && company) {
+        const { error: licenseError } = await supabase
+          .from('company_licenses')
+          .insert({
+            company_id: company.id,
+            ...license,
+          });
+        
+        if (licenseError) throw licenseError;
+      }
 
       // Auto-assign the current user to the newly created company
       const { data: { user } } = await supabase.auth.getUser();
@@ -67,6 +93,7 @@ export const useCompanies = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['user-companies'] });
+      queryClient.invalidateQueries({ queryKey: ['company-licenses'] });
       toast({ title: t('companies.created') });
     },
     onError: (error: any) => {
@@ -79,7 +106,20 @@ export const useCompanies = () => {
   });
 
   const updateCompany = useMutation({
-    mutationFn: async ({ id, ...values }: { id: string; name: string; tax_id?: string; address?: string }) => {
+    mutationFn: async ({ id, license, ...values }: { 
+      id: string; 
+      name: string; 
+      tax_id?: string; 
+      address?: string;
+      license?: {
+        license_type: string;
+        max_users: number;
+        valid_from: string;
+        valid_until: string;
+        is_active: boolean;
+        features: string[];
+      };
+    }) => {
       const { data, error } = await supabase
         .from('companies')
         .update(values)
@@ -88,10 +128,39 @@ export const useCompanies = () => {
         .single();
 
       if (error) throw error;
+
+      // Update or create license if provided
+      if (license) {
+        const { data: existingLicense } = await supabase
+          .from('company_licenses')
+          .select('id')
+          .eq('company_id', id)
+          .single();
+
+        if (existingLicense) {
+          const { error: licenseError } = await supabase
+            .from('company_licenses')
+            .update(license)
+            .eq('company_id', id);
+          
+          if (licenseError) throw licenseError;
+        } else {
+          const { error: licenseError } = await supabase
+            .from('company_licenses')
+            .insert({
+              company_id: id,
+              ...license,
+            });
+          
+          if (licenseError) throw licenseError;
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['company-licenses'] });
       toast({ title: t('companies.updated') });
     },
     onError: (error: any) => {

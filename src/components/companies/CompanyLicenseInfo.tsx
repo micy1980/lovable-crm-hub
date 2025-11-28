@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
-import { Edit } from 'lucide-react';
-import { CompanyLicenseDialog } from './CompanyLicenseDialog';
 
 interface CompanyLicenseInfoProps {
   companyId: string;
@@ -13,7 +10,6 @@ interface CompanyLicenseInfoProps {
 
 export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: CompanyLicenseInfoProps) => {
   const { getLicenseForCompany, getLicenseStatus, getUsedSeats } = useCompanyLicenses();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [usedSeats, setUsedSeats] = useState<number>(0);
   
   const license = getLicenseForCompany(companyId);
@@ -32,7 +28,7 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
   }, [companyId, license]);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{license?.license_type || 'Nincs licenc'}</span>
@@ -51,23 +47,6 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
           </span>
         )}
       </div>
-      {isSuperAdmin && (
-        <>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setDialogOpen(true)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <CompanyLicenseDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            companyId={companyId}
-            companyName={companyName}
-          />
-        </>
-      )}
     </div>
   );
 };
