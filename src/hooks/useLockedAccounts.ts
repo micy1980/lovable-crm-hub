@@ -11,10 +11,7 @@ export const useLockedAccounts = () => {
     queryKey: ['locked-accounts'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('locked_accounts')
-        .select('*')
-        .is('unlocked_at', null)
-        .order('locked_at', { ascending: false });
+        .rpc('get_locked_user_ids');
 
       if (error) {
         console.error('Error fetching locked accounts:', error);
@@ -22,7 +19,7 @@ export const useLockedAccounts = () => {
       }
       return data || [];
     },
-    // Always run query, RLS will handle permissions
+    // Always run query, RLS will handle permissions via security definer
   });
 
   const unlockAccount = useMutation({

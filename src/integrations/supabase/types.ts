@@ -920,6 +920,12 @@ export type Database = {
         Returns: string
       }
       get_company_used_seats: { Args: { _company_id: string }; Returns: number }
+      get_locked_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
