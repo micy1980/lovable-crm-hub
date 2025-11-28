@@ -125,9 +125,6 @@ export function LicenseActivationDialog({
               maxLength={29}
               disabled={activating}
             />
-            <p className="text-xs text-muted-foreground">
-              A kötőjeleket nem kell beírni, automatikusan hozzáadódnak
-            </p>
           </div>
 
           {!companyId && (
