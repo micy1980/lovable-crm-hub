@@ -12,6 +12,10 @@ import { Building2 } from 'lucide-react';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
+import { useLoginAttempts } from '@/hooks/useLoginAttempts';
+import { useAccountLock } from '@/hooks/useAccountLock';
+import { validatePasswordStrength } from '@/lib/passwordValidation';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -22,10 +26,12 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { logLoginAttempt, checkFailedAttempts, lockAccount } = useLoginAttempts();
+  const { checkAccountLock } = useAccountLock();
   
   const authSchema = z.object({
     email: z.string().email({ message: t('auth.invalidEmail') }),
-    password: z.string().min(6, { message: t('auth.passwordMinLength') }),
+    password: z.string().min(8, { message: t('auth.passwordMinLength') }),
     fullName: z.string().min(2, { message: t('auth.fullNameMinLength') }).optional(),
   });
 
@@ -42,16 +48,51 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password });
       
-      const { error } = await supabase.auth.signInWithPassword({
+      // Check failed attempts before login
+      const failedAttempts = await checkFailedAttempts(validated.email);
+      const { data: settings } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'account_lock_attempts')
+        .single();
+      
+      const maxAttempts = settings?.setting_value ? parseInt(settings.setting_value) : 5;
+
+      if (failedAttempts >= maxAttempts) {
+        toast({
+          title: t('auth.accountLocked'),
+          description: t('auth.accountLockedDescription'),
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password,
       });
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+        // Log failed attempt
+        await logLoginAttempt({ email: validated.email, success: false });
+        
+        // Check if we need to lock the account
+        const newFailedAttempts = await checkFailedAttempts(validated.email);
+        
+        if (newFailedAttempts >= maxAttempts - 1 && data?.user?.id) {
+          // Lock the account
+          await lockAccount(data.user.id, 'Too many failed login attempts');
+          toast({
+            title: t('auth.accountLocked'),
+            description: t('auth.accountLockedDescription'),
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('Invalid login credentials')) {
+          const remaining = maxAttempts - newFailedAttempts - 1;
           toast({
             title: t('auth.loginFailed'),
-            description: t('auth.invalidCredentials'),
+            description: `${t('auth.invalidCredentials')} (${remaining} ${t('auth.attemptsRemaining')})`,
             variant: 'destructive',
           });
         } else {
@@ -61,7 +102,24 @@ const Auth = () => {
             variant: 'destructive',
           });
         }
-      } else {
+      } else if (data?.user) {
+        // Check if account is locked
+        const isLocked = await checkAccountLock(data.user.id);
+        
+        if (isLocked) {
+          await supabase.auth.signOut();
+          toast({
+            title: t('auth.accountLocked'),
+            description: t('auth.accountLockedDescription'),
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Log successful attempt
+        await logLoginAttempt({ email: validated.email, success: true, userId: data.user.id });
+        
         toast({
           title: t('auth.success'),
           description: t('auth.loggedInSuccess'),
@@ -87,6 +145,19 @@ const Auth = () => {
 
     try {
       const validated = authSchema.parse({ email, password, fullName });
+      
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(validated.password, t);
+      if (!passwordValidation.valid) {
+        toast({
+          title: t('auth.validationError'),
+          description: passwordValidation.message || t('auth.weakPassword'),
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/`;
 
       const { error } = await supabase.auth.signUp({
@@ -172,7 +243,10 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">{t('auth.password')}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signin-password">{t('auth.password')}</Label>
+                    <ForgotPasswordDialog />
+                  </div>
                   <Input
                     id="signin-password"
                     type="password"
