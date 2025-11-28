@@ -185,7 +185,7 @@ export function CompanyList() {
                 {t('companies.license')}
               </div>
               <div 
-                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
                 onClick={() => handleSort('user_count')}
               >
                 {t('companies.userCount')}
@@ -224,7 +224,7 @@ export function CompanyList() {
                       isSuperAdmin={userIsSuperAdmin}
                     />
                   </div>
-                  <div className="flex items-center text-sm">
+                  <div className="flex items-center justify-center text-sm">
                     {company.user_count} / {company.max_users || '-'}
                   </div>
                   <div className="flex items-center text-sm">{format(new Date(company.created_at), 'PP')}</div>
