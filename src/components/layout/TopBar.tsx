@@ -19,6 +19,7 @@ import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { isSuperAdmin } from '@/lib/roleUtils';
+import { CompanyLicenseWarning } from './CompanyLicenseWarning';
 
 export function TopBar() {
   const { user } = useAuth();
@@ -51,27 +52,30 @@ export function TopBar() {
 
         {/* Company Selector */}
         {companies.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                {activeCompany?.name || t('topbar.selectCompany')}
-                <ChevronDown className="h-4 w-4 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>{t('topbar.selectCompany')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {companies.map((company: any) => (
-                <DropdownMenuItem
-                  key={company.id}
-                  onClick={() => setActiveCompany(company)}
-                  className={activeCompany?.id === company.id ? 'bg-accent' : ''}
-                >
-                  {company.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  {activeCompany?.name || t('topbar.selectCompany')}
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>{t('topbar.selectCompany')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {companies.map((company: any) => (
+                  <DropdownMenuItem
+                    key={company.id}
+                    onClick={() => setActiveCompany(company)}
+                    className={activeCompany?.id === company.id ? 'bg-accent' : ''}
+                  >
+                    {company.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {activeCompany && <CompanyLicenseWarning companyId={activeCompany.id} />}
+          </div>
         )}
 
         {/* Language Selector */}

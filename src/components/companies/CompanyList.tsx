@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Pencil, Trash2, Plus, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -11,10 +10,14 @@ import { CompanyForm } from './CompanyForm';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { CompanyLicenseInfo } from './CompanyLicenseInfo';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin } from '@/lib/roleUtils';
 
 export function CompanyList() {
   const { t } = useTranslation();
   const { companies, isLoading, createCompany, updateCompany, deleteCompany } = useCompanies();
+  const { data: profile } = useUserProfile();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<any>(null);
   const [deletingCompany, setDeletingCompany] = useState<any>(null);
@@ -22,6 +25,8 @@ export function CompanyList() {
   const [companiesWithUserCount, setCompaniesWithUserCount] = useState<any[]>([]);
   const [sortField, setSortField] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  const userIsSuperAdmin = isSuperAdmin(profile);
 
   useMemo(() => {
     const fetchUserCounts = async () => {
@@ -145,7 +150,7 @@ export function CompanyList() {
 
           <div className="border rounded-lg overflow-hidden">
             {/* Header Row */}
-            <div className="grid grid-cols-[200px_120px_1fr_80px_120px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+            <div className="grid grid-cols-[200px_120px_1fr_300px_80px_120px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
               <div 
                 className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                 onClick={() => handleSort('name')}
@@ -166,6 +171,9 @@ export function CompanyList() {
               >
                 {t('companies.address')}
                 {getSortIcon('address')}
+              </div>
+              <div className="text-sm font-semibold text-muted-foreground">
+                {t('companies.license')}
               </div>
               <div 
                 className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
@@ -193,13 +201,20 @@ export function CompanyList() {
               filteredCompanies.map((company: any, index: number) => (
                 <div
                   key={company.id}
-                  className={`grid grid-cols-[200px_120px_1fr_80px_120px_100px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors ${
+                  className={`grid grid-cols-[200px_120px_1fr_300px_80px_120px_100px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors ${
                     index % 2 === 1 ? 'bg-muted/10' : ''
                   }`}
                 >
                   <div className="font-medium flex items-center truncate">{company.name}</div>
                   <div className="flex items-center text-sm">{company.tax_id || '-'}</div>
                   <div className="flex items-center text-sm truncate">{company.address || '-'}</div>
+                  <div className="flex items-center">
+                    <CompanyLicenseInfo 
+                      companyId={company.id} 
+                      companyName={company.name}
+                      isSuperAdmin={userIsSuperAdmin}
+                    />
+                  </div>
                   <div className="flex items-center justify-center text-sm">{company.user_count}</div>
                   <div className="flex items-center text-sm">{format(new Date(company.created_at), 'PP')}</div>
                   <div className="flex items-center justify-end gap-1">
