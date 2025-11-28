@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
-import { formatLicenseKey } from '@/lib/license';
 
 interface CompanyLicenseInfoProps {
   companyId: string;
@@ -10,50 +8,36 @@ interface CompanyLicenseInfoProps {
 }
 
 export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: CompanyLicenseInfoProps) => {
-  const { getLicenseForCompany, getLicenseStatus, getUsedSeats } = useCompanyLicenses();
-  const [usedSeats, setUsedSeats] = useState<number>(0);
+  const { getLicenseForCompany, getLicenseStatus } = useCompanyLicenses();
   
   const license = getLicenseForCompany(companyId);
   const status = getLicenseStatus(license);
 
-  useEffect(() => {
-    const fetchSeats = async () => {
-      try {
-        const seats = await getUsedSeats(companyId);
-        setUsedSeats(seats);
-      } catch (error) {
-        console.error('Error fetching seats:', error);
+  const getBadgeVariant = () => {
+    if (status.status === 'active') {
+      const daysUntilExpiry = license ? Math.floor((new Date(license.valid_until).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+      if (daysUntilExpiry !== null && daysUntilExpiry <= 30) {
+        return 'default';
       }
-    };
-    fetchSeats();
-  }, [companyId, license]);
+      return 'default';
+    }
+    return 'secondary';
+  };
+
+  const getBadgeColor = () => {
+    if (status.status === 'active') {
+      const daysUntilExpiry = license ? Math.floor((new Date(license.valid_until).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+      if (daysUntilExpiry !== null && daysUntilExpiry <= 30) {
+        return 'bg-yellow-500 hover:bg-yellow-600 text-white';
+      }
+      return 'bg-green-500 hover:bg-green-600 text-white';
+    }
+    return 'bg-red-500 hover:bg-red-600 text-white';
+  };
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <Badge variant={status.status === 'active' ? 'default' : 'secondary'} className={status.color}>
-          {status.label}
-        </Badge>
-      </div>
-      {license ? (
-        <>
-          <span className="text-sm text-muted-foreground">
-            {usedSeats} / {license.max_users} felhasználó
-            {usedSeats > license.max_users && (
-              <span className="text-destructive ml-2 font-medium">
-                ⚠️ Túllépve!
-              </span>
-            )}
-          </span>
-          {license.license_key && (
-            <span className="text-xs text-muted-foreground font-mono">
-              {formatLicenseKey(license.license_key)}
-            </span>
-          )}
-        </>
-      ) : (
-        <span className="text-sm text-muted-foreground">Nincs licenc</span>
-      )}
-    </div>
+    <Badge variant={getBadgeVariant()} className={getBadgeColor()}>
+      {status.label}
+    </Badge>
   );
 };
