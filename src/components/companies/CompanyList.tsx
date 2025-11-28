@@ -225,7 +225,7 @@ export function CompanyList() {
                     />
                   </div>
                   <div className="flex items-center justify-center text-sm">
-                    {company.max_users || '-'}
+                    {company.user_count} / {company.max_users || '-'}
                   </div>
                   <div className="flex items-center text-sm">{format(new Date(company.created_at), 'PP')}</div>
                   <div className="flex items-center justify-end gap-1">
