@@ -48,23 +48,27 @@ export const useLoginAttempts = () => {
       .from('system_settings')
       .select('setting_value')
       .eq('setting_key', 'account_lock_auto_unlock_minutes')
-      .single();
+      .maybeSingle();
 
     const autoUnlockMinutes = settings?.setting_value ? parseInt(settings.setting_value) : 30;
-    const lockedUntil = new Date();
-    lockedUntil.setMinutes(lockedUntil.getMinutes() + autoUnlockMinutes);
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (!profile?.email) return;
 
     const { error } = await supabase
-      .from('locked_accounts')
-      .insert({
-        user_id: userId,
-        locked_by_system: true,
-        locked_until: lockedUntil.toISOString(),
-        reason,
+      .rpc('lock_account_for_email', {
+        _email: profile.email,
+        _minutes: autoUnlockMinutes,
+        _reason: reason,
       });
 
     if (error && !error.message.includes('duplicate')) {
-      console.error('Error locking account:', error);
+      console.error('Error locking account via RPC:', error);
     }
   };
 
