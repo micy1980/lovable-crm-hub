@@ -49,17 +49,28 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password });
       
+      // Try to find profile by email (for locking by user_id)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', validated.email)
+        .maybeSingle();
+      
       // Check failed attempts before login
       const failedAttempts = await checkFailedAttempts(validated.email);
       const { data: settings } = await supabase
         .from('system_settings')
         .select('setting_value')
         .eq('setting_key', 'account_lock_attempts')
-        .single();
+        .maybeSingle();
       
       const maxAttempts = settings?.setting_value ? parseInt(settings.setting_value) : 5;
 
       if (failedAttempts >= maxAttempts) {
+        // Ensure account is marked as locked if we know the user
+        if (profile?.id) {
+          await lockAccount(profile.id, 'Too many failed login attempts');
+        }
         toast({
           title: t('auth.accountLocked'),
           description: t('auth.accountLockedDescription'),
@@ -81,16 +92,16 @@ const Auth = () => {
         // Check if we need to lock the account
         const newFailedAttempts = await checkFailedAttempts(validated.email);
         
-        if (newFailedAttempts >= maxAttempts - 1 && data?.user?.id) {
+        if (newFailedAttempts >= maxAttempts && profile?.id) {
           // Lock the account
-          await lockAccount(data.user.id, 'Too many failed login attempts');
+          await lockAccount(profile.id, 'Too many failed login attempts');
           toast({
             title: t('auth.accountLocked'),
             description: t('auth.accountLockedDescription'),
             variant: 'destructive',
           });
         } else if (error.message.includes('Invalid login credentials')) {
-          const remaining = maxAttempts - newFailedAttempts - 1;
+          const remaining = Math.max(maxAttempts - newFailedAttempts, 0);
           toast({
             title: t('auth.loginFailed'),
             description: `${t('auth.invalidCredentials')} (${remaining} ${t('auth.attemptsRemaining')})`,
