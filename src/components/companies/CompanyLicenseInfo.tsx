@@ -30,12 +30,11 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">{license?.license_type || 'Nincs licenc'}</span>
         <Badge variant={status.status === 'active' ? 'default' : 'secondary'} className={status.color}>
           {status.label}
         </Badge>
       </div>
-      {license && (
+      {license ? (
         <>
           <span className="text-sm text-muted-foreground">
             {usedSeats} / {license.max_users} felhasználó
@@ -51,6 +50,8 @@ export const CompanyLicenseInfo = ({ companyId, companyName, isSuperAdmin }: Com
             </span>
           )}
         </>
+      ) : (
+        <span className="text-sm text-muted-foreground">Nincs licenc</span>
       )}
     </div>
   );

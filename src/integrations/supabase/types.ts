@@ -52,7 +52,6 @@ export type Database = {
           id: string
           is_active: boolean
           license_key: string | null
-          license_type: string
           max_users: number
           updated_at: string
           valid_from: string
@@ -65,7 +64,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           license_key?: string | null
-          license_type: string
           max_users: number
           updated_at?: string
           valid_from: string
@@ -78,7 +76,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           license_key?: string | null
-          license_type?: string
           max_users?: number
           updated_at?: string
           valid_from?: string
