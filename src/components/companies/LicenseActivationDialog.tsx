@@ -74,23 +74,24 @@ export function LicenseActivationDialog({
         },
       });
 
-      // Check if the response contains an error message in the data
-      if (data && !data.success) {
-        const errorMessage = data.details || data.error || 'Ismeretlen hiba történt';
-        setErrorMessage(errorMessage);
-        setActivating(false);
-        return;
-      }
-
+      // When edge function returns non-2xx status, both error and data are set
+      // Check data first for detailed error messages from the edge function
       if (error) {
-        // Network or unexpected error
         console.error('License activation error:', error);
-        setErrorMessage(error.message || 'Nem sikerült aktiválni a licensz kulcsot');
+        
+        // Check if data contains detailed error information
+        if (data && typeof data === 'object' && 'error' in data) {
+          const errorMessage = data.details || data.error || 'Ismeretlen hiba történt';
+          setErrorMessage(errorMessage);
+        } else {
+          // Fallback to generic error message
+          setErrorMessage('Nem sikerült aktiválni a licensz kulcsot');
+        }
         setActivating(false);
         return;
       }
 
-      if (data.success) {
+      if (data && data.success) {
         toast({
           title: 'Licensz aktiválva',
           description: `A licensz sikeresen aktiválva lett`,
