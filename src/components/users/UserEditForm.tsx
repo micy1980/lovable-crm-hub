@@ -103,20 +103,44 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         password: data.password && data.password.trim() !== '' ? data.password : undefined,
         mustChangePassword: data.password && data.password.trim() !== '' ? mustChangePassword : undefined,
       });
+      
+      // Show success toast for password update
+      if (data.password && data.password.trim() !== '') {
+        toast({
+          title: t('users.messages.passwordUpdated'),
+        });
+      }
+      
       onClose();
     } catch (error: any) {
       // Check if this is a duplicate email error
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
         setEmailError(t('users.emailAlreadyExists'));
+        toast({
+          title: t('common.errors.userUpdateFailed'),
+          variant: 'destructive',
+        });
         return;
       }
+      
       // Check if this is a weak password error from the backend
       if (error?.isWeakPassword) {
-        setPasswordError(t('auth.weakPasswordMessage'));
+        setPasswordError(t('users.errors.weakPassword'));
+        toast({
+          title: t('users.errors.weakPasswordToast'),
+          variant: 'destructive',
+        });
         return;
       }
-      // Other errors will be handled by the global error handler
-      throw error;
+      
+      // Other errors
+      toast({
+        title: t('common.errors.userUpdateFailed'),
+        variant: 'destructive',
+      });
+      
+      // Don't throw - keep dialog open for user to fix
+      return;
     }
   };
 

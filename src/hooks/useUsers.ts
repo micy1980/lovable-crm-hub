@@ -140,24 +140,48 @@ export const useUsers = () => {
           },
         });
 
+        // Helper function to extract Supabase error message from raw error string
+        const extractSupabaseErrorMessage = (raw: string): string => {
+          const match = raw.match(/\{.*\}/);
+          if (match) {
+            try {
+              const parsed = JSON.parse(match[0]);
+              if (typeof parsed.error === 'string') return parsed.error;
+            } catch {
+              // ignore parse errors
+            }
+          }
+          return raw;
+        };
+
         if (passwordError) {
-          throw new Error(passwordError.message || 'Failed to update password');
+          // Extract the actual error message from the raw error
+          const supabaseMsg = extractSupabaseErrorMessage(passwordError.message || '');
+          
+          // Check if it's a weak password error
+          if (supabaseMsg.toLowerCase().includes('password is known to be weak') ||
+              supabaseMsg.toLowerCase().includes('easy to guess')) {
+            const weakPasswordError = new Error(t('users.errors.weakPassword'));
+            (weakPasswordError as any).isWeakPassword = true;
+            throw weakPasswordError;
+          }
+          
+          // Other errors
+          throw new Error(supabaseMsg || 'Failed to update password');
         }
 
         // Check if the function returned a structured error in the response body
         if (passwordData && typeof passwordData === 'object') {
           if ('code' in passwordData && passwordData.code === 'weak_password') {
-            // Create an error with a special code that the form can catch
-            const weakPasswordError = new Error(t('auth.weakPasswordMessage'));
+            const weakPasswordError = new Error(t('users.errors.weakPassword'));
             (weakPasswordError as any).isWeakPassword = true;
             throw weakPasswordError;
           }
           if ('error' in passwordData) {
-            // Check if the error message indicates a weak password
             const errorMsg = passwordData.error as string;
             if (errorMsg.toLowerCase().includes('weak') || 
                 errorMsg.toLowerCase().includes('easy to guess')) {
-              const weakPasswordError = new Error(t('auth.weakPasswordMessage'));
+              const weakPasswordError = new Error(t('users.errors.weakPassword'));
               (weakPasswordError as any).isWeakPassword = true;
               throw weakPasswordError;
             }
