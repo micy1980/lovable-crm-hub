@@ -156,15 +156,16 @@ export const useUsers = () => {
           };
 
           if (passwordError) {
-            // Extract the actual error message from the raw error
-            const supabaseMsg = extractSupabaseErrorMessage(passwordError.message || '');
-            console.log('[useUsers] Password error detected:', supabaseMsg);
+            // Prefer detailed context from the edge function if available
+            const rawMessage = (passwordError as any)?.context?.error || passwordError.message || '';
+            const supabaseMsg = extractSupabaseErrorMessage(rawMessage);
+            console.log('[useUsers] Password error detected:', supabaseMsg, 'raw:', rawMessage);
             
             // Check if it's a weak password error
-            if (supabaseMsg.toLowerCase().includes('password is known to be weak') ||
-                supabaseMsg.toLowerCase().includes('easy to guess')) {
-              const weakPasswordError = new Error(t('users.errors.weakPassword'));
-              (weakPasswordError as any).isWeakPassword = true;
+            const lower = supabaseMsg.toLowerCase();
+            if (lower.includes('password is known to be weak') || lower.includes('easy to guess')) {
+              const weakPasswordError: any = new Error(t('users.errors.weakPassword'));
+              weakPasswordError.isWeakPassword = true;
               console.log('[useUsers] Throwing weak password error');
               throw weakPasswordError;
             }
