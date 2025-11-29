@@ -901,6 +901,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_old_login_attempts: { Args: never; Returns: undefined }
       count_recent_failed_attempts: {
         Args: { _email: string; _minutes: number }
         Returns: number
