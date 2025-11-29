@@ -41,7 +41,7 @@
     "accountLockedDescription": "A felhasználói fiók zárolva van. Kérlek keresd a rendszergazdát (SA) a feloldáshoz.",
     "attemptsRemaining": "kísérlet maradt",
     "changePasswordRequired": "Jelszóváltoztatás szükséges",
-    "changePasswordRequiredDescription": "Az adminisztrátor megköveteli, hogy változtassa meg a jelszavát a folytatás előtt.",
+    "changePasswordRequiredDescription": "",
     "passwordChangeRequiredMessage": "Kérjük, állítson be új jelszót a folytatáshoz.",
     "newPassword": "Új jelszó",
     "confirmPassword": "Jelszó megerősítése",
