@@ -51,6 +51,8 @@ export const useLockedAccounts = () => {
     },
   });
 
+  console.log('[useLockedAccounts] Locked accounts in hook:', lockedAccounts);
+
   const unlockAccount = useMutation({
     mutationFn: async (userId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
