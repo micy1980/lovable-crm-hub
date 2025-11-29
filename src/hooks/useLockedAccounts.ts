@@ -10,11 +10,9 @@ export const useLockedAccounts = () => {
   const { data: lockedAccounts = [], isLoading } = useQuery({
     queryKey: ['locked-accounts'],
     queryFn: async () => {
-      // Directly load all currently locked accounts
+      // Use security definer function to bypass RLS issues
       const { data: lockedDetails, error: detailsError } = await supabase
-        .from('locked_accounts')
-        .select('*')
-        .is('unlocked_at', null);
+        .rpc('get_locked_accounts_with_details');
 
       if (detailsError) {
         console.error('Error fetching locked account details:', detailsError);
@@ -47,11 +45,10 @@ export const useLockedAccounts = () => {
         };
       });
 
+      console.log('[useLockedAccounts] Locked accounts fetched:', lockedWithDetails);
       return lockedWithDetails;
     },
   });
-
-  console.log('[useLockedAccounts] Locked accounts in hook:', lockedAccounts);
 
   const unlockAccount = useMutation({
     mutationFn: async (userId: string) => {

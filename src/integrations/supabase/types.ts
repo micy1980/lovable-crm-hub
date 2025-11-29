@@ -924,6 +924,21 @@ export type Database = {
         Returns: string
       }
       get_company_used_seats: { Args: { _company_id: string }; Returns: number }
+      get_locked_accounts_with_details: {
+        Args: never
+        Returns: {
+          id: string
+          locked_at: string
+          locked_by_system: boolean
+          locked_until: string
+          reason: string
+          unlocked_at: string
+          unlocked_by: string
+          user_email: string
+          user_full_name: string
+          user_id: string
+        }[]
+      }
       get_locked_user_ids: {
         Args: never
         Returns: {
