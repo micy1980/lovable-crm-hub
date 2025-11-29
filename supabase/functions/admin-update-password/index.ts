@@ -159,15 +159,44 @@ Deno.serve(async (req) => {
     )
 
     if (updateError) {
-      console.error('[admin-update-password] Failed to update password:', updateError.message)
+      console.error('[admin-update-password] Failed to update password:', updateError.message);
       
+      const msg = updateError.message || '';
+      const lower = msg.toLowerCase();
+      const isWeakPassword =
+        lower.includes('password is known to be weak') ||
+        lower.includes('easy to guess');
+
+      if (isWeakPassword) {
+        // Expected validation error: weak / commonly used password.
+        // Return 200 with a structured body so supabase.functions.invoke
+        // does NOT populate the `error` field and the frontend can
+        // handle this as a normal validation error.
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            code: 'weak_password',
+            error: updateError.message,
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Other errors: keep them as real HTTP errors (400)
+      // so they still surface as genuine problems.
       return new Response(
-        JSON.stringify({ error: updateError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        JSON.stringify({
+          ok: false,
+          error: updateError.message,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
-      )
+      );
     }
 
     console.log('[admin-update-password] Successfully updated password for user:', payload.userId)
