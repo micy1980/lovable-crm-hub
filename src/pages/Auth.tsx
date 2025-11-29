@@ -78,15 +78,24 @@ const Auth = () => {
         return;
       }
       
-      // Load settings for lock threshold
-      const { data: settings } = await supabase
+      // Load settings for lock threshold and auto-unlock time
+      const { data: settingsData } = await supabase
         .from('system_settings')
-        .select('setting_value')
-        .eq('setting_key', 'account_lock_attempts')
-        .maybeSingle();
+        .select('setting_key, setting_value')
+        .in('setting_key', ['account_lock_attempts', 'account_lock_auto_unlock_minutes']);
       
-      const maxAttempts = settings?.setting_value ? parseInt(settings.setting_value) : 5;
-      console.log(`Max login attempts allowed: ${maxAttempts}`);
+      const settingsMap = new Map(
+        settingsData?.map(s => [s.setting_key, s.setting_value]) || []
+      );
+      
+      const maxAttempts = settingsMap.get('account_lock_attempts') 
+        ? parseInt(settingsMap.get('account_lock_attempts')!) 
+        : 5;
+      const autoUnlockMinutes = settingsMap.get('account_lock_auto_unlock_minutes')
+        ? parseInt(settingsMap.get('account_lock_auto_unlock_minutes')!)
+        : 30;
+      
+      console.log(`Max login attempts allowed: ${maxAttempts}, auto-unlock: ${autoUnlockMinutes} minutes`);
 
       // Try to sign in
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -108,7 +117,7 @@ const Auth = () => {
           console.log(`🔒 LOCKING ACCOUNT: ${validated.email} (${failedAttempts}/${maxAttempts} attempts)`);
           const { data: lockResult, error: lockError } = await supabase.rpc('lock_account_for_email', {
             _email: validated.email,
-            _minutes: 30,
+            _minutes: autoUnlockMinutes,
             _reason: 'Too many failed login attempts',
           });
           

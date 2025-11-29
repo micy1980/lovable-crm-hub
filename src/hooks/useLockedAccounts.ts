@@ -10,14 +10,54 @@ export const useLockedAccounts = () => {
   const { data: lockedAccounts = [], isLoading } = useQuery({
     queryKey: ['locked-accounts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get locked user IDs
+      const { data: lockedUserIds, error: idsError } = await supabase
         .rpc('get_locked_user_ids');
 
-      if (error) {
-        console.error('Error fetching locked accounts:', error);
+      if (idsError) {
+        console.error('Error fetching locked user IDs:', idsError);
         return [];
       }
-      return data || [];
+
+      if (!lockedUserIds || lockedUserIds.length === 0) {
+        return [];
+      }
+
+      // Get full locked account details
+      const userIds = lockedUserIds.map((item: any) => item.user_id);
+      const { data: lockedDetails, error: detailsError } = await supabase
+        .from('locked_accounts')
+        .select('*')
+        .in('user_id', userIds)
+        .is('unlocked_at', null);
+
+      if (detailsError) {
+        console.error('Error fetching locked account details:', detailsError);
+        return lockedUserIds; // Return just IDs if details fail
+      }
+
+      // Get recent login attempts for IP addresses
+      const { data: recentAttempts } = await supabase
+        .from('login_attempts')
+        .select('user_id, ip_address, attempt_time')
+        .in('user_id', userIds)
+        .eq('success', false)
+        .order('attempt_time', { ascending: false })
+        .limit(100);
+
+      // Map IP addresses to locked accounts
+      const lockedWithDetails = lockedDetails?.map((lock: any) => {
+        const userAttempts = recentAttempts?.filter((a: any) => a.user_id === lock.user_id) || [];
+        const latestAttempt = userAttempts[0];
+        
+        return {
+          ...lock,
+          ip_address: latestAttempt?.ip_address || null,
+          last_attempt_time: latestAttempt?.attempt_time || null,
+        };
+      }) || [];
+
+      return lockedWithDetails;
     },
     // Always run query, RLS will handle permissions via security definer
   });
@@ -54,10 +94,15 @@ export const useLockedAccounts = () => {
     return lockedAccounts.some((locked: any) => locked.user_id === userId);
   };
 
+  const getLockedAccountDetails = (userId: string) => {
+    return lockedAccounts.find((locked: any) => locked.user_id === userId);
+  };
+
   return {
     lockedAccounts,
     isLoading,
     unlockAccount,
     isUserLocked,
+    getLockedAccountDetails,
   };
 };

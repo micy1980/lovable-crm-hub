@@ -52,6 +52,7 @@ export const useLoginAttempts = () => {
 
     const autoUnlockMinutes = settings?.setting_value ? parseInt(settings.setting_value) : 30;
 
+    // Get user profile to get email
     const { data: profile } = await supabase
       .from('profiles')
       .select('email')
@@ -60,6 +61,7 @@ export const useLoginAttempts = () => {
 
     if (!profile?.email) return;
 
+    // First, lock the account
     const { error } = await supabase
       .rpc('lock_account_for_email', {
         _email: profile.email,
@@ -69,6 +71,26 @@ export const useLoginAttempts = () => {
 
     if (error && !error.message.includes('duplicate')) {
       console.error('Error locking account via RPC:', error);
+      return;
+    }
+
+    // Then notify super admins
+    try {
+      const lockedUntil = new Date();
+      lockedUntil.setMinutes(lockedUntil.getMinutes() + autoUnlockMinutes);
+
+      await supabase.functions.invoke('notify-account-lock', {
+        body: {
+          userId,
+          email: profile.email,
+          reason,
+          lockedUntil: lockedUntil.toISOString(),
+          ipAddress: '', // Will be filled from login_attempts table in edge function
+        },
+      });
+    } catch (notifyError) {
+      console.error('Error sending lock notification:', notifyError);
+      // Don't fail the lock operation if notification fails
     }
   };
 
