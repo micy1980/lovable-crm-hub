@@ -81,7 +81,10 @@
     "system": "Rendszer",
     "actions": "Műveletek",
     "yes": "Igen",
-    "no": "Nem"
+    "no": "Nem",
+    "errors": {
+      "userUpdateFailed": "Hiba történt a felhasználó frissítése során."
+    }
   },
   "dashboard": {
     "title": "Vezérlőpult",
@@ -303,6 +306,13 @@
     "mustChangePasswordOnNextLogin": {
       "label": "Belépéskor a felhasználónak meg kell változtatnia a jelszavát",
       "tooltip": "Ha be van kapcsolva, a felhasználó kényszerítve lesz egy új erős jelszó beállítására a következő bejelentkezéskor"
+    },
+    "errors": {
+      "weakPassword": "A jelszó túl gyenge vagy gyakran használt. Kérlek, válassz másikat.",
+      "weakPasswordToast": "A jelszót a rendszer túl gyengének ítélte, kérlek válassz másikat."
+    },
+    "messages": {
+      "passwordUpdated": "A jelszó sikeresen frissült."
     },
     "deleteDialog": {
       "title": "Felhasználó törlése",

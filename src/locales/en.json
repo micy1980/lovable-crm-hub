@@ -81,7 +81,10 @@
     "system": "System",
     "actions": "Actions",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "errors": {
+      "userUpdateFailed": "An error occurred while updating the user."
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -303,6 +306,13 @@
     "mustChangePasswordOnNextLogin": {
       "label": "User must change password at next login",
       "tooltip": "When enabled, the user will be forced to set a new strong password on their next login"
+    },
+    "errors": {
+      "weakPassword": "The password is too weak or commonly used. Please choose a different one.",
+      "weakPasswordToast": "The password was rejected as too weak. Please choose a different one."
+    },
+    "messages": {
+      "passwordUpdated": "Password updated successfully."
     },
     "deleteDialog": {
       "title": "Delete user",
