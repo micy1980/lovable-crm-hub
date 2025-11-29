@@ -9,6 +9,7 @@ import { CompanyProvider } from "@/contexts/CompanyContext";
 import { MainLayout } from "@/components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import ChangePassword from "./pages/ChangePassword";
 import Partners from "./pages/Partners";
 import Projects from "./pages/Projects";
 import Sales from "./pages/Sales";
@@ -30,9 +31,10 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
                 <Route path="/partners" element={<MainLayout><Partners /></MainLayout>} />
                 <Route path="/projects" element={<MainLayout><Projects /></MainLayout>} />
                 <Route path="/sales" element={<MainLayout><Sales /></MainLayout>} />

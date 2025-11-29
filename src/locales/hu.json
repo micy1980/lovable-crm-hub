@@ -39,7 +39,18 @@
     "passwordResetError": "Nem sikerült elküldeni a jelszó visszaállítási e-mailt. Kérjük, próbáld újra.",
     "accountLocked": "Fiók zárolva",
     "accountLockedDescription": "A felhasználói fiók zárolva van. Kérlek keresd a rendszergazdát (SA) a feloldáshoz.",
-    "attemptsRemaining": "kísérlet maradt"
+    "attemptsRemaining": "kísérlet maradt",
+    "changePasswordRequired": "Jelszóváltoztatás szükséges",
+    "changePasswordRequiredDescription": "Az adminisztrátor megköveteli, hogy változtassa meg a jelszavát a folytatás előtt.",
+    "passwordChangeRequiredMessage": "Kérjük, állítson be új jelszót a folytatáshoz.",
+    "newPassword": "Új jelszó",
+    "confirmPassword": "Jelszó megerősítése",
+    "changePassword": "Jelszó megváltoztatása",
+    "changingPassword": "Jelszó megváltoztatása...",
+    "passwordChangedSuccess": "Jelszó sikeresen megváltoztatva",
+    "passwordChangeError": "Jelszó megváltoztatása sikertelen",
+    "passwordsDoNotMatch": "A jelszavak nem egyeznek",
+    "notAuthenticated": "Nem vagy hitelesítve"
   },
   "nav": {
     "dashboard": "Vezérlőpult",

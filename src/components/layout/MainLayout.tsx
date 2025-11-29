@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { ReactNode, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LicenseStatusBanner } from '@/components/license/LicenseStatusBanner';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { useInactivityLogout } from '@/hooks/useInactivityLogout';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -15,6 +16,8 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, loading } = useAuth();
   const { settings } = useSystemSettings();
+  const { data: profile } = useUserProfile();
+  const navigate = useNavigate();
   
   // Get auto-logout timeout from settings (default to 300 seconds = 5 minutes)
   const timeoutSeconds = settings?.auto_logout_timeout 
@@ -23,6 +26,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   // Enable inactivity logout
   useInactivityLogout(timeoutSeconds);
+
+  // Check if user must change password
+  useEffect(() => {
+    if (user && profile?.must_change_password) {
+      navigate('/change-password', { replace: true });
+    }
+  }, [user, profile, navigate]);
 
   if (loading) {
     return (
