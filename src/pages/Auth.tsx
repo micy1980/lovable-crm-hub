@@ -146,11 +146,27 @@ const Auth = () => {
           userId: data.user.id 
         });
         
-        toast({
-          title: t('auth.success'),
-          description: t('auth.loggedInSuccess'),
-        });
-        navigate('/');
+        // Check if user must change password
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('must_change_password')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profile?.must_change_password) {
+          toast({
+            title: t('auth.passwordChangeRequired'),
+            description: t('auth.passwordChangeRequiredMessage'),
+            variant: 'default',
+          });
+          navigate('/change-password');
+        } else {
+          toast({
+            title: t('auth.success'),
+            description: t('auth.loggedInSuccess'),
+          });
+          navigate('/');
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

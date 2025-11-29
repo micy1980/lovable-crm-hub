@@ -39,7 +39,18 @@
     "passwordResetError": "Failed to send password reset email. Please try again.",
     "accountLocked": "Account Locked",
     "accountLockedDescription": "This user account is locked. Please contact a Super Admin (SA) to unlock it.",
-    "attemptsRemaining": "attempts remaining"
+    "attemptsRemaining": "attempts remaining",
+    "changePasswordRequired": "Password Change Required",
+    "changePasswordRequiredDescription": "Your administrator has required you to change your password before continuing.",
+    "passwordChangeRequiredMessage": "Please set a new password to continue.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "changePassword": "Change Password",
+    "changingPassword": "Changing password...",
+    "passwordChangedSuccess": "Password changed successfully",
+    "passwordChangeError": "Failed to change password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "notAuthenticated": "You are not authenticated"
   },
   "nav": {
     "dashboard": "Dashboard",
