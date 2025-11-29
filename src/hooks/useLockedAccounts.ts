@@ -2,10 +2,35 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUserProfile } from './useUserProfile';
+import { useEffect } from 'react';
 
 export const useLockedAccounts = () => {
   const queryClient = useQueryClient();
   const { data: currentProfile } = useUserProfile();
+
+  // Subscribe to realtime changes on locked_accounts table
+  useEffect(() => {
+    const channel = supabase
+      .channel('locked-accounts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'locked_accounts'
+        },
+        (payload) => {
+          console.log('[useLockedAccounts] Realtime change detected:', payload);
+          // Invalidate queries to refetch the latest locked accounts
+          queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: lockedAccounts = [], isLoading } = useQuery({
     queryKey: ['locked-accounts'],
