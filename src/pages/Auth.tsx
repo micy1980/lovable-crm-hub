@@ -60,7 +60,16 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password });
       
-      // FIRST: Check if account is already locked (before attempting sign-in)
+      // FIRST: Clean up any expired locks before checking status
+      const { error: preCleanupError } = await supabase.rpc('cleanup_expired_locks');
+      if (preCleanupError) {
+        console.error('Error cleaning up expired locks before lock check:', preCleanupError);
+      } else {
+        // If anything was cleaned up, refresh locked accounts query so admin UI updates
+        queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
+      }
+
+      // Then: Check if account is already locked (before attempting sign-in)
       const { data: isLocked, error: lockCheckError } = await supabase.rpc('is_account_locked_by_email', {
         _email: validated.email
       });
