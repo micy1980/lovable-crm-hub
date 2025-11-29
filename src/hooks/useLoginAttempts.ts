@@ -29,10 +29,19 @@ export const useLoginAttempts = () => {
   };
 
   const checkFailedAttempts = async (email: string): Promise<number> => {
+    // Get time window from system settings
+    const { data: settings } = await supabase
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'account_lock_failed_attempts_window_minutes')
+      .maybeSingle();
+    
+    const timeWindowMinutes = settings?.setting_value ? parseInt(settings.setting_value) : 5;
+
     const { data, error } = await supabase
       .rpc('count_recent_failed_attempts', { 
         _email: email, 
-        _minutes: 15  // Check last 15 minutes
+        _minutes: timeWindowMinutes
       });
 
     if (error) {
