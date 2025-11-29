@@ -89,23 +89,17 @@ const Auth = () => {
         return;
       }
       
-      // Load settings for lock threshold and auto-unlock time
-      const { data: settingsData } = await supabase
-        .from('system_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', ['account_lock_attempts', 'account_lock_auto_unlock_minutes']);
-      
-      const settingsMap = new Map(
-        settingsData?.map(s => [s.setting_key, s.setting_value]) || []
-      );
-      
-      const maxAttempts = settingsMap.get('account_lock_attempts') 
-        ? parseInt(settingsMap.get('account_lock_attempts')!) 
-        : 5;
-      const autoUnlockMinutes = settingsMap.get('account_lock_auto_unlock_minutes')
-        ? parseInt(settingsMap.get('account_lock_auto_unlock_minutes')!)
-        : 30;
-      
+      // Load lock settings via security definer function (bypasses RLS issues)
+      const { data: lockSettings, error: lockSettingsError } = await supabase
+        .rpc('get_account_lock_settings');
+
+      if (lockSettingsError) {
+        console.error('Error loading account lock settings, using defaults:', lockSettingsError);
+      }
+
+      const maxAttempts = lockSettings?.[0]?.max_attempts ?? 5;
+      const autoUnlockMinutes = lockSettings?.[0]?.auto_unlock_minutes ?? 30;
+
       console.log(`Max login attempts allowed: ${maxAttempts}, auto-unlock: ${autoUnlockMinutes} minutes`);
 
       // Try to sign in
