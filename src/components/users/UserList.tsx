@@ -28,7 +28,7 @@ export function UserList() {
   const { data: currentProfile } = useUserProfile();
   const { users, isLoading, toggleUserFlag, updateUser, createUser, deleteUser } = useUsers();
   const { companies } = useCompanies();
-  const { lockedAccounts, isUserLocked, unlockAccount } = useLockedAccounts();
+  const { lockedAccounts, isUserLocked, unlockAccount, getLockedAccountDetails } = useLockedAccounts();
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [companyAssignmentUser, setCompanyAssignmentUser] = useState<any>(null);
@@ -293,6 +293,7 @@ export function UserList() {
                       const nextUser = filteredUsers[index + 1];
                       const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
                       const userIsLocked = isUserLocked(user.id);
+                      const lockDetails = getLockedAccountDetails(user.id);
                       
                       return (
                         <div key={user.id}>
@@ -331,7 +332,7 @@ export function UserList() {
 
                             {/* Status Column (Locked) */}
                             <div className="flex items-center justify-center">
-                              {userIsLocked ? (
+                              {userIsLocked && lockDetails ? (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -340,11 +341,29 @@ export function UserList() {
                                         {t('users.locked')}
                                       </Badge>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      {t('users.lockedTooltip')}
+                                    <TooltipContent className="max-w-xs">
+                                      <div className="space-y-1 text-xs">
+                                        <p className="font-semibold">{t('users.accountLockedDetails')}</p>
+                                        <p><span className="font-medium">{t('users.reason')}:</span> {lockDetails.reason || '-'}</p>
+                                        <p><span className="font-medium">{t('users.lockedAt')}:</span> {lockDetails.locked_at ? format(new Date(lockDetails.locked_at), 'yyyy-MM-dd HH:mm') : '-'}</p>
+                                        {lockDetails.locked_until && (
+                                          <p><span className="font-medium">{t('users.lockedUntil')}:</span> {format(new Date(lockDetails.locked_until), 'yyyy-MM-dd HH:mm')}</p>
+                                        )}
+                                        {lockDetails.ip_address && (
+                                          <p><span className="font-medium">{t('users.ipAddress')}:</span> {lockDetails.ip_address}</p>
+                                        )}
+                                        {lockDetails.locked_by_system && (
+                                          <p className="text-yellow-500">{t('users.lockedBySystem')}</p>
+                                        )}
+                                      </div>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
+                              ) : userIsLocked ? (
+                                <Badge variant="destructive" className="text-xs font-medium gap-1">
+                                  <LockKeyhole className="h-3 w-3" />
+                                  {t('users.locked')}
+                                </Badge>
                               ) : (
                                 <span className="text-muted-foreground">-</span>
                               )}
