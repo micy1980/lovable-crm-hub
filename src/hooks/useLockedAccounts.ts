@@ -10,31 +10,22 @@ export const useLockedAccounts = () => {
   const { data: lockedAccounts = [], isLoading } = useQuery({
     queryKey: ['locked-accounts'],
     queryFn: async () => {
-      // Get locked user IDs
-      const { data: lockedUserIds, error: idsError } = await supabase
-        .rpc('get_locked_user_ids');
-
-      if (idsError) {
-        console.error('Error fetching locked user IDs:', idsError);
-        return [];
-      }
-
-      if (!lockedUserIds || lockedUserIds.length === 0) {
-        return [];
-      }
-
-      // Get full locked account details
-      const userIds = lockedUserIds.map((item: any) => item.user_id);
+      // Directly load all currently locked accounts
       const { data: lockedDetails, error: detailsError } = await supabase
         .from('locked_accounts')
         .select('*')
-        .in('user_id', userIds)
         .is('unlocked_at', null);
 
       if (detailsError) {
         console.error('Error fetching locked account details:', detailsError);
-        return lockedUserIds; // Return just IDs if details fail
+        return [];
       }
+
+      if (!lockedDetails || lockedDetails.length === 0) {
+        return [];
+      }
+
+      const userIds = lockedDetails.map((lock: any) => lock.user_id);
 
       // Get recent login attempts for IP addresses
       const { data: recentAttempts } = await supabase
@@ -45,21 +36,19 @@ export const useLockedAccounts = () => {
         .order('attempt_time', { ascending: false })
         .limit(100);
 
-      // Map IP addresses to locked accounts
-      const lockedWithDetails = lockedDetails?.map((lock: any) => {
+      const lockedWithDetails = lockedDetails.map((lock: any) => {
         const userAttempts = recentAttempts?.filter((a: any) => a.user_id === lock.user_id) || [];
         const latestAttempt = userAttempts[0];
-        
+
         return {
           ...lock,
           ip_address: latestAttempt?.ip_address || null,
           last_attempt_time: latestAttempt?.attempt_time || null,
         };
-      }) || [];
+      });
 
       return lockedWithDetails;
     },
-    // Always run query, RLS will handle permissions via security definer
   });
 
   const unlockAccount = useMutation({
