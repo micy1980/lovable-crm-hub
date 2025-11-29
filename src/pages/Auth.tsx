@@ -158,6 +158,19 @@ const Auth = () => {
           success: true, 
           userId: data.user.id 
         });
+
+        // After successful login, ensure any existing lock record is cleared
+        const { error: unlockError } = await supabase.rpc('unlock_account_by_user_id', {
+          _user_id: data.user.id,
+          _unlocked_by: data.user.id,
+        });
+
+        if (unlockError) {
+          console.error('Error auto-unlocking account after successful login:', unlockError);
+        } else {
+          console.log('Account auto-unlocked after successful login if it was locked.');
+          queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
+        }
         
         // Check if user must change password
         const { data: profile } = await supabase
