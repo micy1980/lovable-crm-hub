@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useLoginAttempts = () => {
   const logLoginAttempt = async (params: {
