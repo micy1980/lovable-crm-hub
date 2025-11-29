@@ -15,6 +15,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { useLoginAttempts } from '@/hooks/useLoginAttempts';
 import { validatePasswordStrength } from '@/lib/passwordValidation';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ const Auth = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { logLoginAttempt, checkFailedAttempts } = useLoginAttempts();
+  const queryClient = useQueryClient();
   
   const authSchema = z.object({
     email: z.string().email({ message: t('auth.invalidEmail') }),
@@ -125,6 +127,8 @@ const Auth = () => {
             console.error('❌ Error locking account:', lockError);
           } else {
             console.log('✅ Account locked successfully');
+            // Invalidate locked accounts query to update UI
+            queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
           }
 
           toast({
