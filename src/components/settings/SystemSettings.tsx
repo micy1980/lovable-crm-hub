@@ -12,6 +12,7 @@ export const SystemSettings = () => {
   const [timeoutMinutes, setTimeoutMinutes] = useState<string>('5');
   const [lockAttempts, setLockAttempts] = useState<string>('5');
   const [autoUnlockMinutes, setAutoUnlockMinutes] = useState<string>('30');
+  const [failedAttemptsWindow, setFailedAttemptsWindow] = useState<string>('5');
   const [trialDays, setTrialDays] = useState<string>('14');
   const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>('90');
   const { t } = useTranslation();
@@ -27,6 +28,9 @@ export const SystemSettings = () => {
       }
       if (settings.account_lock_auto_unlock_minutes) {
         setAutoUnlockMinutes(settings.account_lock_auto_unlock_minutes);
+      }
+      if (settings.account_lock_failed_attempts_window_minutes) {
+        setFailedAttemptsWindow(settings.account_lock_failed_attempts_window_minutes);
       }
       if (settings.trial_license_days) {
         setTrialDays(settings.trial_license_days);
@@ -59,6 +63,14 @@ export const SystemSettings = () => {
       updateSetting.mutate({
         key: 'account_lock_auto_unlock_minutes',
         value: unlockMinutes.toString(),
+      });
+    }
+
+    const windowMinutes = parseInt(failedAttemptsWindow);
+    if (windowMinutes > 0) {
+      updateSetting.mutate({
+        key: 'account_lock_failed_attempts_window_minutes',
+        value: windowMinutes.toString(),
       });
     }
 
@@ -175,6 +187,29 @@ export const SystemSettings = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t('settings.autoUnlockDescription')}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="failed-attempts-window">
+                  Sikertelen próbálkozások időablaka
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="failed-attempts-window"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={failedAttemptsWindow}
+                    onChange={(e) => setFailedAttemptsWindow(e.target.value)}
+                    className="w-32"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {t('settings.minutes')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mennyi időre visszamenőleg számítsa a rendszer a sikertelen bejelentkezési kísérleteket
                 </p>
               </div>
 
