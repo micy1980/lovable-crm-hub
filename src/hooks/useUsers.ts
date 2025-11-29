@@ -157,9 +157,25 @@ export const useUsers = () => {
 
           if (passwordError) {
             // Prefer detailed context from the edge function if available
-            const rawMessage = (passwordError as any)?.context?.error || passwordError.message || '';
+            const ctx: any = (passwordError as any).context;
+            let rawMessage = '';
+
+            if (ctx) {
+              if (typeof ctx.error === 'string') {
+                rawMessage = ctx.error;
+              } else if (ctx.body && typeof ctx.body.error === 'string') {
+                rawMessage = ctx.body.error;
+              } else if (ctx.body) {
+                rawMessage = JSON.stringify(ctx.body);
+              }
+            }
+
+            if (!rawMessage) {
+              rawMessage = passwordError.message || '';
+            }
+
             const supabaseMsg = extractSupabaseErrorMessage(rawMessage);
-            console.log('[useUsers] Password error detected:', supabaseMsg, 'raw:', rawMessage);
+            console.log('[useUsers] Password error detected:', supabaseMsg, 'raw:', rawMessage, 'ctx:', ctx);
             
             // Check if it's a weak password error
             const lower = supabaseMsg.toLowerCase();
