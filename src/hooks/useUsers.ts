@@ -124,69 +124,81 @@ export const useUsers = () => {
 
       // Update password if provided
       if (password && password.trim() !== '') {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('No active session');
-        }
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            throw new Error('No active session');
+          }
 
-        const { data: passwordData, error: passwordError } = await supabase.functions.invoke('admin-update-password', {
-          body: {
-            userId: id,
-            password,
-            mustChangePassword,
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
+          const { data: passwordData, error: passwordError } = await supabase.functions.invoke('admin-update-password', {
+            body: {
+              userId: id,
+              password,
+              mustChangePassword,
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
 
-        // Helper function to extract Supabase error message from raw error string
-        const extractSupabaseErrorMessage = (raw: string): string => {
-          const match = raw.match(/\{.*\}/);
-          if (match) {
-            try {
-              const parsed = JSON.parse(match[0]);
-              if (typeof parsed.error === 'string') return parsed.error;
-            } catch {
-              // ignore parse errors
+          // Helper function to extract Supabase error message from raw error string
+          const extractSupabaseErrorMessage = (raw: string): string => {
+            const match = raw.match(/\{.*\}/);
+            if (match) {
+              try {
+                const parsed = JSON.parse(match[0]);
+                if (typeof parsed.error === 'string') return parsed.error;
+              } catch {
+                // ignore parse errors
+              }
             }
-          }
-          return raw;
-        };
+            return raw;
+          };
 
-        if (passwordError) {
-          // Extract the actual error message from the raw error
-          const supabaseMsg = extractSupabaseErrorMessage(passwordError.message || '');
-          
-          // Check if it's a weak password error
-          if (supabaseMsg.toLowerCase().includes('password is known to be weak') ||
-              supabaseMsg.toLowerCase().includes('easy to guess')) {
-            const weakPasswordError = new Error(t('users.errors.weakPassword'));
-            (weakPasswordError as any).isWeakPassword = true;
-            throw weakPasswordError;
+          if (passwordError) {
+            // Extract the actual error message from the raw error
+            const supabaseMsg = extractSupabaseErrorMessage(passwordError.message || '');
+            console.log('[useUsers] Password error detected:', supabaseMsg);
+            
+            // Check if it's a weak password error
+            if (supabaseMsg.toLowerCase().includes('password is known to be weak') ||
+                supabaseMsg.toLowerCase().includes('easy to guess')) {
+              const weakPasswordError = new Error(t('users.errors.weakPassword'));
+              (weakPasswordError as any).isWeakPassword = true;
+              console.log('[useUsers] Throwing weak password error');
+              throw weakPasswordError;
+            }
+            
+            // Other errors
+            throw new Error(supabaseMsg || 'Failed to update password');
           }
-          
-          // Other errors
-          throw new Error(supabaseMsg || 'Failed to update password');
-        }
 
-        // Check if the function returned a structured error in the response body
-        if (passwordData && typeof passwordData === 'object') {
-          if ('code' in passwordData && passwordData.code === 'weak_password') {
-            const weakPasswordError = new Error(t('users.errors.weakPassword'));
-            (weakPasswordError as any).isWeakPassword = true;
-            throw weakPasswordError;
-          }
-          if ('error' in passwordData) {
-            const errorMsg = passwordData.error as string;
-            if (errorMsg.toLowerCase().includes('weak') || 
-                errorMsg.toLowerCase().includes('easy to guess')) {
+          // Check if the function returned a structured error in the response body
+          if (passwordData && typeof passwordData === 'object') {
+            if ('code' in passwordData && passwordData.code === 'weak_password') {
               const weakPasswordError = new Error(t('users.errors.weakPassword'));
               (weakPasswordError as any).isWeakPassword = true;
               throw weakPasswordError;
             }
-            throw new Error(errorMsg);
+            if ('error' in passwordData) {
+              const errorMsg = passwordData.error as string;
+              if (errorMsg.toLowerCase().includes('weak') || 
+                  errorMsg.toLowerCase().includes('easy to guess')) {
+                const weakPasswordError = new Error(t('users.errors.weakPassword'));
+                (weakPasswordError as any).isWeakPassword = true;
+                throw weakPasswordError;
+              }
+              throw new Error(errorMsg);
+            }
           }
+        } catch (error: any) {
+          // Re-throw weak password errors as-is
+          if (error.isWeakPassword) {
+            throw error;
+          }
+          // For other errors, wrap them appropriately
+          console.error('[useUsers] Password update error:', error);
+          throw error;
         }
       }
 
@@ -198,15 +210,14 @@ export const useUsers = () => {
       toast({ title: t('users.updated') });
     },
     onError: (error: any) => {
+      console.log('[useUsers] onError called:', error);
       // Don't show toast for weak password errors - the form will handle it
       if (error.isWeakPassword) {
+        console.log('[useUsers] Weak password error, form will handle it');
         return;
       }
-      toast({
-        title: t('users.error'),
-        description: error.message,
-        variant: 'destructive',
-      });
+      // Don't show toast here - let the component handle all error display
+      console.log('[useUsers] Non-weak-password error, component will handle it');
     },
   });
 

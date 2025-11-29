@@ -95,6 +95,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
     setEmailError(null);
     
     try {
+      console.log('[UserEditForm] Submitting update...');
       await updateUser.mutateAsync({
         id: user.id,
         email: data.email !== user.email ? data.email : undefined,
@@ -103,6 +104,8 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         password: data.password && data.password.trim() !== '' ? data.password : undefined,
         mustChangePassword: data.password && data.password.trim() !== '' ? mustChangePassword : undefined,
       });
+      
+      console.log('[UserEditForm] Update successful');
       
       // Show success toast for password update
       if (data.password && data.password.trim() !== '') {
@@ -113,8 +116,11 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       
       onClose();
     } catch (error: any) {
+      console.log('[UserEditForm] Caught error:', error, 'isWeakPassword:', error?.isWeakPassword);
+      
       // Check if this is a duplicate email error
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
+        console.log('[UserEditForm] Duplicate email error');
         setEmailError(t('users.emailAlreadyExists'));
         toast({
           title: t('common.errors.userUpdateFailed'),
@@ -125,6 +131,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       
       // Check if this is a weak password error from the backend
       if (error?.isWeakPassword) {
+        console.log('[UserEditForm] Weak password error - setting field error and showing toast');
         setPasswordError(t('users.errors.weakPassword'));
         toast({
           title: t('users.errors.weakPasswordToast'),
@@ -134,8 +141,10 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       }
       
       // Other errors
+      console.log('[UserEditForm] Other error - showing generic toast');
       toast({
         title: t('common.errors.userUpdateFailed'),
+        description: error?.message || 'Unknown error',
         variant: 'destructive',
       });
       
