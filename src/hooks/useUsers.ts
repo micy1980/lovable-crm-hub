@@ -32,7 +32,8 @@ export const useUsers = () => {
       password,
       is_active, 
       can_delete, 
-      can_view_logs 
+      can_view_logs,
+      mustChangePassword
     }: { 
       id: string; 
       role?: 'super_admin' | 'admin' | 'normal' | 'viewer';
@@ -43,6 +44,7 @@ export const useUsers = () => {
       is_active?: boolean; 
       can_delete?: boolean; 
       can_view_logs?: boolean;
+      mustChangePassword?: boolean;
     }) => {
       // Update email if provided and different
       if (email && email.trim() !== '') {
@@ -52,7 +54,7 @@ export const useUsers = () => {
         }
 
         const { data: emailData, error: emailError } = await supabase.functions.invoke('admin-update-user', {
-          body: { userId: id, email },
+          body: { userId: id, email, mustChangePassword },
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
@@ -131,6 +133,7 @@ export const useUsers = () => {
           body: {
             userId: id,
             password,
+            mustChangePassword,
           },
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -224,7 +227,8 @@ export const useUsers = () => {
       role, 
       is_active, 
       can_delete, 
-      can_view_logs 
+      can_view_logs,
+      mustChangePassword
     }: { 
       email: string;
       password: string;
@@ -234,6 +238,7 @@ export const useUsers = () => {
       is_active: boolean; 
       can_delete: boolean; 
       can_view_logs: boolean;
+      mustChangePassword?: boolean;
     }) => {
       // Get the current session token to authenticate with the edge function
       const { data: { session } } = await supabase.auth.getSession();
@@ -245,6 +250,17 @@ export const useUsers = () => {
       // The edge function validates the caller and uses service role key server-side.
       // This does NOT affect the current session.
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email,
+          password,
+          familyName: family_name,
+          givenName: given_name,
+          role,
+          isActive: is_active,
+          canDelete: can_delete,
+          canViewLogs: can_view_logs,
+          mustChangePassword,
+        },
         body: {
           email,
           password,

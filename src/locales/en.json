@@ -289,6 +289,10 @@
     "assignCompanies": "Assign companies",
     "deleteUser": "Delete user",
     "emailAlreadyExists": "A user with this email address already exists. Please use a different email or edit the existing user.",
+    "mustChangePasswordOnNextLogin": {
+      "label": "User must change password at next login",
+      "tooltip": "When enabled, the user will be forced to set a new strong password on their next login"
+    },
     "deleteDialog": {
       "title": "Delete user",
       "description": "Are you sure you want to delete this user? This action cannot be undone. To confirm, please enter your own password.",
