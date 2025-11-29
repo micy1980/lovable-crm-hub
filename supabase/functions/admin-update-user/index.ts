@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if the caller is a super admin
+    // Check if the caller is a super admin or admin
     const { data: callerProfile, error: profileError } = await requestSupabase
       .from('profiles')
       .select('role')
@@ -70,28 +70,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (callerProfile?.role !== 'super_admin') {
+    // Only SA and Admin can update users
+    if (callerProfile?.role !== 'super_admin' && callerProfile?.role !== 'admin') {
       return new Response(
-        JSON.stringify({ error: 'Only super admins can update user emails' }),
+        JSON.stringify({ error: 'Only super admins and admins can update users' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Parse the request body
-    const { userId, email } = await req.json();
+    const { userId, email, mustChangePassword } = await req.json();
 
-    if (!userId || !email) {
+    if (!userId) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: userId and email' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid email format' }),
+        JSON.stringify({ error: 'Missing required field: userId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -99,85 +91,132 @@ Deno.serve(async (req) => {
     // Create service role client
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Check if email is already in use by another user
-    const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (checkError) {
-      console.error('Error checking existing users:', checkError);
+    // Get target user's role to enforce permission rules
+    const { data: targetProfile, error: targetProfileError } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (targetProfileError) {
+      console.error('Error fetching target profile:', targetProfileError);
       return new Response(
-        JSON.stringify({ error: 'Failed to validate email' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Target user not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const emailExists = existingUsers.users.some(
-      (u) => u.email?.toLowerCase() === email.toLowerCase() && u.id !== userId
-    );
-
-    if (emailExists) {
-      console.log('Email already registered:', email);
-      // Return 200 for validation errors to prevent runtime error display
+    // Admin cannot edit SA users
+    if (callerProfile.role === 'admin' && targetProfile.role === 'super_admin') {
+      console.error('Admin attempted to edit SA user');
       return new Response(
-        JSON.stringify({
-          ok: false,
-          errorCode: 'EMAIL_ALREADY_REGISTERED',
-          message: 'A user with this email address has already been registered',
-          message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
-          message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.',
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Admins cannot edit Super Admin users' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Update the user's email in auth
-    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
-      { email }
-    );
+    // Handle email update if provided
+    if (email) {
+      // Validate email format
+      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+      if (!emailRegex.test(email)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid email format' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    if (updateError) {
-      console.error('Error updating user email:', updateError);
+      // Check if email is already in use by another user
+      const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
       
-      // Check if this is a duplicate email error
-      if (updateError.message?.toLowerCase().includes('already') || 
-          updateError.message?.toLowerCase().includes('registered')) {
-        // Return 200 for validation errors to prevent runtime error display
+      if (checkError) {
+        console.error('Error checking existing users:', checkError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to validate email' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const emailExists = existingUsers.users.some(
+        (u) => u.email?.toLowerCase() === email.toLowerCase() && u.id !== userId
+      );
+
+      if (emailExists) {
+        console.log('Email already registered:', email);
         return new Response(
           JSON.stringify({
             ok: false,
             errorCode: 'EMAIL_ALREADY_REGISTERED',
-            message: updateError.message,
+            message: 'A user with this email address has already been registered',
             message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
             message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.',
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      return new Response(
-        JSON.stringify({ error: updateError.message || 'Failed to update user email' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+
+      // Update the user's email in auth
+      const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { email }
       );
+
+      if (updateError) {
+        console.error('Error updating user email:', updateError);
+        
+        if (updateError.message?.toLowerCase().includes('already') || 
+            updateError.message?.toLowerCase().includes('registered')) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              errorCode: 'EMAIL_ALREADY_REGISTERED',
+              message: updateError.message,
+              message_hu: 'Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.',
+              message_en: 'A user with this email address already exists. Please use a different email or edit the existing user.',
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        return new Response(
+          JSON.stringify({ error: updateError.message || 'Failed to update user email' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Update the email in the profiles table
+      const { error: profileUpdateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ email })
+        .eq('id', userId);
+
+      if (profileUpdateError) {
+        console.error('Error updating profile email:', profileUpdateError);
+      }
     }
 
-    // Update the email in the profiles table
-    const { error: profileUpdateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ email })
-      .eq('id', userId);
+    // Handle must_change_password flag update
+    if (typeof mustChangePassword === 'boolean') {
+      const { error: mustChangeError } = await supabaseAdmin
+        .from('profiles')
+        .update({ must_change_password: mustChangePassword })
+        .eq('id', userId);
 
-    if (profileUpdateError) {
-      console.error('Error updating profile email:', profileUpdateError);
-      // Continue anyway, the auth email is updated
+      if (mustChangeError) {
+        console.error('Error updating must_change_password:', mustChangeError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update password change requirement' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    console.log('User email updated successfully:', userId);
+    console.log('User updated successfully:', userId);
     return new Response(
       JSON.stringify({ 
         ok: true, 
-        message: 'User email updated successfully',
-        userId: updateData.user.id,
-        email: updateData.user.email,
+        message: 'User updated successfully',
+        userId: userId,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -289,6 +289,10 @@
     "assignCompanies": "Cégek hozzárendelése",
     "deleteUser": "Felhasználó törlése",
     "emailAlreadyExists": "Ezzel az e-mail címmel már létezik felhasználó. Adj meg másik címet vagy szerkeszd a meglévő felhasználót.",
+    "mustChangePasswordOnNextLogin": {
+      "label": "Belépéskor a felhasználónak meg kell változtatnia a jelszavát",
+      "tooltip": "Ha be van kapcsolva, a felhasználó kényszerítve lesz egy új erős jelszó beállítására a következő bejelentkezéskor"
+    },
     "deleteDialog": {
       "title": "Felhasználó törlése",
       "description": "Biztosan törölni szeretnéd ezt a felhasználót? Ez a művelet nem vonható vissza. A törléshez add meg a saját jelszavadat.",

@@ -69,13 +69,13 @@ Deno.serve(async (req) => {
     console.log('[admin-update-password] Caller user ID:', user.id)
 
     // Step 2: Check the caller's role in profiles table
-    const { data: profile, error: profileError } = await requestClient
+    const { data: callerProfile, error: profileError } = await requestClient
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile) {
+    if (profileError || !callerProfile) {
       console.error('[admin-update-password] Profile not found:', profileError?.message)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -83,10 +83,11 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('[admin-update-password] Caller role:', profile.role)
+    console.log('[admin-update-password] Caller role:', callerProfile.role)
 
-    if (profile.role !== 'super_admin') {
-      console.warn('[admin-update-password] Caller is not super_admin, role:', profile.role)
+    // Only SA and Admin can update passwords
+    if (callerProfile.role !== 'super_admin' && callerProfile.role !== 'admin') {
+      console.warn('[admin-update-password] Caller is not super_admin or admin, role:', callerProfile.role)
       return new Response(
         JSON.stringify({ error: 'Forbidden' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -97,6 +98,7 @@ Deno.serve(async (req) => {
     const payload = await req.json() as {
       userId: string
       password: string
+      mustChangePassword?: boolean
     }
 
     if (!payload.userId || !payload.password) {
@@ -108,6 +110,32 @@ Deno.serve(async (req) => {
     }
 
     console.log('[admin-update-password] Updating password for user:', payload.userId)
+
+    // Get target user's role to enforce permission rules
+    const { data: targetProfile, error: targetProfileError } = await serviceClient
+      .from('profiles')
+      .select('role')
+      .eq('id', payload.userId)
+      .single()
+
+    if (targetProfileError) {
+      console.error('[admin-update-password] Target profile not found:', targetProfileError.message)
+      return new Response(
+        JSON.stringify({ error: 'Target user not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('[admin-update-password] Target user role:', targetProfile.role)
+
+    // Admin cannot edit SA users
+    if (callerProfile.role === 'admin' && targetProfile.role === 'super_admin') {
+      console.error('[admin-update-password] Admin attempted to change SA password')
+      return new Response(
+        JSON.stringify({ error: 'Admins cannot change Super Admin passwords' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // Step 4: Validate minimum length (Supabase Auth requires min 6 chars even with service role)
     if (payload.password.length < 6) {
@@ -144,7 +172,22 @@ Deno.serve(async (req) => {
 
     console.log('[admin-update-password] Successfully updated password for user:', payload.userId)
 
-    // Step 5: Return success
+    // Step 6: Update must_change_password flag if provided
+    if (typeof payload.mustChangePassword === 'boolean') {
+      const { error: flagError } = await serviceClient
+        .from('profiles')
+        .update({ must_change_password: payload.mustChangePassword })
+        .eq('id', payload.userId)
+
+      if (flagError) {
+        console.error('[admin-update-password] Failed to update must_change_password flag:', flagError.message)
+        // Continue anyway, password is updated
+      } else {
+        console.log('[admin-update-password] Updated must_change_password flag to:', payload.mustChangePassword)
+      }
+    }
+
+    // Step 7: Return success
     return new Response(
       JSON.stringify({ ok: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

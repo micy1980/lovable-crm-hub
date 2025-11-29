@@ -3,6 +3,12 @@ export interface PasswordValidationResult {
   message: string | null;
 }
 
+export interface PasswordValidationOptions {
+  currentUserRole: string;
+  targetUserRole: string;
+  t: (key: string) => string;
+}
+
 export function validatePasswordStrength(
   password: string,
   t: (key: string) => string
@@ -51,4 +57,56 @@ export function validatePasswordStrength(
     valid: true,
     message: null,
   };
+}
+
+/**
+ * Validate password with role-based rules
+ * 
+ * Rules:
+ * - SA editing non-SA: min 1 char (actually 6 due to Supabase platform requirement)
+ * - Admin editing non-SA/non-Admin: min 1 char (actually 6 due to Supabase platform requirement)
+ * - All other cases: full strength validation (8+ chars with complexity)
+ */
+export function validatePasswordWithRoles(
+  password: string,
+  options: PasswordValidationOptions
+): PasswordValidationResult {
+  const { currentUserRole, targetUserRole, t } = options;
+
+  // Empty password is always invalid when required
+  if (!password || password.trim() === '') {
+    return {
+      valid: false,
+      message: t('users.passwordRequired'),
+    };
+  }
+
+  // SA setting password for non-SA user: only check min 6 chars (platform requirement)
+  if (currentUserRole === 'super_admin' && targetUserRole !== 'super_admin') {
+    if (password.length < 6) {
+      return {
+        valid: false,
+        message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie (platform követelmény)',
+      };
+    }
+    return { valid: true, message: null };
+  }
+
+  // Admin setting password for non-SA and non-Admin user: only check min 6 chars (platform requirement)
+  if (
+    currentUserRole === 'admin' &&
+    targetUserRole !== 'super_admin' &&
+    targetUserRole !== 'admin'
+  ) {
+    if (password.length < 6) {
+      return {
+        valid: false,
+        message: 'A jelszónak legalább 6 karakter hosszúnak kell lennie (platform követelmény)',
+      };
+    }
+    return { valid: true, message: null };
+  }
+
+  // All other cases: full strength validation
+  return validatePasswordStrength(password, t);
 }

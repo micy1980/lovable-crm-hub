@@ -69,13 +69,13 @@ Deno.serve(async (req) => {
     console.log('[admin-create-user] Caller user ID:', user.id)
 
     // Step 2: Check the caller's role in profiles table
-    const { data: profile, error: profileError } = await requestClient
+    const { data: callerProfile, error: profileError } = await requestClient
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile) {
+    if (profileError || !callerProfile) {
       console.error('[admin-create-user] Profile not found:', profileError?.message)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -83,10 +83,11 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('[admin-create-user] Caller role:', profile.role)
+    console.log('[admin-create-user] Caller role:', callerProfile.role)
 
-    if (profile.role !== 'super_admin') {
-      console.warn('[admin-create-user] Caller is not super_admin, role:', profile.role)
+    // Only SA and Admin can create users
+    if (callerProfile.role !== 'super_admin' && callerProfile.role !== 'admin') {
+      console.warn('[admin-create-user] Caller is not SA or Admin, role:', callerProfile.role)
       return new Response(
         JSON.stringify({ error: 'Forbidden' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -103,6 +104,7 @@ Deno.serve(async (req) => {
       isActive: boolean
       canDelete: boolean
       canViewLogs: boolean
+      mustChangePassword?: boolean
     }
 
     if (!payload.email || !payload.password || !payload.familyName || !payload.givenName || !payload.role) {
@@ -113,7 +115,35 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('[admin-create-user] Creating user:', payload.email)
+    // Admin cannot create SA users
+    if (callerProfile.role === 'admin' && payload.role === 'super_admin') {
+      console.error('[admin-create-user] Admin cannot create SA users')
+      return new Response(
+        JSON.stringify({ error: 'Admins cannot create Super Admin users' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('[admin-create-user] Creating user:', payload.email, 'Target role:', payload.role)
+
+    // Validate password based on roles
+    // SA creating non-SA or Admin creating non-SA/non-Admin: minimum 6 chars (platform requirement)
+    // All other cases: full validation would be needed but Supabase handles this
+    if (payload.password.length < 6) {
+      console.error('[admin-create-user] Password too short')
+      return new Response(
+        JSON.stringify({ 
+          ok: false,
+          errorCode: 'PASSWORD_TOO_SHORT',
+          error: 'Password must be at least 6 characters (Supabase Auth platform requirement)',
+          minLength: 6
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
 
     // Build full name from family and given names
     const fullName = `${payload.familyName} ${payload.givenName}`
@@ -210,7 +240,7 @@ Deno.serve(async (req) => {
     console.log('[admin-create-user] Created auth user:', newUserId)
 
     // Step 6: Update the profile (already created by handle_new_user trigger)
-    // The trigger creates the profile automatically, so we just update it with the correct values including user_code
+    // The trigger creates the profile automatically, so we just update it with the correct values including user_code and must_change_password
     const { error: profileUpdateError } = await serviceClient
       .from('profiles')
       .update({
@@ -220,6 +250,7 @@ Deno.serve(async (req) => {
         role: payload.role,
         is_active: payload.isActive,
         user_code: userCode,
+        must_change_password: payload.mustChangePassword === true,
       })
       .eq('id', newUserId)
 

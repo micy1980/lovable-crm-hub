@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { format } from 'date-fns';
 import { Eye, EyeOff } from 'lucide-react';
-import { validatePasswordStrength } from '@/lib/passwordValidation';
+import { validatePasswordWithRoles } from '@/lib/passwordValidation';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserEditFormProps {
@@ -29,6 +30,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const [familyNameTouched, setFamilyNameTouched] = useState(false);
   const [givenNameTouched, setGivenNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: user?.email || '',
@@ -42,6 +44,12 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const familyName = watch('family_name');
   const givenName = watch('given_name');
   const password = watch('password');
+  
+  const currentUserRole = profile?.role || 'normal';
+  const targetUserRole = user?.role || 'normal';
+
+  // Checkbox is disabled if password is empty
+  const isCheckboxEnabled = password && password.trim() !== '';
 
   const onSubmit = async (data: any) => {
     let hasError = false;
@@ -69,22 +77,17 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       return;
     }
 
-    // Super Admin minimum 6 chars (Supabase Auth requirement), no other validation
-    const isSA = isSuperAdmin(profile);
+    // Validate password if provided
     if (data.password && data.password.trim() !== '') {
-      if (isSA) {
-        // SA: only check minimum 6 chars (platform requirement)
-        if (data.password.length < 6) {
-          setPasswordError('A jelszónak legalább 6 karakter hosszúnak kell lennie (platform követelmény)');
-          return;
-        }
-      } else {
-        // Non-SA: full validation
-        const validation = validatePasswordStrength(data.password, t);
-        if (!validation.valid) {
-          setPasswordError(validation.message);
-          return;
-        }
+      const validation = validatePasswordWithRoles(data.password, {
+        currentUserRole,
+        targetUserRole,
+        t,
+      });
+      
+      if (!validation.valid) {
+        setPasswordError(validation.message);
+        return;
       }
     }
     
@@ -98,6 +101,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         family_name: data.family_name,
         given_name: data.given_name,
         password: data.password && data.password.trim() !== '' ? data.password : undefined,
+        mustChangePassword: data.password && data.password.trim() !== '' ? mustChangePassword : undefined,
       });
       onClose();
     } catch (error: any) {
@@ -207,21 +211,18 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
               setValue('password', newPassword);
               setPasswordTouched(true);
               
-              const isSA = isSuperAdmin(profile);
-              
               // Clear error when field becomes empty
               if (newPassword.trim() === '') {
                 setPasswordError(null);
-              } else if (isSA) {
-                // SA: only check minimum 6 chars
-                if (newPassword.length < 6) {
-                  setPasswordError('Min. 6 karakter (platform követelmény)');
-                } else {
-                  setPasswordError(null);
-                }
+                // Uncheck and disable checkbox when password is cleared
+                setMustChangePassword(false);
               } else {
-                // Non-SA: full validation
-                const validation = validatePasswordStrength(newPassword, t);
+                // Validate with role-based rules
+                const validation = validatePasswordWithRoles(newPassword, {
+                  currentUserRole,
+                  targetUserRole,
+                  t,
+                });
                 if (!validation.valid) {
                   setPasswordError(validation.message);
                 } else {
@@ -233,24 +234,16 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
               const currentPassword = e.target.value;
               setPasswordTouched(true);
               
-              const isSA = isSuperAdmin(profile);
-              
               if (currentPassword.trim() !== '') {
-                if (isSA) {
-                  // SA: only check minimum 6 chars
-                  if (currentPassword.length < 6) {
-                    setPasswordError('Min. 6 karakter (platform követelmény)');
-                  } else {
-                    setPasswordError(null);
-                  }
+                const validation = validatePasswordWithRoles(currentPassword, {
+                  currentUserRole,
+                  targetUserRole,
+                  t,
+                });
+                if (!validation.valid) {
+                  setPasswordError(validation.message);
                 } else {
-                  // Non-SA: full validation
-                  const validation = validatePasswordStrength(currentPassword, t);
-                  if (!validation.valid) {
-                    setPasswordError(validation.message);
-                  } else {
-                    setPasswordError(null);
-                  }
+                  setPasswordError(null);
                 }
               }
             }}
@@ -266,6 +259,22 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         {passwordTouched && passwordError && password && password.trim() !== '' && (
           <p className="text-sm text-destructive">{passwordError}</p>
         )}
+        
+        {/* Force Password Change Checkbox */}
+        <div className="flex items-center space-x-2 pt-2">
+          <Checkbox
+            id="mustChangePassword"
+            checked={mustChangePassword}
+            onCheckedChange={(checked) => setMustChangePassword(checked === true)}
+            disabled={!isCheckboxEnabled}
+          />
+          <Label
+            htmlFor="mustChangePassword"
+            className={`text-sm font-normal cursor-pointer ${!isCheckboxEnabled ? 'text-muted-foreground' : ''}`}
+          >
+            {t('users.mustChangePasswordOnNextLogin.label')}
+          </Label>
+        </div>
       </div>
 
       {user?.user_code && (
