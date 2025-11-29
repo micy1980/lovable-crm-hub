@@ -888,6 +888,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_active_locks_duration: {
+        Args: { _new_minutes: number }
+        Returns: undefined
+      }
       can_add_seat: { Args: { _company_id: string }; Returns: boolean }
       can_user_delete_in_company: {
         Args: { _company_id: string; _user_id: string }
@@ -901,6 +905,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_expired_locks: { Args: never; Returns: undefined }
       cleanup_old_login_attempts: { Args: never; Returns: undefined }
       count_recent_failed_attempts: {
         Args: { _email: string; _minutes: number }

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -64,6 +65,16 @@ export const SystemSettings = () => {
         key: 'account_lock_auto_unlock_minutes',
         value: unlockMinutes.toString(),
       });
+      
+      // Also adjust existing active locks to the new duration
+      supabase.rpc('adjust_active_locks_duration', { _new_minutes: unlockMinutes })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error adjusting active locks duration:', error);
+          } else {
+            console.log('Active locks duration adjusted to', unlockMinutes, 'minutes');
+          }
+        });
     }
 
     const windowMinutes = parseInt(failedAttemptsWindow);

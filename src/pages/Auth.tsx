@@ -159,16 +159,13 @@ const Auth = () => {
           userId: data.user.id 
         });
 
-        // After successful login, ensure any existing lock record is cleared
-        const { error: unlockError } = await supabase.rpc('unlock_account_by_user_id', {
-          _user_id: data.user.id,
-          _unlocked_by: data.user.id,
-        });
-
-        if (unlockError) {
-          console.error('Error auto-unlocking account after successful login:', unlockError);
+        // After successful login, delete any existing lock records (expired or manually unlocked)
+        const { error: cleanupError } = await supabase.rpc('cleanup_expired_locks');
+        
+        if (cleanupError) {
+          console.error('Error cleaning up expired locks after successful login:', cleanupError);
         } else {
-          console.log('Account auto-unlocked after successful login if it was locked.');
+          console.log('Expired/unlocked lock records cleaned up after successful login.');
           queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
         }
         
