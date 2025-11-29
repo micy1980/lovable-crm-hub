@@ -912,6 +912,14 @@ export type Database = {
         Returns: number
       }
       generate_license_key: { Args: never; Returns: string }
+      get_account_lock_settings: {
+        Args: never
+        Returns: {
+          auto_unlock_minutes: number
+          failed_window_minutes: number
+          max_attempts: number
+        }[]
+      }
       get_admin_company_ids: {
         Args: { _user_id: string }
         Returns: {
