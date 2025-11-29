@@ -10,15 +10,21 @@ export const useLockedAccounts = () => {
   const { data: lockedAccounts = [], isLoading } = useQuery({
     queryKey: ['locked-accounts'],
     queryFn: async () => {
+      // Always clean up expired or manually unlocked locks before listing
+      const { error: cleanupError } = await supabase.rpc('cleanup_expired_locks');
+      if (cleanupError) {
+        console.error('[useLockedAccounts] Error cleaning up expired locks:', cleanupError);
+      }
+
       // Use security definer function to bypass RLS issues
       const { data: lockedDetails, error: detailsError } = await supabase
         .rpc('get_locked_accounts_with_details');
-
+ 
       if (detailsError) {
         console.error('Error fetching locked account details:', detailsError);
         return [];
       }
-
+ 
       if (!lockedDetails || lockedDetails.length === 0) {
         return [];
       }
