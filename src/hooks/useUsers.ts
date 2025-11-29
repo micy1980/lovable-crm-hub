@@ -261,16 +261,6 @@ export const useUsers = () => {
           canViewLogs: can_view_logs,
           mustChangePassword,
         },
-        body: {
-          email,
-          password,
-          familyName: family_name,
-          givenName: given_name,
-          role,
-          isActive: is_active,
-          canDelete: can_delete,
-          canViewLogs: can_view_logs,
-        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
