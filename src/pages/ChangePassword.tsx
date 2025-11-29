@@ -53,6 +53,10 @@ export const ChangePassword = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Clear any existing inline errors
+    setPasswordError(null);
+    setConfirmPasswordError(null);
+
     try {
       if (!user) {
         toast({
@@ -66,9 +70,11 @@ export const ChangePassword = () => {
 
       // Check if passwords match
       if (newPassword !== confirmPassword) {
+        const msg = t('auth.passwordsDoNotMatch');
+        setConfirmPasswordError(msg);
         toast({
           title: t('auth.validationError'),
-          description: t('auth.passwordsDoNotMatch'),
+          description: msg,
           variant: 'destructive',
         });
         setLoading(false);
@@ -78,9 +84,11 @@ export const ChangePassword = () => {
       // ALWAYS validate password strength for forced password change
       const passwordValidation = validatePasswordStrength(newPassword, t);
       if (!passwordValidation.valid) {
+        const msg = passwordValidation.message || t('auth.weakPassword');
+        setPasswordError(msg);
         toast({
           title: t('auth.validationError'),
-          description: passwordValidation.message || t('auth.weakPassword'),
+          description: msg,
           variant: 'destructive',
         });
         setLoading(false);
