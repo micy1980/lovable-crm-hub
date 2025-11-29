@@ -15,10 +15,39 @@ export const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+
+  // Validate password strength on change
+  const handlePasswordChange = (value: string) => {
+    setNewPassword(value);
+    
+    if (value) {
+      const validation = validatePasswordStrength(value, t);
+      if (!validation.valid) {
+        setPasswordError(validation.message || t('auth.weakPassword'));
+      } else {
+        setPasswordError(null);
+      }
+    } else {
+      setPasswordError(null);
+    }
+  };
+
+  // Validate password match on confirm change
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+    
+    if (value && newPassword && value !== newPassword) {
+      setConfirmPasswordError(t('auth.passwordsDoNotMatch'));
+    } else {
+      setConfirmPasswordError(null);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,11 +93,27 @@ export const ChangePassword = () => {
       });
 
       if (updateError) {
-        toast({
-          title: t('auth.error'),
-          description: updateError.message,
-          variant: 'destructive',
-        });
+        const errorMsg = updateError.message || '';
+        const isWeakPassword = 
+          errorMsg.toLowerCase().includes('password is known to be weak') ||
+          errorMsg.toLowerCase().includes('easy to guess');
+        
+        if (isWeakPassword) {
+          // Treat as validation error - show inline
+          setPasswordError(t('auth.weakPassword'));
+          toast({
+            title: t('auth.validationError'),
+            description: t('auth.weakPassword'),
+            variant: 'destructive',
+          });
+        } else {
+          // Other update errors
+          toast({
+            title: t('auth.error'),
+            description: errorMsg,
+            variant: 'destructive',
+          });
+        }
         setLoading(false);
         return;
       }
@@ -126,9 +171,15 @@ export const ChangePassword = () => {
                 type="password"
                 placeholder="••••••••"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                className={passwordError ? 'border-destructive' : ''}
                 required
               />
+              {passwordError && (
+                <p className="text-sm text-destructive mt-1">
+                  {passwordError}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password">{t('auth.confirmPassword')}</Label>
@@ -137,9 +188,15 @@ export const ChangePassword = () => {
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                className={confirmPasswordError ? 'border-destructive' : ''}
                 required
               />
+              {confirmPasswordError && (
+                <p className="text-sm text-destructive mt-1">
+                  {confirmPasswordError}
+                </p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t('auth.changingPassword') : t('auth.changePassword')}
