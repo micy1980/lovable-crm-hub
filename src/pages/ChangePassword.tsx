@@ -142,8 +142,9 @@ export const ChangePassword = () => {
         description: t('auth.passwordChangedSuccess'),
       });
 
-      // Redirect to home
-      navigate('/');
+      // Force full page reload to ensure fresh profile data is loaded
+      // This prevents the MainLayout useEffect from redirecting back with stale data
+      window.location.href = '/';
     } catch (error) {
       console.error('Error changing password:', error);
       toast({
