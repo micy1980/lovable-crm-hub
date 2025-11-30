@@ -21,6 +21,7 @@ import { use2FA } from '@/hooks/use2FA';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -40,12 +41,12 @@ const Auth = () => {
     fullName: z.string().min(2, { message: t('auth.fullNameMinLength') }).optional(),
   });
 
-  // Redirect if already logged in (but not if 2FA verification is pending)
+  // Redirect if already logged in (but not if 2FA verification is pending or during active auth flow)
   useEffect(() => {
-    if (user && !show2FADialog) {
+    if (user && !show2FADialog && !isAuthenticating) {
       navigate('/');
     }
-  }, [user, navigate, show2FADialog]);
+  }, [user, navigate, show2FADialog, isAuthenticating]);
 
   const handle2FASuccess = async () => {
     console.log('2FA verification successful, completing login...');
@@ -126,6 +127,7 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setIsAuthenticating(true);
 
     try {
       const validated = authSchema.parse({ email, password });
@@ -288,6 +290,7 @@ const Auth = () => {
       }
     } finally {
       setLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
