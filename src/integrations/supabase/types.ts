@@ -472,6 +472,8 @@ export type Database = {
           language: string | null
           must_change_password: boolean | null
           role: Database["public"]["Enums"]["user_role"]
+          two_factor_enabled: boolean | null
+          two_factor_secret: string | null
           updated_at: string | null
           user_code: string | null
         }
@@ -490,6 +492,8 @@ export type Database = {
           language?: string | null
           must_change_password?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
           updated_at?: string | null
           user_code?: string | null
         }
@@ -508,6 +512,8 @@ export type Database = {
           language?: string | null
           must_change_password?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
           updated_at?: string | null
           user_code?: string | null
         }
@@ -911,7 +917,20 @@ export type Database = {
         Args: { _email: string; _minutes: number }
         Returns: number
       }
+      disable_2fa: { Args: { _user_id: string }; Returns: undefined }
+      enable_2fa: {
+        Args: { _secret: string; _user_id: string }
+        Returns: undefined
+      }
+      generate_2fa_secret: { Args: never; Returns: string }
       generate_license_key: { Args: never; Returns: string }
+      get_2fa_status: {
+        Args: { _user_id: string }
+        Returns: {
+          has_recovery_codes: boolean
+          two_factor_enabled: boolean
+        }[]
+      }
       get_account_lock_settings: {
         Args: never
         Returns: {
@@ -987,6 +1006,7 @@ export type Database = {
         Args: { _unlocked_by: string; _user_id: string }
         Returns: undefined
       }
+      user_has_2fa_enabled: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       company_role: "ADMIN" | "NORMAL" | "VIEWER"
