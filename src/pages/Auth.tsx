@@ -67,27 +67,8 @@ const Auth = () => {
 
       const currentUser = currentSession.user;
 
-      // Extract session_id from JWT token
-      const jwtPayload = JSON.parse(atob(currentSession.access_token.split('.')[1]));
-      const sessionId = jwtPayload.session_id;
-      
-      // Record 2FA verification in database for this session
-      if (sessionId) {
-        try {
-          await supabase
-            .from('session_2fa_verifications')
-            .upsert({
-              user_id: currentUser.id,
-              session_id: sessionId,
-              verified_at: new Date().toISOString(),
-              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
-            }, {
-              onConflict: 'user_id,session_id'
-            });
-        } catch (verificationError) {
-          console.error('Error recording 2FA verification:', verificationError);
-        }
-      }
+      // Step 4: Removed direct DB write to session_2fa_verifications
+      // The verify-2fa-token edge function now handles this using service role
 
       // Log successful attempt
       await logLoginAttempt({ 
