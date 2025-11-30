@@ -68,6 +68,7 @@
     "verifyCode": "Kód ellenőrzése",
     "verifying": "Ellenőrzés...",
     "invalidCode": "Érvénytelen kód. Kérlek próbáld újra.",
+    "tooManyAttempts": "Túl sok sikertelen próbálkozás. Kérjük, próbálja újra később.",
     "enabledSuccess": "2FA sikeresen bekapcsolva",
     "disabledSuccess": "2FA sikeresen kikapcsolva",
     "errorEnabling": "Hiba a 2FA bekapcsolása során",

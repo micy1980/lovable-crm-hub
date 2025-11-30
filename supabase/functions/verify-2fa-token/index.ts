@@ -224,6 +224,34 @@ serve(async (req) => {
       }
     );
 
+    // Load 2FA settings (session duration + rate limiting config)
+    const { data: twoFaSettings, error: twoFaSettingsError } = await supabaseAdmin
+      .rpc('get_2fa_settings');
+
+    if (twoFaSettingsError) {
+      console.error('Error loading 2FA settings, using defaults:', twoFaSettingsError);
+    }
+
+    const sessionDurationMinutes = twoFaSettings?.[0]?.session_duration_minutes ?? 720;
+    const maxAttempts = twoFaSettings?.[0]?.max_attempts ?? 10;
+    const windowMinutes = twoFaSettings?.[0]?.window_minutes ?? 10;
+    const lockMinutes = twoFaSettings?.[0]?.lock_minutes ?? 10;
+
+    // Check if user is locked from 2FA attempts
+    const { data: locked, error: lockCheckError } = await supabaseAdmin
+      .rpc('is_two_factor_locked', { _user_id: userId });
+
+    if (lockCheckError) {
+      console.error('Error checking 2FA lock status:', lockCheckError);
+    }
+
+    if (locked === true) {
+      return new Response(
+        JSON.stringify({ valid: false, error: 'two_factor_locked' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { token, recoveryCode } = await req.json();
 
     // At least one must be provided
@@ -306,31 +334,66 @@ serve(async (req) => {
       isValid = verifyTOTP(profile.two_factor_secret, totpToken);
     }
 
-    // Step 3C: On successful verification, mark session as verified via service role
-    if (isValid) {
-      const { error: markError } = await supabaseAdmin
-        .from('session_2fa_verifications')
-        .upsert(
-          {
-            user_id: userId,
-            session_id: sessionId,
-            verified_at: new Date().toISOString(),
-            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h valid
-          },
-          { onConflict: 'user_id,session_id' }
-        );
+    // Log the attempt to two_factor_attempts table
+    const ipAddress = req.headers.get('x-forwarded-for') ?? req.headers.get('cf-connecting-ip') ?? null;
+    
+    const { error: logError } = await supabaseAdmin
+      .from('two_factor_attempts')
+      .insert({
+        user_id: userId,
+        success: isValid,
+        ip_address: ipAddress,
+      });
 
-      if (markError) {
-        console.error('Error marking 2FA verified:', markError);
-        return new Response(
-          JSON.stringify({ valid: false, error: 'server_error' }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    if (logError) {
+      console.error('Error logging 2FA attempt:', logError);
+    }
+
+    // If verification failed, check if we should lock the user
+    if (!isValid) {
+      const { error: applyLockError } = await supabaseAdmin
+        .rpc('apply_two_factor_lock_if_needed', {
+          _user_id: userId,
+          _max_attempts: maxAttempts,
+          _window_minutes: windowMinutes,
+          _lock_minutes: lockMinutes,
+        });
+
+      if (applyLockError) {
+        console.error('Error applying 2FA lock if needed:', applyLockError);
       }
+
+      return new Response(
+        JSON.stringify({ valid: false, error: 'invalid_code' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Step 3C: On successful verification, mark session as verified via service role
+    const expiresAt = new Date(Date.now() + sessionDurationMinutes * 60 * 1000).toISOString();
+    
+    const { error: markError } = await supabaseAdmin
+      .from('session_2fa_verifications')
+      .upsert(
+        {
+          user_id: userId,
+          session_id: sessionId,
+          verified_at: new Date().toISOString(),
+          expires_at: expiresAt,
+        },
+        { onConflict: 'user_id,session_id' }
+      );
+
+    if (markError) {
+      console.error('Error marking 2FA verified:', markError);
+      return new Response(
+        JSON.stringify({ valid: false, error: 'server_error' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(
-      JSON.stringify({ valid: isValid, error: isValid ? undefined : 'invalid_code' }),
+      JSON.stringify({ valid: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

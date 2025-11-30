@@ -137,6 +137,15 @@ export const ChangePassword = () => {
         // Don't show error to user, just log it
       }
 
+      // Invalidate all 2FA session verifications after password change
+      // This forces users with 2FA enabled to re-verify on next access
+      try {
+        await supabase.rpc('invalidate_own_2fa_verifications');
+      } catch (rpcError) {
+        console.error('Error invalidating 2FA verifications:', rpcError);
+        // Don't block password change flow, but log the error
+      }
+
       toast({
         title: t('auth.success'),
         description: t('auth.passwordChangedSuccess'),

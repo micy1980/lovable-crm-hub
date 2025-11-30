@@ -92,6 +92,8 @@ export const use2FA = () => {
         const errorKey = response.data?.error;
         if (errorKey === 'invalid_code') {
           toast.error(t('2fa.invalidCode'));
+        } else if (errorKey === 'two_factor_locked') {
+          toast.error(t('2fa.tooManyAttempts'));
         } else {
           toast.error(t('2fa.verificationFailed'));
         }
