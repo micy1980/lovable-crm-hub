@@ -224,11 +224,15 @@ serve(async (req) => {
       }
     );
 
-    const { token, isRecoveryCode } = await req.json();
+    const { token, recoveryCode } = await req.json();
 
-    if (!token) {
+    // At least one must be provided
+    const totpToken = (token ?? '').toString().trim();
+    const recoveryCodeValue = (recoveryCode ?? '').toString().trim();
+
+    if (!totpToken && !recoveryCodeValue) {
       return new Response(
-        JSON.stringify({ error: 'Token is required' }),
+        JSON.stringify({ valid: false, error: 'invalid_code' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -251,7 +255,8 @@ serve(async (req) => {
 
     let isValid = false;
 
-    if (isRecoveryCode) {
+    // Priority: check recovery code first if provided
+    if (recoveryCodeValue) {
       // Verify recovery code
       const { data: recoveryCodes, error: recoveryError } = await supabaseAdmin
         .from('user_recovery_codes')
@@ -267,12 +272,11 @@ serve(async (req) => {
         );
       }
 
-      // Check if token matches any recovery code
+      // Check if recoveryCode matches any stored code
       for (const code of recoveryCodes || []) {
-        // Simple hash comparison (in production, use proper hashing like bcrypt)
         const expectedHash = await crypto.subtle.digest(
           'SHA-256',
-          new TextEncoder().encode(token)
+          new TextEncoder().encode(recoveryCodeValue)
         );
         const expectedHashHex = Array.from(new Uint8Array(expectedHash))
           .map(b => b.toString(16).padStart(2, '0'))
@@ -290,7 +294,7 @@ serve(async (req) => {
           break;
         }
       }
-    } else {
+    } else if (totpToken) {
       // Verify TOTP token
       if (!profile.two_factor_secret) {
         return new Response(
@@ -299,7 +303,7 @@ serve(async (req) => {
         );
       }
 
-      isValid = verifyTOTP(profile.two_factor_secret, token);
+      isValid = verifyTOTP(profile.two_factor_secret, totpToken);
     }
 
     // Step 3C: On successful verification, mark session as verified via service role
