@@ -664,6 +664,30 @@ export type Database = {
           },
         ]
       }
+      session_2fa_verifications: {
+        Row: {
+          expires_at: string
+          id: string
+          session_id: string
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          expires_at?: string
+          id?: string
+          session_id: string
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          expires_at?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           created_at: string | null
@@ -911,6 +935,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_expired_2fa_verifications: { Args: never; Returns: undefined }
       cleanup_expired_locks: { Args: never; Returns: undefined }
       cleanup_old_login_attempts: { Args: never; Returns: undefined }
       count_recent_failed_attempts: {
@@ -981,6 +1006,7 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      is_2fa_verified: { Args: { _user_id: string }; Returns: boolean }
       is_account_locked: { Args: { _user_id: string }; Returns: boolean }
       is_account_locked_by_email: { Args: { _email: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }

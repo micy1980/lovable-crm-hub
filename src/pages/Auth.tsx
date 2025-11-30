@@ -53,9 +53,9 @@ const Auth = () => {
     setShow2FADialog(false);
     
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      if (!currentUser) {
+      if (!currentSession || !currentSession.user) {
         toast({
           title: t('auth.error'),
           description: t('auth.notAuthenticated'),
@@ -63,6 +63,30 @@ const Auth = () => {
         });
         setLoading(false);
         return;
+      }
+
+      const currentUser = currentSession.user;
+
+      // Extract session_id from JWT token
+      const jwtPayload = JSON.parse(atob(currentSession.access_token.split('.')[1]));
+      const sessionId = jwtPayload.session_id;
+      
+      // Record 2FA verification in database for this session
+      if (sessionId) {
+        try {
+          await supabase
+            .from('session_2fa_verifications')
+            .upsert({
+              user_id: currentUser.id,
+              session_id: sessionId,
+              verified_at: new Date().toISOString(),
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+            }, {
+              onConflict: 'user_id,session_id'
+            });
+        } catch (verificationError) {
+          console.error('Error recording 2FA verification:', verificationError);
+        }
       }
 
       // Log successful attempt
@@ -103,6 +127,8 @@ const Auth = () => {
         description: t('auth.loginFailed'),
         variant: 'destructive',
       });
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
