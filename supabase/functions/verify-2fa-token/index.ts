@@ -171,13 +171,50 @@ function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
   return result;
 }
 
+// Helper to decode JWT payload
+function decodeJwtPayload(token: string): any {
+  try {
+    const payload = token.split('.')[1];
+    const padded = payload.padEnd(payload.length + (4 - (payload.length % 4)) % 4, '=');
+    const json = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(json);
+  } catch (error) {
+    console.error('JWT decode error:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
+    // Step 3A: Require Authorization header and extract session info
+    const authHeader = req.headers.get('Authorization') || '';
+    const tokenMatch = authHeader.match(/^Bearer (.+)$/);
+    const accessToken = tokenMatch?.[1];
+
+    if (!accessToken) {
+      return new Response(
+        JSON.stringify({ valid: false, error: 'missing_auth' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Decode JWT to get userId and sessionId
+    const jwtPayload = decodeJwtPayload(accessToken);
+    const userId = jwtPayload?.sub as string | undefined;
+    const sessionId = jwtPayload?.session_id as string | undefined;
+
+    if (!userId || !sessionId) {
+      return new Response(
+        JSON.stringify({ valid: false, error: 'invalid_session' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
@@ -187,20 +224,20 @@ serve(async (req) => {
       }
     );
 
-    const { email, token, isRecoveryCode } = await req.json();
+    const { token, isRecoveryCode } = await req.json();
 
-    if (!email || !token) {
+    if (!token) {
       return new Response(
-        JSON.stringify({ error: 'Email and token are required' }),
+        JSON.stringify({ error: 'Token is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get user's 2FA secret and recovery codes
-    const { data: profile, error: profileError } = await supabaseClient
+    // Step 3B: Get user's 2FA secret using userId from JWT (not from request body)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, two_factor_secret, two_factor_enabled')
-      .eq('email', email)
+      .select('id, email, two_factor_secret, two_factor_enabled')
+      .eq('id', userId)
       .eq('two_factor_enabled', true)
       .single();
 
@@ -216,7 +253,7 @@ serve(async (req) => {
 
     if (isRecoveryCode) {
       // Verify recovery code
-      const { data: recoveryCodes, error: recoveryError } = await supabaseClient
+      const { data: recoveryCodes, error: recoveryError } = await supabaseAdmin
         .from('user_recovery_codes')
         .select('id, code_hash')
         .eq('user_id', profile.id)
@@ -245,7 +282,7 @@ serve(async (req) => {
           isValid = true;
           
           // Mark recovery code as used
-          await supabaseClient
+          await supabaseAdmin
             .from('user_recovery_codes')
             .update({ used: true, used_at: new Date().toISOString() })
             .eq('id', code.id);
@@ -263,6 +300,29 @@ serve(async (req) => {
       }
 
       isValid = verifyTOTP(profile.two_factor_secret, token);
+    }
+
+    // Step 3C: On successful verification, mark session as verified via service role
+    if (isValid) {
+      const { error: markError } = await supabaseAdmin
+        .from('session_2fa_verifications')
+        .upsert(
+          {
+            user_id: userId,
+            session_id: sessionId,
+            verified_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h valid
+          },
+          { onConflict: 'user_id,session_id' }
+        );
+
+      if (markError) {
+        console.error('Error marking 2FA verified:', markError);
+        return new Response(
+          JSON.stringify({ valid: false, error: 'server_error' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     return new Response(
