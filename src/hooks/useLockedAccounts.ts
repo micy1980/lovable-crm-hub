@@ -81,6 +81,27 @@ export const useLockedAccounts = () => {
     },
   });
 
+  // Auto-refresh when locks expire (checks every 10 seconds for expired locks)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lockedAccounts.length > 0) {
+        const now = new Date().getTime();
+        const hasExpiredLock = lockedAccounts.some((lock: any) => {
+          if (!lock.locked_until) return false;
+          const lockUntil = new Date(lock.locked_until).getTime();
+          return lockUntil <= now;
+        });
+
+        if (hasExpiredLock) {
+          console.log('[useLockedAccounts] Expired lock detected, refreshing...');
+          queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
+        }
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [lockedAccounts, queryClient]);
+
   const unlockAccount = useMutation({
     mutationFn: async (userId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
