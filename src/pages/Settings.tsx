@@ -6,6 +6,7 @@ import { CompanyList } from '@/components/companies/CompanyList';
 import { UserList } from '@/components/users/UserList';
 import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { SystemSettings } from '@/components/settings/SystemSettings';
+import { TwoFactorAuth } from '@/components/settings/TwoFactorAuth';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
@@ -151,6 +152,9 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Two-Factor Authentication */}
+          <TwoFactorAuth />
         </TabsContent>
 
         {isAdmin && (

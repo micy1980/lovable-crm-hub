@@ -13,20 +13,25 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
+import { TwoFactorDialog } from '@/components/auth/TwoFactorDialog';
 import { useLoginAttempts } from '@/hooks/useLoginAttempts';
 import { validatePasswordStrength } from '@/lib/passwordValidation';
 import { useQueryClient } from '@tanstack/react-query';
+import { use2FA } from '@/hooks/use2FA';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [show2FADialog, setShow2FADialog] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { logLoginAttempt, checkFailedAttempts } = useLoginAttempts();
+  const { check2FARequired } = use2FA();
   const queryClient = useQueryClient();
   
   const authSchema = z.object({
@@ -41,6 +46,71 @@ const Auth = () => {
       navigate('/');
     }
   }, [user, navigate]);
+
+  const handle2FASuccess = async () => {
+    console.log('2FA verification successful, completing login...');
+    setShow2FADialog(false);
+    
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        toast({
+          title: t('auth.error'),
+          description: t('auth.notAuthenticated'),
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Log successful attempt
+      await logLoginAttempt({ 
+        email: pendingEmail, 
+        success: true, 
+        userId: currentUser.id 
+      });
+
+      // Clean up expired locks
+      const { error: cleanupError } = await supabase.rpc('cleanup_expired_locks');
+      if (cleanupError) {
+        console.error('Error cleaning up expired locks:', cleanupError);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
+      }
+
+      // Check if user must change password
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('must_change_password')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (profile?.must_change_password) {
+        navigate('/change-password');
+      } else {
+        toast({
+          title: t('auth.success'),
+          description: t('auth.loggedInSuccess'),
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error after 2FA verification:', error);
+      toast({
+        title: t('auth.error'),
+        description: t('auth.loginFailed'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handle2FACancel = () => {
+    setShow2FADialog(false);
+    setPendingEmail('');
+    // Sign out the user since 2FA was cancelled
+    supabase.auth.signOut();
+  };
 
   /**
    * Account Lock Flow:
@@ -154,8 +224,21 @@ const Auth = () => {
           });
         }
       } else if (data?.user) {
-        console.log('Sign-in successful, logging attempt...');
-        // Success! Log it
+        console.log('Sign-in successful, checking 2FA requirement...');
+        
+        // Check if user has 2FA enabled
+        const requires2FA = await check2FARequired(validated.email);
+        
+        if (requires2FA) {
+          console.log('2FA required, showing 2FA dialog');
+          // Store email for 2FA verification
+          setPendingEmail(validated.email);
+          setShow2FADialog(true);
+          setLoading(false);
+          return;
+        }
+        
+        // No 2FA required, log successful attempt and proceed
         await logLoginAttempt({ 
           email: validated.email, 
           success: true, 
@@ -373,6 +456,14 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* 2FA Dialog */}
+      <TwoFactorDialog
+        open={show2FADialog}
+        email={pendingEmail}
+        onSuccess={handle2FASuccess}
+        onCancel={handle2FACancel}
+      />
     </div>
   );
 };
