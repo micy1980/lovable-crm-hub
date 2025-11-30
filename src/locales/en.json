@@ -90,6 +90,7 @@
     "codeRequired": "2FA Code Required",
     "codeRequiredDescription": "Enter the 6-digit code from your authenticator app or use a recovery code.",
     "verifyAndLogin": "Verify and Login",
+    "verificationFailed": "Verification failed. Please try again.",
     "adminDisable": "Disable 2FA (Admin)",
     "adminDisableConfirm": "Are you sure you want to disable 2FA for this user?",
     "adminDisableSuccess": "2FA disabled for user"

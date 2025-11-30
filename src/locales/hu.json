@@ -92,7 +92,8 @@
     "verifyAndLogin": "Ellenőrzés és bejelentkezés",
     "adminDisable": "2FA kikapcsolása (Admin)",
     "adminDisableConfirm": "Biztos, hogy kikapcsolod a 2FA-t ennél a felhasználónál?",
-    "adminDisableSuccess": "2FA kikapcsolva a felhasználónál"
+    "adminDisableSuccess": "2FA kikapcsolva a felhasználónál",
+    "verificationFailed": "Hitelesítés sikertelen. Kérem próbáld újra."
   },
   "nav": {
     "dashboard": "Vezérlőpult",

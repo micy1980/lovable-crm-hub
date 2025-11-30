@@ -77,12 +77,24 @@ export const use2FA = () => {
 
       if (response.error) {
         console.error('2FA verification error:', response.error);
+        toast.error(t('2fa.verificationFailed'));
         return false;
       }
 
-      return response.data?.valid === true;
+      if (response.data?.valid === true) {
+        return true;
+      } else {
+        const errorKey = response.data?.error;
+        if (errorKey === 'invalid_code') {
+          toast.error(t('2fa.invalidCode'));
+        } else {
+          toast.error(t('2fa.verificationFailed'));
+        }
+        return false;
+      }
     } catch (error) {
       console.error('Error verifying 2FA token:', error);
+      toast.error(t('2fa.verificationFailed'));
       return false;
     } finally {
       setLoading(false);

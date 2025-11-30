@@ -179,7 +179,7 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           persistSession: false,
@@ -207,8 +207,8 @@ serve(async (req) => {
     if (profileError || !profile) {
       console.error('Profile fetch error:', profileError);
       return new Response(
-        JSON.stringify({ valid: false, error: 'User not found or 2FA not enabled' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ valid: false, error: 'invalid_code' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -225,8 +225,8 @@ serve(async (req) => {
       if (recoveryError) {
         console.error('Recovery codes fetch error:', recoveryError);
         return new Response(
-          JSON.stringify({ valid: false, error: 'Failed to fetch recovery codes' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ valid: false, error: 'invalid_code' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -257,8 +257,8 @@ serve(async (req) => {
       // Verify TOTP token
       if (!profile.two_factor_secret) {
         return new Response(
-          JSON.stringify({ valid: false, error: '2FA secret not found' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ valid: false, error: 'invalid_code' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -266,15 +266,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ valid: isValid }),
+      JSON.stringify({ valid: isValid, error: isValid ? undefined : 'invalid_code' }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error verifying 2FA token:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ valid: false, error: 'server_error' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
