@@ -40,12 +40,12 @@ const Auth = () => {
     fullName: z.string().min(2, { message: t('auth.fullNameMinLength') }).optional(),
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in (but not if 2FA verification is pending)
   useEffect(() => {
-    if (user) {
+    if (user && !show2FADialog) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, show2FADialog]);
 
   const handle2FASuccess = async () => {
     console.log('2FA verification successful, completing login...');
@@ -228,13 +228,14 @@ const Auth = () => {
         
         // Check if user has 2FA enabled
         const requires2FA = await check2FARequired(validated.email);
+        console.log('2FA check result:', requires2FA);
         
         if (requires2FA) {
-          console.log('2FA required, showing 2FA dialog');
+          console.log('2FA required, showing 2FA dialog, current state:', { show2FADialog, pendingEmail });
           // Store email for 2FA verification
           setPendingEmail(validated.email);
           setShow2FADialog(true);
-          setLoading(false);
+          // Don't set loading false here - let the dialog handle the loading state
           return;
         }
         
