@@ -70,9 +70,13 @@ export const use2FA = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Step 4: Updated to use Authorization header, email no longer needed in body
+      // Use correct field based on whether it's a recovery code or TOTP token
+      const body = isRecoveryCode 
+        ? { recoveryCode: token }
+        : { token };
+      
       const response = await supabase.functions.invoke('verify-2fa-token', {
-        body: { token, isRecoveryCode },
+        body,
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
       });
 
