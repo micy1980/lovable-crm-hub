@@ -10,6 +10,7 @@ import { use2FA } from '@/hooks/use2FA';
 import { useTranslation } from 'react-i18next';
 import { Shield, Download, Copy, AlertTriangle, QrCode as QrCodeIcon } from 'lucide-react';
 import QRCode from 'qrcode';
+import * as OTPAuth from 'otpauth';
 import { toast } from 'sonner';
 
 export const TwoFactorAuth = () => {
@@ -69,15 +70,23 @@ export const TwoFactorAuth = () => {
   const handleVerifyAndEnable = async () => {
     if (!user || !verificationCode || !secret) return;
 
-    // Verify the code
-    const isValid = await verify2FAToken(user.email, verificationCode, false);
-    
-    if (!isValid) {
+    // Verify the code locally using the same TOTP parameters as the backend
+    const totp = new OTPAuth.TOTP({
+      issuer: 'MiniCRM',
+      label: user.email,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret,
+    });
+
+    const delta = totp.validate({ token: verificationCode, window: 1 });
+    if (delta === null) {
       toast.error(t('2fa.invalidCode'));
       return;
     }
 
-    // Enable 2FA
+    // Enable 2FA in the backend
     const success = await enable2FA(user.id, secret);
     if (success) {
       setIs2FAEnabled(true);
