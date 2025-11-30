@@ -68,6 +68,7 @@
     "verifyCode": "Verify Code",
     "verifying": "Verifying...",
     "invalidCode": "Invalid code. Please try again.",
+    "tooManyAttempts": "Too many failed attempts. Please try again later.",
     "enabledSuccess": "2FA enabled successfully",
     "disabledSuccess": "2FA disabled successfully",
     "errorEnabling": "Failed to enable 2FA",

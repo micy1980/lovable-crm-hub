@@ -799,6 +799,51 @@ export type Database = {
           },
         ]
       }
+      two_factor_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_address?: string | null
+          success: boolean
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      two_factor_locks: {
+        Row: {
+          locked_at: string
+          locked_until: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          locked_at?: string
+          locked_until: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          locked_at?: string
+          locked_until?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_companies: {
         Row: {
           company_id: string
@@ -922,6 +967,15 @@ export type Database = {
         Args: { _new_minutes: number }
         Returns: undefined
       }
+      apply_two_factor_lock_if_needed: {
+        Args: {
+          _lock_minutes: number
+          _max_attempts: number
+          _user_id: string
+          _window_minutes: number
+        }
+        Returns: undefined
+      }
       can_add_seat: { Args: { _company_id: string }; Returns: boolean }
       can_user_delete_in_company: {
         Args: { _company_id: string; _user_id: string }
@@ -935,6 +989,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_expired_2fa_locks: { Args: never; Returns: undefined }
       cleanup_expired_2fa_verifications: { Args: never; Returns: undefined }
       cleanup_expired_locks: { Args: never; Returns: undefined }
       cleanup_old_login_attempts: { Args: never; Returns: undefined }
@@ -949,6 +1004,15 @@ export type Database = {
       }
       generate_2fa_secret: { Args: never; Returns: string }
       generate_license_key: { Args: never; Returns: string }
+      get_2fa_settings: {
+        Args: never
+        Returns: {
+          lock_minutes: number
+          max_attempts: number
+          session_duration_minutes: number
+          window_minutes: number
+        }[]
+      }
       get_2fa_status: {
         Args: { _user_id: string }
         Returns: {
@@ -1006,6 +1070,11 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      invalidate_2fa_verifications: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      invalidate_own_2fa_verifications: { Args: never; Returns: undefined }
       is_2fa_verified: { Args: { _user_id: string }; Returns: boolean }
       is_account_locked: { Args: { _user_id: string }; Returns: boolean }
       is_account_locked_by_email: { Args: { _email: string }; Returns: boolean }
@@ -1024,6 +1093,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_two_factor_locked: { Args: { _user_id: string }; Returns: boolean }
       lock_account_for_email: {
         Args: { _email: string; _minutes: number; _reason: string }
         Returns: undefined
