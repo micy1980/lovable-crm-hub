@@ -83,6 +83,48 @@ Deno.serve(async (req) => {
     });
     console.log('================================');
 
+    // Send email notifications to super admins
+    if (superAdmins.length > 0) {
+      const emailRecipients = superAdmins.map((admin: any) => admin.email);
+      
+      const emailHtml = `
+        <h2>Fiók zárolás értesítés</h2>
+        <p>Egy felhasználói fiók zárolásra került a rendszerben.</p>
+        <ul>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Felhasználó ID:</strong> ${userId}</li>
+          <li><strong>Ok:</strong> ${reason}</li>
+          <li><strong>Zárolva eddig:</strong> ${lockDuration}</li>
+          ${ipAddress ? `<li><strong>IP cím:</strong> ${ipAddress}</li>` : ''}
+        </ul>
+        <p>A fiókot feloldhatod az Admin felületen a <a href="${supabaseUrl}">Mini CRM</a> rendszerben.</p>
+      `;
+
+      try {
+        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            to: emailRecipients,
+            subject: 'Fiók zárolás értesítés - Mini CRM',
+            html: emailHtml,
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          const errorText = await emailResponse.text();
+          console.error('Failed to send email:', errorText);
+        } else {
+          console.log('Email sent successfully to super admins');
+        }
+      } catch (emailError) {
+        console.error('Error sending email:', emailError);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
