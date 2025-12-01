@@ -13,7 +13,8 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId: string;
+  projectId?: string;
+  salesId?: string;
   task?: any;
 }
 
@@ -25,7 +26,7 @@ interface TaskFormData {
   responsible_user_id: string;
 }
 
-export const TaskDialog = ({ open, onOpenChange, projectId, task }: TaskDialogProps) => {
+export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: TaskDialogProps) => {
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
   
@@ -63,7 +64,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, task }: TaskDialogPr
       const taskData = {
         ...data,
         company_id: activeCompany.id,
-        project_id: projectId,
+        project_id: projectId || null,
+        sales_id: salesId || null,
         responsible_user_id: data.responsible_user_id || null,
         deadline: data.deadline || null,
       };
@@ -86,6 +88,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, task }: TaskDialogPr
       }
 
       queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-tasks'] });
       onOpenChange(false);
       reset();
     } catch (error: any) {
