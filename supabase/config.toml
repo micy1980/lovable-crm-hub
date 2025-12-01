@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.check-deadlines]
 verify_jwt = false
+
+[functions.check-api-key-status]
+verify_jwt = false

@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { useApiKeyStatus } from '@/hooks/useApiKeyStatus';
 import { toast } from 'sonner';
 import { Loader2, Key } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export const EmailSettings = () => {
   const { settings, isLoading, updateSetting } = useSystemSettings();
+  const { data: apiKeyStatus, isLoading: isLoadingApiKey, refetch: refetchApiKey } = useApiKeyStatus();
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingApiKey, setIsUpdatingApiKey] = useState(false);
   const [newApiKey, setNewApiKey] = useState('');
@@ -18,7 +20,6 @@ export const EmailSettings = () => {
   const emailSettings = {
     fromEmail: settings?.['email_from_address'] || 'onboarding@resend.dev',
     fromName: settings?.['email_from_name'] || 'Mini CRM',
-    apiKey: settings?.['resend_api_key'] || '',
     notifyAccountLock: settings?.['email_notify_account_lock'] === 'true',
     notifyTaskDeadline: settings?.['email_notify_task_deadline'] === 'true',
     notifyTaskCreated: settings?.['email_notify_task_created'] === 'true',
@@ -27,13 +28,10 @@ export const EmailSettings = () => {
 
   const [formData, setFormData] = useState(emailSettings);
 
-  // Helper function to mask API key
-  const maskApiKey = (key: string) => {
-    if (!key || key.length < 8) return '';
-    const start = key.substring(0, 6);
-    const end = key.substring(key.length - 4);
-    return `${start}${'*'.repeat(Math.min(20, key.length - 10))}${end}`;
-  };
+  // Update formData when settings change
+  useEffect(() => {
+    setFormData(emailSettings);
+  }, [settings]);
 
   const handleUpdateApiKey = async () => {
     if (!newApiKey || newApiKey.trim().length === 0) {
@@ -49,6 +47,8 @@ export const EmailSettings = () => {
       });
       toast.success('API kulcs sikeresen frissítve');
       setNewApiKey('');
+      // Refetch API key status
+      refetchApiKey();
     } catch (error) {
       console.error('Error updating API key:', error);
       toast.error('Hiba történt az API kulcs frissítése során');
@@ -76,7 +76,7 @@ export const EmailSettings = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingApiKey) {
     return (
       <Card>
         <CardHeader>
@@ -92,6 +92,10 @@ export const EmailSettings = () => {
     );
   }
 
+  const apiKeyConfigured = apiKeyStatus?.isConfigured || false;
+  const apiKeyValue = apiKeyStatus?.apiKey || '';
+  const apiKeySource = apiKeyStatus?.source || 'none';
+
   return (
     <Card>
       <CardHeader>
@@ -104,12 +108,17 @@ export const EmailSettings = () => {
           <h3 className="text-lg font-medium">Email szolgáltatás (Resend)</h3>
           <div className="space-y-3">
             <div>
-              <Label>API Kulcs státusza</Label>
+              <Label>API Kulcs</Label>
               <div className="mt-2 p-3 rounded-lg border bg-muted/50">
-                {emailSettings.apiKey ? (
-                  <div className="space-y-1">
+                {apiKeyConfigured ? (
+                  <div className="space-y-2">
                     <p className="text-sm font-medium text-green-600 dark:text-green-400">✓ API kulcs beállítva</p>
-                    <p className="text-xs font-mono text-muted-foreground">{maskApiKey(emailSettings.apiKey)}</p>
+                    <div className="space-y-1">
+                      <p className="text-xs font-mono text-muted-foreground break-all">{apiKeyValue}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Forrás: {apiKeySource === 'secret' ? 'Supabase Secret (RESEND_API_KEY)' : 'Adatbázis (system_settings)'}
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-1">
@@ -136,21 +145,21 @@ export const EmailSettings = () => {
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="mt-2">
                   <Key className="mr-2 h-4 w-4" />
-                  {emailSettings.apiKey ? 'API kulcs frissítése' : 'API kulcs beállítása'}
+                  {apiKeyConfigured ? 'API kulcs frissítése' : 'API kulcs beállítása'}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Resend API kulcs {emailSettings.apiKey ? 'frissítése' : 'beállítása'}</AlertDialogTitle>
+                  <AlertDialogTitle>Resend API kulcs {apiKeyConfigured ? 'frissítése' : 'beállítása'}</AlertDialogTitle>
                   <AlertDialogDescription className="space-y-3">
-                    <p>Add meg {emailSettings.apiKey ? 'az új' : 'a'} Resend API kulcsot. Ez biztonságosan lesz tárolva a rendszerben.</p>
-                    {emailSettings.apiKey && (
+                    <p>Add meg {apiKeyConfigured ? 'az új' : 'a'} Resend API kulcsot. Ez biztonságosan lesz tárolva a rendszerben.</p>
+                    {apiKeyConfigured && (
                       <div className="p-2 rounded bg-muted">
-                        <p className="text-xs text-muted-foreground">Jelenlegi: {maskApiKey(emailSettings.apiKey)}</p>
+                        <p className="text-xs text-muted-foreground">Jelenlegi: {apiKeyValue.substring(0, 20)}...</p>
                       </div>
                     )}
                     <div className="space-y-2">
-                      <Label htmlFor="apiKey">{emailSettings.apiKey ? 'Új' : ''} API kulcs</Label>
+                      <Label htmlFor="apiKey">{apiKeyConfigured ? 'Új' : ''} API kulcs</Label>
                       <Input
                         id="apiKey"
                         type="password"
@@ -165,7 +174,7 @@ export const EmailSettings = () => {
                   <AlertDialogCancel>Mégse</AlertDialogCancel>
                   <AlertDialogAction onClick={handleUpdateApiKey} disabled={isUpdatingApiKey}>
                     {isUpdatingApiKey && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {emailSettings.apiKey ? 'Frissítés' : 'Mentés'}
+                    {apiKeyConfigured ? 'Frissítés' : 'Mentés'}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
