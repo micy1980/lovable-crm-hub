@@ -3,19 +3,24 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
+import { ProjectDialog } from '@/components/projects/ProjectDialog';
+import { useState } from 'react';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
   const { canEdit } = useReadOnlyMode();
+  const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects', activeCompany?.id],
@@ -67,7 +72,7 @@ const Projects = () => {
             {t('projects.description', { companyName: activeCompany.name })}
           </p>
         </div>
-        <Button disabled={!canEdit}>
+        <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
           <Plus className="mr-2 h-4 w-4" />
           {t('projects.newProject')}
         </Button>
@@ -90,7 +95,8 @@ const Projects = () => {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="flex items-center justify-between border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/projects/${project.id}`)}
                 >
                   <div>
                     <h3 className="font-semibold">{project.name}</h3>
@@ -98,15 +104,19 @@ const Projects = () => {
                       <p className="text-sm text-muted-foreground">{t('projects.code')}: {project.code}</p>
                     )}
                     {project.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
                     )}
                     {project.status && (
-                      <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-md text-xs mt-2">
-                        {project.status}
-                      </span>
+                      <Badge variant="secondary" className="mt-2">
+                        {project.status === 'planning' && 'Tervezés'}
+                        {project.status === 'in_progress' && 'Folyamatban'}
+                        {project.status === 'on_hold' && 'Felfüggesztve'}
+                        {project.status === 'completed' && 'Befejezett'}
+                        {project.status === 'cancelled' && 'Törölve'}
+                      </Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/projects/${project.id}`); }}>
                     {t('common.viewDetails')}
                   </Button>
                 </div>
@@ -120,6 +130,8 @@ const Projects = () => {
         </CardContent>
       </Card>
       </div>
+
+      <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </LicenseGuard>
   );
 };
