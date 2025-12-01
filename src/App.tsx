@@ -13,6 +13,7 @@ import ChangePassword from "./pages/ChangePassword";
 import Partners from "./pages/Partners";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import SalesDetail from "./pages/SalesDetail";
 import Sales from "./pages/Sales";
 import Documents from "./pages/Documents";
 import CalendarPage from "./pages/CalendarPage";
@@ -41,7 +42,7 @@ const App = () => (
                 <Route path="/partners" element={<MainLayout><Partners /></MainLayout>} />
                 <Route path="/projects" element={<MainLayout><Projects /></MainLayout>} />
                 <Route path="/projects/:id" element={<MainLayout><ProjectDetail /></MainLayout>} />
-                <Route path="/sales" element={<MainLayout><Sales /></MainLayout>} />
+                <Route path="/sales/:id" element={<MainLayout><SalesDetail /></MainLayout>} />
                 <Route path="/documents" element={<MainLayout><Documents /></MainLayout>} />
                 <Route path="/calendar" element={<MainLayout><CalendarPage /></MainLayout>} />
                 <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />

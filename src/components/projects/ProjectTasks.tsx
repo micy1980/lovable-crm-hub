@@ -9,31 +9,39 @@ import { TaskDialog } from './TaskDialog';
 import { format } from 'date-fns';
 
 interface ProjectTasksProps {
-  projectId: string;
-  canEdit: boolean;
+  projectId?: string;
+  salesId?: string;
+  canEdit?: boolean;
 }
 
-export const ProjectTasks = ({ projectId, canEdit }: ProjectTasksProps) => {
+export const ProjectTasks = ({ projectId, salesId, canEdit = true }: ProjectTasksProps) => {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ['project-tasks', projectId],
+    queryKey: projectId ? ['project-tasks', projectId] : ['sales-tasks', salesId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select(`
           *,
           responsible:responsible_user_id(full_name, email),
           creator:created_by(full_name, email)
         `)
-        .eq('project_id', projectId)
         .is('deleted_at', null)
         .order('deadline', { ascending: true });
 
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      } else if (salesId) {
+        query = query.eq('sales_id', salesId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
+    enabled: !!(projectId || salesId),
   });
 
   const getStatusIcon = (status: string) => {
@@ -76,7 +84,7 @@ export const ProjectTasks = ({ projectId, canEdit }: ProjectTasksProps) => {
             <div>
               <CardTitle>Feladatok</CardTitle>
               <CardDescription>
-                Projekthez kapcsolódó feladatok ({tasks.length} db)
+                {projectId ? 'Projekthez' : 'Értékesítéshez'} kapcsolódó feladatok ({tasks.length} db)
               </CardDescription>
             </div>
             <Button size="sm" onClick={handleNewTask} disabled={!canEdit}>
@@ -90,7 +98,7 @@ export const ProjectTasks = ({ projectId, canEdit }: ProjectTasksProps) => {
             <div className="text-center py-8 text-muted-foreground">Betöltés...</div>
           ) : tasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Még nincsenek feladatok ehhez a projekthez
+              Még nincsenek feladatok {projectId ? 'ehhez a projekthez' : 'ehhez az értékesítéshez'}
             </div>
           ) : (
             <div className="space-y-3">
@@ -139,6 +147,7 @@ export const ProjectTasks = ({ projectId, canEdit }: ProjectTasksProps) => {
         open={taskDialogOpen}
         onOpenChange={setTaskDialogOpen}
         projectId={projectId}
+        salesId={salesId}
         task={selectedTask}
       />
     </>
