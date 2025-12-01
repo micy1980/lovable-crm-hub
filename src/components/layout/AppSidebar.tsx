@@ -8,6 +8,7 @@ import {
   Settings,
   Building2,
   ScrollText,
+  LockKeyhole,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -41,9 +42,10 @@ export function AppSidebar() {
     { title: t('nav.settings'), url: '/settings', icon: Settings, feature: null },
   ];
 
-  // Only show Logs to super_admin
+  // Only show Logs and Locked Accounts to super_admin
   if (isSuperAdmin(profile)) {
     allMenuItems.splice(6, 0, { title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'logs' });
+    allMenuItems.splice(7, 0, { title: 'Zárolt Fiókok', url: '/locked-accounts', icon: LockKeyhole, feature: null });
   }
 
   // Filter menu items based on license features
