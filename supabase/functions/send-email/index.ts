@@ -1,7 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { getResendClient } from "./resend-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +22,8 @@ const handler = async (req: Request): Promise<Response> => {
     const { to, subject, html, from }: EmailRequest = await req.json();
 
     console.log("Sending email to:", to);
+
+    const resend = await getResendClient();
 
     const emailResponse = await resend.emails.send({
       from: from || "Mini CRM <onboarding@resend.dev>",
@@ -52,5 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 serve(handler);

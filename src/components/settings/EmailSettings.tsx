@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Key } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export const EmailSettings = () => {
   const { settings, isLoading, updateSetting } = useSystemSettings();
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingApiKey, setIsUpdatingApiKey] = useState(false);
+  const [newApiKey, setNewApiKey] = useState('');
 
   const emailSettings = {
     fromEmail: settings?.['email_from_address'] || 'onboarding@resend.dev',
     fromName: settings?.['email_from_name'] || 'Mini CRM',
+    apiKey: settings?.['resend_api_key'] || '',
     notifyAccountLock: settings?.['email_notify_account_lock'] === 'true',
     notifyTaskDeadline: settings?.['email_notify_task_deadline'] === 'true',
     notifyTaskCreated: settings?.['email_notify_task_created'] === 'true',
@@ -22,6 +26,28 @@ export const EmailSettings = () => {
   };
 
   const [formData, setFormData] = useState(emailSettings);
+
+  const handleUpdateApiKey = async () => {
+    if (!newApiKey || newApiKey.trim().length === 0) {
+      toast.error('Adj meg egy érvényes API kulcsot');
+      return;
+    }
+    
+    setIsUpdatingApiKey(true);
+    try {
+      await updateSetting.mutateAsync({ 
+        key: 'resend_api_key', 
+        value: newApiKey 
+      });
+      toast.success('API kulcs sikeresen frissítve');
+      setNewApiKey('');
+    } catch (error) {
+      console.error('Error updating API key:', error);
+      toast.error('Hiba történt az API kulcs frissítése során');
+    } finally {
+      setIsUpdatingApiKey(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -69,13 +95,51 @@ export const EmailSettings = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Email szolgáltatás (Resend)</h3>
           <div className="space-y-2">
-            <Label>API Kulcs</Label>
+            <Label>API Kulcs státusza</Label>
             <p className="text-sm text-muted-foreground">
-              Az API kulcs biztonságosan tárolva van a rendszerben. Az újrakonfiguráláshoz használd a secrets--add_secret tool-t.
+              {emailSettings.apiKey ? '✓ API kulcs beállítva' : '⚠ API kulcs nincs beállítva'}
             </p>
             <p className="text-sm text-muted-foreground">
               Regisztráció: <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com</a>
+              {' | '}
+              API kulcs létrehozása: <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/api-keys</a>
+              {' | '}
+              Domain validálás: <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/domains</a>
             </p>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="mt-2">
+                  <Key className="mr-2 h-4 w-4" />
+                  {emailSettings.apiKey ? 'API kulcs frissítése' : 'API kulcs beállítása'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Resend API kulcs {emailSettings.apiKey ? 'frissítése' : 'beállítása'}</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <p>Add meg {emailSettings.apiKey ? 'az új' : 'a'} Resend API kulcsot. Ez biztonságosan lesz tárolva a rendszerben.</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="apiKey">{emailSettings.apiKey ? 'Új' : ''} API kulcs</Label>
+                      <Input
+                        id="apiKey"
+                        type="password"
+                        value={newApiKey}
+                        onChange={(e) => setNewApiKey(e.target.value)}
+                        placeholder="re_..."
+                      />
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Mégse</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleUpdateApiKey} disabled={isUpdatingApiKey}>
+                    {isUpdatingApiKey && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {emailSettings.apiKey ? 'Frissítés' : 'Mentés'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 
