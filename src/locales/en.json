@@ -201,7 +201,17 @@
   "calendar": {
     "title": "Calendar",
     "description": "View and manage your tasks and deadlines",
-    "comingSoon": "Calendar view coming soon. You'll be able to see tasks and deadlines in a calendar format."
+    "today": "Today",
+    "selectDate": "Select a date",
+    "noTasks": "No tasks on this day"
+  },
+  "tasks": {
+    "status": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed"
+    },
+    "responsible": "Responsible"
   },
   "settings": {
     "title": "Settings",

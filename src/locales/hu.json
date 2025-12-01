@@ -201,7 +201,17 @@
   "calendar": {
     "title": "Naptár",
     "description": "Feladatok és határidők megtekintése és kezelése",
-    "comingSoon": "A naptár nézet hamarosan elérhető lesz. Naptár formátumban láthatja majd a feladatokat és határidőket."
+    "today": "Ma",
+    "selectDate": "Válassz egy dátumot",
+    "noTasks": "Nincsenek feladatok ezen a napon"
+  },
+  "tasks": {
+    "status": {
+      "pending": "Függőben",
+      "inProgress": "Folyamatban",
+      "completed": "Befejezett"
+    },
+    "responsible": "Felelős"
   },
   "settings": {
     "title": "Beállítások",
