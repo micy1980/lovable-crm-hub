@@ -13,6 +13,7 @@ import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { useState } from 'react';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -72,10 +73,23 @@ const Projects = () => {
             {t('projects.description', { companyName: activeCompany.name })}
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('projects.newProject')}
-        </Button>
+        <div className="flex gap-2">
+          <ExportMenu
+            data={projects || []}
+            columns={[
+              { header: 'Név', key: 'name' },
+              { header: 'Kód', key: 'code' },
+              { header: 'Leírás', key: 'description' },
+              { header: 'Státusz', key: 'status' },
+              { header: 'Létrehozva', key: 'created_at' },
+            ]}
+            title="Projektek"
+          />
+          <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('projects.newProject')}
+          </Button>
+        </div>
       </div>
 
       <Card>
