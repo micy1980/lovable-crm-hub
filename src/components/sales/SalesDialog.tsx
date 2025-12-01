@@ -157,14 +157,14 @@ export const SalesDialog = ({ open, onOpenChange, sale }: SalesDialogProps) => {
             <div className="space-y-2">
               <Label htmlFor="partner_id">Partner</Label>
               <Select
-                value={watch('partner_id') || ''}
-                onValueChange={(value) => setValue('partner_id', value)}
+                value={watch('partner_id') || 'none'}
+                onValueChange={(value) => setValue('partner_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Válasszon partnert" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nincs</SelectItem>
+                  <SelectItem value="none">Nincs</SelectItem>
                   {partners.map((partner: any) => (
                     <SelectItem key={partner.id} value={partner.id}>
                       {partner.name}

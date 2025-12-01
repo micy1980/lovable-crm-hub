@@ -158,14 +158,14 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
           <div className="space-y-2">
             <Label htmlFor="responsible_user_id">Felelős</Label>
             <Select
-              value={watch('responsible_user_id') || ''}
-              onValueChange={(value) => setValue('responsible_user_id', value)}
+              value={watch('responsible_user_id') || 'none'}
+              onValueChange={(value) => setValue('responsible_user_id', value === 'none' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Válasszon felelőst" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nincs</SelectItem>
+                <SelectItem value="none">Nincs</SelectItem>
                 {users.map((user: any) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.full_name || user.email}

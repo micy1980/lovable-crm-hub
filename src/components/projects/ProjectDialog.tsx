@@ -163,14 +163,14 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
           <div className="space-y-2">
             <Label htmlFor="owner_user_id">Tulajdonos</Label>
             <Select
-              value={watch('owner_user_id') || ''}
-              onValueChange={(value) => setValue('owner_user_id', value)}
+              value={watch('owner_user_id') || 'none'}
+              onValueChange={(value) => setValue('owner_user_id', value === 'none' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Válasszon tulajdonost" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nincs</SelectItem>
+                <SelectItem value="none">Nincs</SelectItem>
                 {users.map((user: any) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.full_name || user.email}
@@ -184,14 +184,14 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
             <div className="space-y-2">
               <Label htmlFor="responsible1_user_id">Felelős 1</Label>
               <Select
-                value={watch('responsible1_user_id') || ''}
-                onValueChange={(value) => setValue('responsible1_user_id', value)}
+                value={watch('responsible1_user_id') || 'none'}
+                onValueChange={(value) => setValue('responsible1_user_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Válasszon felelőst" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nincs</SelectItem>
+                  <SelectItem value="none">Nincs</SelectItem>
                   {users.map((user: any) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name || user.email}
@@ -204,14 +204,14 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
             <div className="space-y-2">
               <Label htmlFor="responsible2_user_id">Felelős 2</Label>
               <Select
-                value={watch('responsible2_user_id') || ''}
-                onValueChange={(value) => setValue('responsible2_user_id', value)}
+                value={watch('responsible2_user_id') || 'none'}
+                onValueChange={(value) => setValue('responsible2_user_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Válasszon felelőst" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nincs</SelectItem>
+                  <SelectItem value="none">Nincs</SelectItem>
                   {users.map((user: any) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name || user.email}
