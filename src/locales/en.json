@@ -202,8 +202,12 @@
     "title": "Calendar",
     "description": "View and manage your tasks and deadlines",
     "today": "Today",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
     "selectDate": "Select a date",
-    "noTasks": "No tasks on this day"
+    "noTasks": "No tasks",
+    "tasksList": "Tasks List"
   },
   "tasks": {
     "status": {
