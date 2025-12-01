@@ -2,11 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export const usePartners = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { activeCompany } = useCompany();
 
   const { data: partners = [], isLoading } = useQuery({
     queryKey: ['partners'],
@@ -32,9 +34,17 @@ export const usePartners = () => {
       category?: string; 
       notes?: string;
     }) => {
+      if (!activeCompany?.id) {
+        throw new Error('No company selected');
+      }
+
+      // Automatically add company_id from active company
       const { data, error } = await supabase
         .from('partners')
-        .insert(values)
+        .insert({
+          ...values,
+          company_id: activeCompany.id
+        })
         .select()
         .single();
 
