@@ -5,23 +5,21 @@ export const useLoginAttempts = () => {
   const logLoginAttempt = async (params: {
     email: string;
     success: boolean;
-    userId?: string;
+    userId?: string; // Kept for compatibility, but not used (RPC function handles user_id lookup)
   }) => {
-    const { email, success, userId } = params;
+    const { email, success } = params;
 
     // Get client info
     const ipAddress = ''; // Cannot get real IP on client side
     const userAgent = navigator.userAgent;
 
-    const { error } = await supabase
-      .from('login_attempts')
-      .insert({
-        email,
-        success,
-        user_id: userId || null,
-        ip_address: ipAddress || null,
-        user_agent: userAgent,
-      });
+    // Use secure RPC function with rate limiting instead of direct INSERT
+    const { error } = await supabase.rpc('record_login_attempt', {
+      _email: email,
+      _success: success,
+      _ip_address: ipAddress || undefined,
+      _user_agent: userAgent
+    });
 
     if (error) {
       console.error('Error logging login attempt:', error);
