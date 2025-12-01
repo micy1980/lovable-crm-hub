@@ -24,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 export function TopBar() {
   const { user } = useAuth();
@@ -106,6 +107,9 @@ export function TopBar() {
 
         {/* Language Selector */}
         <LanguageSelector />
+
+        {/* Notifications */}
+        <NotificationCenter />
 
         {/* Theme Toggle */}
         <Button
