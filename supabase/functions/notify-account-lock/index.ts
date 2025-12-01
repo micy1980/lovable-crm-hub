@@ -85,43 +85,66 @@ Deno.serve(async (req) => {
 
     // Send email notifications to super admins
     if (superAdmins.length > 0) {
-      const emailRecipients = superAdmins.map((admin: any) => admin.email);
+      // Check if account lock notifications are enabled
+      const { data: emailSetting } = await supabase
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'email_notify_account_lock')
+        .single();
       
-      const emailHtml = `
-        <h2>Fiók zárolás értesítés</h2>
-        <p>Egy felhasználói fiók zárolásra került a rendszerben.</p>
-        <ul>
-          <li><strong>Email:</strong> ${email}</li>
-          <li><strong>Felhasználó ID:</strong> ${userId}</li>
-          <li><strong>Ok:</strong> ${reason}</li>
-          <li><strong>Zárolva eddig:</strong> ${lockDuration}</li>
-          ${ipAddress ? `<li><strong>IP cím:</strong> ${ipAddress}</li>` : ''}
-        </ul>
-        <p>A fiókot feloldhatod az Admin felületen a <a href="${supabaseUrl}">Mini CRM</a> rendszerben.</p>
-      `;
+      const shouldSendEmail = emailSetting?.setting_value === 'true';
+      
+      if (shouldSendEmail) {
+        // Get from email settings
+        const { data: fromSettings } = await supabase
+          .from('system_settings')
+          .select('setting_key, setting_value')
+          .in('setting_key', ['email_from_address', 'email_from_name']);
+        
+        const fromEmail = fromSettings?.find(s => s.setting_key === 'email_from_address')?.setting_value || 'onboarding@resend.dev';
+        const fromName = fromSettings?.find(s => s.setting_key === 'email_from_name')?.setting_value || 'Mini CRM';
+        
+        const emailRecipients = superAdmins.map((admin: any) => admin.email);
+        
+        const emailHtml = `
+          <h2>Fiók zárolás értesítés</h2>
+          <p>Egy felhasználói fiók zárolásra került a rendszerben.</p>
+          <ul>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Felhasználó ID:</strong> ${userId}</li>
+            <li><strong>Ok:</strong> ${reason}</li>
+            <li><strong>Zárolva eddig:</strong> ${lockDuration}</li>
+            ${ipAddress ? `<li><strong>IP cím:</strong> ${ipAddress}</li>` : ''}
+          </ul>
+          <p>A fiókot feloldhatod az Admin felületen a <a href="${supabaseUrl}">Mini CRM</a> rendszerben.</p>
+        `;
 
-      try {
-        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-          },
-          body: JSON.stringify({
-            to: emailRecipients,
-            subject: 'Fiók zárolás értesítés - Mini CRM',
-            html: emailHtml,
-          }),
-        });
+        try {
+          const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({
+              to: emailRecipients,
+              subject: 'Fiók zárolás értesítés - Mini CRM',
+              html: emailHtml,
+              from: `${fromName} <${fromEmail}>`,
+            }),
+          });
 
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text();
-          console.error('Failed to send email:', errorText);
-        } else {
-          console.log('Email sent successfully to super admins');
+          if (!emailResponse.ok) {
+            const errorText = await emailResponse.text();
+            console.error('Failed to send email:', errorText);
+          } else {
+            console.log('Email sent successfully to super admins');
+          }
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
         }
-      } catch (emailError) {
-        console.error('Error sending email:', emailError);
+      } else {
+        console.log('Account lock email notifications are disabled');
       }
     }
 
