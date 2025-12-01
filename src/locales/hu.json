@@ -202,8 +202,12 @@
     "title": "Naptár",
     "description": "Feladatok és határidők megtekintése és kezelése",
     "today": "Ma",
+    "day": "Nap",
+    "week": "Hét",
+    "month": "Hónap",
     "selectDate": "Válassz egy dátumot",
-    "noTasks": "Nincsenek feladatok ezen a napon"
+    "noTasks": "Nincsenek feladatok",
+    "tasksList": "Feladatok listája"
   },
   "tasks": {
     "status": {
