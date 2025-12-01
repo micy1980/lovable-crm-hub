@@ -27,6 +27,14 @@ export const EmailSettings = () => {
 
   const [formData, setFormData] = useState(emailSettings);
 
+  // Helper function to mask API key
+  const maskApiKey = (key: string) => {
+    if (!key || key.length < 8) return '';
+    const start = key.substring(0, 6);
+    const end = key.substring(key.length - 4);
+    return `${start}${'*'.repeat(Math.min(20, key.length - 10))}${end}`;
+  };
+
   const handleUpdateApiKey = async () => {
     if (!newApiKey || newApiKey.trim().length === 0) {
       toast.error('Adj meg egy érvényes API kulcsot');
@@ -94,18 +102,35 @@ export const EmailSettings = () => {
         {/* API Configuration */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Email szolgáltatás (Resend)</h3>
-          <div className="space-y-2">
-            <Label>API Kulcs státusza</Label>
-            <p className="text-sm text-muted-foreground">
-              {emailSettings.apiKey ? '✓ API kulcs beállítva' : '⚠ API kulcs nincs beállítva'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Regisztráció: <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com</a>
-              {' | '}
-              API kulcs létrehozása: <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/api-keys</a>
-              {' | '}
-              Domain validálás: <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/domains</a>
-            </p>
+          <div className="space-y-3">
+            <div>
+              <Label>API Kulcs státusza</Label>
+              <div className="mt-2 p-3 rounded-lg border bg-muted/50">
+                {emailSettings.apiKey ? (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400">✓ API kulcs beállítva</p>
+                    <p className="text-xs font-mono text-muted-foreground">{maskApiKey(emailSettings.apiKey)}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-orange-600 dark:text-orange-400">⚠ API kulcs nincs beállítva</p>
+                    <p className="text-xs text-muted-foreground">Az email értesítések nem fognak működni API kulcs nélkül</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>
+                <strong>Lépések:</strong>
+              </p>
+              <ol className="list-decimal list-inside space-y-0.5 ml-2">
+                <li>Regisztráció: <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com</a></li>
+                <li>API kulcs létrehozása: <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/api-keys</a></li>
+                <li>Domain validálás: <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/domains</a></li>
+                <li>API kulcs beállítása az alábbi gombbal</li>
+              </ol>
+            </div>
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -119,6 +144,11 @@ export const EmailSettings = () => {
                   <AlertDialogTitle>Resend API kulcs {emailSettings.apiKey ? 'frissítése' : 'beállítása'}</AlertDialogTitle>
                   <AlertDialogDescription className="space-y-3">
                     <p>Add meg {emailSettings.apiKey ? 'az új' : 'a'} Resend API kulcsot. Ez biztonságosan lesz tárolva a rendszerben.</p>
+                    {emailSettings.apiKey && (
+                      <div className="p-2 rounded bg-muted">
+                        <p className="text-xs text-muted-foreground">Jelenlegi: {maskApiKey(emailSettings.apiKey)}</p>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="apiKey">{emailSettings.apiKey ? 'Új' : ''} API kulcs</Label>
                       <Input
