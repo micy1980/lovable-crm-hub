@@ -246,14 +246,14 @@ export const DocumentDialog = ({ open, onOpenChange, document: doc }: DocumentDi
             <div className="space-y-2">
               <Label htmlFor="project_id">Projekt</Label>
               <Select
-                value={watch('project_id') || ''}
-                onValueChange={(value) => setValue('project_id', value)}
+                value={watch('project_id') || 'none'}
+                onValueChange={(value) => setValue('project_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Nincs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nincs</SelectItem>
+                  <SelectItem value="none">Nincs</SelectItem>
                   {projects.map((project: any) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -266,14 +266,14 @@ export const DocumentDialog = ({ open, onOpenChange, document: doc }: DocumentDi
             <div className="space-y-2">
               <Label htmlFor="sales_id">Értékesítés</Label>
               <Select
-                value={watch('sales_id') || ''}
-                onValueChange={(value) => setValue('sales_id', value)}
+                value={watch('sales_id') || 'none'}
+                onValueChange={(value) => setValue('sales_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Nincs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nincs</SelectItem>
+                  <SelectItem value="none">Nincs</SelectItem>
                   {sales.map((sale: any) => (
                     <SelectItem key={sale.id} value={sale.id}>
                       {sale.name}
@@ -286,14 +286,14 @@ export const DocumentDialog = ({ open, onOpenChange, document: doc }: DocumentDi
             <div className="space-y-2">
               <Label htmlFor="partner_id">Partner</Label>
               <Select
-                value={watch('partner_id') || ''}
-                onValueChange={(value) => setValue('partner_id', value)}
+                value={watch('partner_id') || 'none'}
+                onValueChange={(value) => setValue('partner_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Nincs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nincs</SelectItem>
+                  <SelectItem value="none">Nincs</SelectItem>
                   {partners.map((partner: any) => (
                     <SelectItem key={partner.id} value={partner.id}>
                       {partner.name}
