@@ -16,4 +16,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.check-api-key-status]
-verify_jwt = false
+verify_jwt = true
