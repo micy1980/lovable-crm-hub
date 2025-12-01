@@ -1099,6 +1099,15 @@ export type Database = {
         Args: { _email: string; _minutes: number; _reason: string }
         Returns: undefined
       }
+      record_login_attempt: {
+        Args: {
+          _email: string
+          _ip_address?: string
+          _success: boolean
+          _user_agent?: string
+        }
+        Returns: undefined
+      }
       unlock_account_by_user_id: {
         Args: { _unlocked_by: string; _user_id: string }
         Returns: undefined
