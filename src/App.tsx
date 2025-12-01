@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import ChangePassword from "./pages/ChangePassword";
 import Partners from "./pages/Partners";
 import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 import Sales from "./pages/Sales";
 import Documents from "./pages/Documents";
 import CalendarPage from "./pages/CalendarPage";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
                 <Route path="/partners" element={<MainLayout><Partners /></MainLayout>} />
                 <Route path="/projects" element={<MainLayout><Projects /></MainLayout>} />
+                <Route path="/projects/:id" element={<MainLayout><ProjectDetail /></MainLayout>} />
                 <Route path="/sales" element={<MainLayout><Sales /></MainLayout>} />
                 <Route path="/documents" element={<MainLayout><Documents /></MainLayout>} />
                 <Route path="/calendar" element={<MainLayout><CalendarPage /></MainLayout>} />
