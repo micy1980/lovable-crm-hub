@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 import LicenseGenerator from "./pages/LicenseGenerator";
 import LockedAccounts from "./pages/LockedAccounts";
+import LoginAttempts from "./pages/LoginAttempts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
                 <Route path="/logs" element={<MainLayout><Logs /></MainLayout>} />
                 <Route path="/locked-accounts" element={<MainLayout><LockedAccounts /></MainLayout>} />
+                <Route path="/login-attempts" element={<MainLayout><LoginAttempts /></MainLayout>} />
                 <Route path="/license-generator" element={<LicenseGenerator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

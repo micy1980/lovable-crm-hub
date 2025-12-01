@@ -16,6 +16,10 @@ export const SystemSettings = () => {
   const [failedAttemptsWindow, setFailedAttemptsWindow] = useState<string>('5');
   const [trialDays, setTrialDays] = useState<string>('14');
   const [passwordExpiryDays, setPasswordExpiryDays] = useState<string>('90');
+  const [twoFactorSessionDuration, setTwoFactorSessionDuration] = useState<string>('720');
+  const [twoFactorMaxAttempts, setTwoFactorMaxAttempts] = useState<string>('10');
+  const [twoFactorWindowMinutes, setTwoFactorWindowMinutes] = useState<string>('10');
+  const [twoFactorLockMinutes, setTwoFactorLockMinutes] = useState<string>('10');
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -38,6 +42,18 @@ export const SystemSettings = () => {
       }
       if (settings.password_expiry_days) {
         setPasswordExpiryDays(settings.password_expiry_days);
+      }
+      if (settings.two_factor_session_duration_minutes) {
+        setTwoFactorSessionDuration(settings.two_factor_session_duration_minutes);
+      }
+      if (settings.two_factor_max_attempts) {
+        setTwoFactorMaxAttempts(settings.two_factor_max_attempts);
+      }
+      if (settings.two_factor_window_minutes) {
+        setTwoFactorWindowMinutes(settings.two_factor_window_minutes);
+      }
+      if (settings.two_factor_lock_minutes) {
+        setTwoFactorLockMinutes(settings.two_factor_lock_minutes);
       }
     }
   }, [settings]);
@@ -77,11 +93,11 @@ export const SystemSettings = () => {
         });
     }
 
-    const windowMinutes = parseInt(failedAttemptsWindow);
-    if (windowMinutes > 0) {
+    const failedWindowMinutes = parseInt(failedAttemptsWindow);
+    if (failedWindowMinutes > 0) {
       updateSetting.mutate({
         key: 'account_lock_failed_attempts_window_minutes',
-        value: windowMinutes.toString(),
+        value: failedWindowMinutes.toString(),
       });
     }
 
@@ -98,6 +114,39 @@ export const SystemSettings = () => {
       updateSetting.mutate({
         key: 'password_expiry_days',
         value: passwordExpiry.toString(),
+      });
+    }
+
+    // 2FA settings
+    const sessionDuration = parseInt(twoFactorSessionDuration);
+    if (sessionDuration > 0) {
+      updateSetting.mutate({
+        key: 'two_factor_session_duration_minutes',
+        value: sessionDuration.toString(),
+      });
+    }
+
+    const maxAttempts = parseInt(twoFactorMaxAttempts);
+    if (maxAttempts > 0) {
+      updateSetting.mutate({
+        key: 'two_factor_max_attempts',
+        value: maxAttempts.toString(),
+      });
+    }
+
+    const twoFactorWindow = parseInt(twoFactorWindowMinutes);
+    if (twoFactorWindow > 0) {
+      updateSetting.mutate({
+        key: 'two_factor_window_minutes',
+        value: twoFactorWindow.toString(),
+      });
+    }
+
+    const lockMinutes = parseInt(twoFactorLockMinutes);
+    if (lockMinutes > 0) {
+      updateSetting.mutate({
+        key: 'two_factor_lock_minutes',
+        value: lockMinutes.toString(),
       });
     }
   };
@@ -244,6 +293,98 @@ export const SystemSettings = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t('settings.passwordExpiryDescription')}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="2fa-session-duration">
+                  2FA munkamenet időtartama
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="2fa-session-duration"
+                    type="number"
+                    min="1"
+                    max="10080"
+                    value={twoFactorSessionDuration}
+                    onChange={(e) => setTwoFactorSessionDuration(e.target.value)}
+                    className="w-32"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {t('settings.minutes')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mennyi ideig marad érvényes a 2FA hitelesítés (alapértelmezett: 720 perc = 12 óra)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="2fa-max-attempts">
+                  2FA max. próbálkozások száma
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="2fa-max-attempts"
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={twoFactorMaxAttempts}
+                    onChange={(e) => setTwoFactorMaxAttempts(e.target.value)}
+                    className="w-32"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {t('settings.attempts')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Hány sikertelen 2FA kísérlet után kerül zárolásra a felhasználó (alapértelmezett: 10)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="2fa-window-minutes">
+                  2FA próbálkozások időablaka
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="2fa-window-minutes"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={twoFactorWindowMinutes}
+                    onChange={(e) => setTwoFactorWindowMinutes(e.target.value)}
+                    className="w-32"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {t('settings.minutes')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mennyi időre visszamenőleg számítsa a rendszer a sikertelen 2FA kísérleteket (alapértelmezett: 10 perc)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="2fa-lock-minutes">
+                  2FA zárolás időtartama
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="2fa-lock-minutes"
+                    type="number"
+                    min="1"
+                    max="1440"
+                    value={twoFactorLockMinutes}
+                    onChange={(e) => setTwoFactorLockMinutes(e.target.value)}
+                    className="w-32"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {t('settings.minutes')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mennyi ideig legyen zárolva a 2FA sikertelen kísérletek után (alapértelmezett: 10 perc)
                 </p>
               </div>
             </div>

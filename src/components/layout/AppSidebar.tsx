@@ -42,10 +42,11 @@ export function AppSidebar() {
     { title: t('nav.settings'), url: '/settings', icon: Settings, feature: null },
   ];
 
-  // Only show Logs and Locked Accounts to super_admin
+  // Only show Logs, Locked Accounts and Login Attempts to super_admin
   if (isSuperAdmin(profile)) {
     allMenuItems.splice(6, 0, { title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'logs' });
     allMenuItems.splice(7, 0, { title: 'Zárolt Fiókok', url: '/locked-accounts', icon: LockKeyhole, feature: null });
+    allMenuItems.splice(8, 0, { title: 'Login Kísérletek', url: '/login-attempts', icon: ScrollText, feature: null });
   }
 
   // Filter menu items based on license features
