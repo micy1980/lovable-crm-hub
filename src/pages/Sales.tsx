@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SalesDialog } from '@/components/sales/SalesDialog';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -72,10 +73,24 @@ const Sales = () => {
             {t('sales.description', { companyName: activeCompany.name })}
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('sales.newOpportunity')}
-        </Button>
+        <div className="flex gap-2">
+          <ExportMenu
+            data={sales || []}
+            columns={[
+              { header: 'Név', key: 'name' },
+              { header: 'Leírás', key: 'description' },
+              { header: 'Státusz', key: 'status' },
+              { header: 'Várható érték', key: 'expected_value' },
+              { header: 'Pénznem', key: 'currency' },
+              { header: 'Várható lezárás', key: 'expected_close_date' },
+            ]}
+            title="Értékesítések"
+          />
+          <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('sales.newOpportunity')}
+          </Button>
+        </div>
       </div>
 
       <Card>

@@ -6,6 +6,9 @@ import { FolderKanban, TrendingUp, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LicenseStatusWidget } from '@/components/dashboard/LicenseStatusWidget';
 import { TasksWidget } from '@/components/dashboard/TasksWidget';
+import { ProjectsChart } from '@/components/dashboard/ProjectsChart';
+import { SalesChart } from '@/components/dashboard/SalesChart';
+import { RecentActivityWidget } from '@/components/dashboard/RecentActivityWidget';
 
 const Dashboard = () => {
   const { activeCompany } = useCompany();
@@ -139,6 +142,18 @@ const Dashboard = () => {
       </div>
 
       <TasksWidget />
+      
+      <div className="grid gap-4 md:grid-cols-4">
+        {projectStats?.byStatus && Object.keys(projectStats.byStatus).length > 0 && (
+          <ProjectsChart data={projectStats.byStatus} />
+        )}
+        
+        {salesStats?.byStatus && Object.keys(salesStats.byStatus).length > 0 && (
+          <SalesChart data={salesStats.byStatus} />
+        )}
+      </div>
+      
+      <RecentActivityWidget />
     </div>
   );
 };

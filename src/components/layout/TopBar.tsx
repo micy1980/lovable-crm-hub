@@ -1,4 +1,4 @@
-import { Moon, Sun, LogOut, ChevronDown } from 'lucide-react';
+import { Moon, Sun, LogOut, ChevronDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,6 +25,8 @@ import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { GlobalSearch } from '@/components/shared/GlobalSearch';
+import { useState } from 'react';
 
 export function TopBar() {
   const { user } = useAuth();
@@ -35,6 +37,7 @@ export function TopBar() {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const license = activeCompany ? getLicenseForCompany(activeCompany.id) : null;
   const licenseStatus = license ? getLicenseStatus(license) : null;
@@ -58,6 +61,17 @@ export function TopBar() {
         <SidebarTrigger />
 
         <div className="flex-1" />
+
+        {/* Global Search */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSearchOpen(true)}
+          className="gap-2"
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden md:inline">Keresés</span>
+        </Button>
 
         {/* Company Selector */}
         {companies.length > 0 && (
@@ -145,6 +159,8 @@ export function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   );
 }
