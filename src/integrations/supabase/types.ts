@@ -89,6 +89,13 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "company_licenses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       costs: {
@@ -208,6 +215,13 @@ export type Database = {
             columns: ["owner_company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_owner_company_id_fkey"
+            columns: ["owner_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
             referencedColumns: ["id"]
           },
           {
@@ -373,6 +387,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -418,6 +439,7 @@ export type Database = {
         Row: {
           address: string | null
           category: string | null
+          company_id: string | null
           created_at: string | null
           deleted_at: string | null
           email: string | null
@@ -431,6 +453,7 @@ export type Database = {
         Insert: {
           address?: string | null
           category?: string | null
+          company_id?: string | null
           created_at?: string | null
           deleted_at?: string | null
           email?: string | null
@@ -444,6 +467,7 @@ export type Database = {
         Update: {
           address?: string | null
           category?: string | null
+          company_id?: string | null
           created_at?: string | null
           deleted_at?: string | null
           email?: string | null
@@ -454,7 +478,22 @@ export type Database = {
           tax_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "partners_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partners_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -525,6 +564,13 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_default_company_id_fkey"
+            columns: ["default_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       projects: {
@@ -576,6 +622,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
             referencedColumns: ["id"]
           },
           {
@@ -653,6 +706,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
             referencedColumns: ["id"]
           },
           {
@@ -770,6 +830,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tasks_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -872,6 +939,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_companies_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -923,6 +997,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_company_permissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_company_permissions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -960,7 +1041,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      companies_safe: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string | null
+          name: string | null
+          tax_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          name?: string | null
+          tax_id?: never
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          name?: string | null
+          tax_id?: never
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       adjust_active_locks_duration: {
@@ -986,6 +1096,10 @@ export type Database = {
         Returns: boolean
       }
       can_user_view_logs_in_company: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_company_sensitive_data: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
