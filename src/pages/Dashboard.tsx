@@ -1,9 +1,11 @@
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FolderKanban, TrendingUp, CheckSquare, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FolderKanban, TrendingUp, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { LicenseStatusWidget } from '@/components/dashboard/LicenseStatusWidget';
+import { TasksWidget } from '@/components/dashboard/TasksWidget';
 
 const Dashboard = () => {
   const { activeCompany } = useCompany();
@@ -55,40 +57,21 @@ const Dashboard = () => {
     enabled: !!activeCompany,
   });
 
-  const { data: upcomingTasks } = useQuery({
-    queryKey: ['upcoming-tasks', activeCompany?.id],
-    queryFn: async () => {
-      if (!activeCompany) return [];
-
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .is('deleted_at', null)
-        .lte('deadline', sevenDaysFromNow.toISOString())
-        .order('deadline', { ascending: true })
-        .limit(5);
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!activeCompany,
-  });
-
   const { data: partnersCount } = useQuery({
-    queryKey: ['partners-count'],
+    queryKey: ['partners-count', activeCompany?.id],
     queryFn: async () => {
+      if (!activeCompany) return 0;
+
       const { count, error } = await supabase
         .from('partners')
         .select('*', { count: 'exact', head: true })
+        .eq('company_id', activeCompany.id)
         .is('deleted_at', null);
 
       if (error) throw error;
       return count || 0;
     },
+    enabled: !!activeCompany,
   });
 
   if (!activeCompany) {
@@ -97,9 +80,6 @@ const Dashboard = () => {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>{t('dashboard.noCompanySelected')}</CardTitle>
-            <CardDescription>
-              {t('dashboard.noCompanyMessage')}
-            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -144,19 +124,6 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('dashboard.upcomingTasks')}</CardTitle>
-            <CheckSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingTasks?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.dueInDays')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.totalPartners')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -167,33 +134,11 @@ const Dashboard = () => {
             </p>
           </CardContent>
         </Card>
+
+        <LicenseStatusWidget />
       </div>
 
-      {upcomingTasks && upcomingTasks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('dashboard.upcomingTasksTitle')}</CardTitle>
-            <CardDescription>{t('dashboard.tasksDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                  <div>
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {task.description}
-                    </p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {task.deadline ? new Date(task.deadline).toLocaleDateString() : t('dashboard.noDeadline')}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <TasksWidget />
     </div>
   );
 };
