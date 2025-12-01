@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CompanyProvider } from "@/contexts/CompanyContext";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { useDeadlineChecker } from "@/hooks/useDeadlineChecker";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ChangePassword from "./pages/ChangePassword";
@@ -26,7 +27,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Check deadlines periodically
+  useDeadlineChecker();
+
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
@@ -58,6 +63,7 @@ const App = () => (
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
