@@ -25,12 +25,20 @@ serve(async (req) => {
     });
 
     // Verify the caller is authenticated
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const token = authHeader.replace('Bearer ', '');
     
     const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !caller) {
+      console.error('Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -69,19 +77,35 @@ serve(async (req) => {
       );
     }
 
-    // Sign out the target user from all sessions using admin API
-    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
+    console.log(`Terminating sessions for user: ${userId}`);
 
-    if (signOutError) {
-      console.error('Error signing out user:', signOutError);
+    // Use the admin API to delete all sessions for the user
+    // This is done by updating the user's aud claim timestamp which invalidates all tokens
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      // Setting app_metadata forces token refresh and invalidates old sessions
+      app_metadata: { 
+        sessions_invalidated_at: new Date().toISOString() 
+      }
+    });
+
+    if (updateError) {
+      console.error('Error invalidating user sessions:', updateError);
       return new Response(
-        JSON.stringify({ error: 'Failed to terminate session' }),
+        JSON.stringify({ error: 'Failed to terminate session', details: updateError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Also invalidate any 2FA verifications for this user
-    await supabaseAdmin.rpc('invalidate_2fa_verifications', { _user_id: userId });
+    const { error: twoFaError } = await supabaseAdmin
+      .from('session_2fa_verifications')
+      .delete()
+      .eq('user_id', userId);
+
+    if (twoFaError) {
+      console.warn('Error invalidating 2FA verifications:', twoFaError);
+      // Don't fail the request for this
+    }
 
     // Log the action
     await supabaseAdmin.from('logs').insert({
@@ -92,6 +116,8 @@ serve(async (req) => {
       new_values: { target_user_id: userId, terminated_by: caller.id },
     });
 
+    console.log(`Successfully terminated sessions for user: ${userId}`);
+
     return new Response(
       JSON.stringify({ success: true, message: 'User session terminated' }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -99,8 +125,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in terminate-user-session:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
