@@ -44,6 +44,22 @@ const isAddressEmpty = (address: AddressData): boolean => {
   return !address.country && !address.postal_code && !address.city && !address.street_name;
 };
 
+const areAddressesEqual = (addr1: AddressData, addr2: AddressData): boolean => {
+  return (
+    addr1.country === addr2.country &&
+    addr1.county === addr2.county &&
+    addr1.postal_code === addr2.postal_code &&
+    addr1.city === addr2.city &&
+    addr1.street_name === addr2.street_name &&
+    addr1.street_type === addr2.street_type &&
+    addr1.house_number === addr2.house_number &&
+    addr1.plot_number === addr2.plot_number &&
+    addr1.building === addr2.building &&
+    addr1.staircase === addr2.staircase &&
+    addr1.floor_door === addr2.floor_door
+  );
+};
+
 export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialData }: PartnerDialogProps) {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
@@ -162,54 +178,69 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
       const site = data.find((a: any) => a.address_type === 'site');
       const mailing = data.find((a: any) => a.address_type === 'mailing');
       
+      const hqAddress: AddressData = hq ? {
+        country: hq.country || '',
+        county: hq.county || '',
+        postal_code: hq.postal_code || '',
+        city: hq.city || '',
+        street_name: hq.street_name || '',
+        street_type: hq.street_type || '',
+        house_number: hq.house_number || '',
+        plot_number: hq.plot_number || '',
+        building: hq.building || '',
+        staircase: hq.staircase || '',
+        floor_door: hq.floor_door || '',
+      } : emptyAddress;
+
+      const siteAddr: AddressData = site ? {
+        country: site.country || '',
+        county: site.county || '',
+        postal_code: site.postal_code || '',
+        city: site.city || '',
+        street_name: site.street_name || '',
+        street_type: site.street_type || '',
+        house_number: site.house_number || '',
+        plot_number: site.plot_number || '',
+        building: site.building || '',
+        staircase: site.staircase || '',
+        floor_door: site.floor_door || '',
+      } : emptyAddress;
+
+      const mailingAddr: AddressData = mailing ? {
+        country: mailing.country || '',
+        county: mailing.county || '',
+        postal_code: mailing.postal_code || '',
+        city: mailing.city || '',
+        street_name: mailing.street_name || '',
+        street_type: mailing.street_type || '',
+        house_number: mailing.house_number || '',
+        plot_number: mailing.plot_number || '',
+        building: mailing.building || '',
+        staircase: mailing.staircase || '',
+        floor_door: mailing.floor_door || '',
+      } : emptyAddress;
+
       if (hq) {
-        setHeadquartersAddress({
-          country: hq.country || '',
-          county: hq.county || '',
-          postal_code: hq.postal_code || '',
-          city: hq.city || '',
-          street_name: hq.street_name || '',
-          street_type: hq.street_type || '',
-          house_number: hq.house_number || '',
-          plot_number: hq.plot_number || '',
-          building: hq.building || '',
-          staircase: hq.staircase || '',
-          floor_door: hq.floor_door || '',
-        });
+        setHeadquartersAddress(hqAddress);
       }
       
       if (site) {
-        setSiteAddress({
-          country: site.country || '',
-          county: site.county || '',
-          postal_code: site.postal_code || '',
-          city: site.city || '',
-          street_name: site.street_name || '',
-          street_type: site.street_type || '',
-          house_number: site.house_number || '',
-          plot_number: site.plot_number || '',
-          building: site.building || '',
-          staircase: site.staircase || '',
-          floor_door: site.floor_door || '',
-        });
+        setSiteAddress(siteAddr);
         setShowSiteAddress(true);
       }
 
       if (mailing) {
-        setMailingAddress({
-          country: mailing.country || '',
-          county: mailing.county || '',
-          postal_code: mailing.postal_code || '',
-          city: mailing.city || '',
-          street_name: mailing.street_name || '',
-          street_type: mailing.street_type || '',
-          house_number: mailing.house_number || '',
-          plot_number: mailing.plot_number || '',
-          building: mailing.building || '',
-          staircase: mailing.staircase || '',
-          floor_door: mailing.floor_door || '',
-        });
+        setMailingAddress(mailingAddr);
         setShowMailingAddress(true);
+        
+        // Check if mailing address matches HQ or site
+        if (!isAddressEmpty(mailingAddr)) {
+          if (areAddressesEqual(mailingAddr, hqAddress)) {
+            setMailingSameAsHQ(true);
+          } else if (site && areAddressesEqual(mailingAddr, siteAddr)) {
+            setMailingSameAsSite(true);
+          }
+        }
       }
     }
   };
