@@ -55,6 +55,23 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
   const isSelected = selectedDate && isSameDay(currentDate, selectedDate);
   const allDayTasks = getAllDayTasks();
 
+  // Determine the highlight style for the day column
+  const getColumnHighlight = (isLastHour = false) => {
+    if (isToday) {
+      return cn(
+        "bg-primary/10 dark:bg-primary/20 border-x-2 border-x-primary",
+        isLastHour && "border-b-2 border-b-primary"
+      );
+    }
+    if (isSelected) {
+      return cn(
+        "bg-emerald-500/5 dark:bg-emerald-500/10 border-x-2 border-x-emerald-400 dark:border-x-emerald-500",
+        isLastHour && "border-b-2 border-b-emerald-400 dark:border-b-emerald-500"
+      );
+    }
+    return "";
+  };
+
   return (
     <div className="w-full border rounded-lg overflow-hidden">
       {/* Header */}
@@ -62,8 +79,8 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
         <div className="py-3 text-center text-sm font-medium border-r"></div>
         <div className={cn(
           "py-3 text-center text-sm font-medium",
-          isToday && "bg-primary/10 dark:bg-primary/20 text-primary font-bold ring-2 ring-inset ring-primary",
-          isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
+          isToday && "bg-primary/10 dark:bg-primary/20 text-primary font-bold border-t-2 border-x-2 border-t-primary border-x-primary",
+          isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border-t-2 border-x-2 border-t-emerald-400 border-x-emerald-400 dark:border-t-emerald-500 dark:border-x-emerald-500"
         )}>
           {format(currentDate, 'yyyy. MMMM d. EEEE', { locale })}
         </div>
@@ -74,11 +91,7 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
         <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
           {t('calendar.allDay', 'Egész nap')}
         </div>
-        <div className={cn(
-          "min-h-[40px] p-1",
-          isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
-          isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
-        )}>
+        <div className={cn("min-h-[40px] p-1", getColumnHighlight())}>
           {allDayTasks.slice(0, 3).map((task) => (
             <div
               key={task.id}
@@ -99,18 +112,15 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
 
       {/* Hourly grid */}
       <div className="max-h-[500px] overflow-y-auto">
-        {HOURS.map((hour) => {
+        {HOURS.map((hour, hourIndex) => {
           const hourTasks = getTasksForHour(hour);
+          const isLastHour = hourIndex === HOURS.length - 1;
           return (
             <div key={hour} className="grid grid-cols-[60px_1fr] border-b last:border-b-0">
               <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
                 {String(hour).padStart(2, '0')}:00
               </div>
-              <div className={cn(
-                "min-h-[44px] p-0.5",
-                isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
-                isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
-              )}>
+              <div className={cn("min-h-[44px] p-0.5", getColumnHighlight(isLastHour))}>
                 {hourTasks.map((task) => (
                   <div
                     key={task.id}
