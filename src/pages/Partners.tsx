@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Lock } from 'lucide-react';
+import { Plus, Pencil, Lock, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePartners } from '@/hooks/usePartners';
 import { PartnerDialog } from '@/components/partners/PartnerDialog';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
-import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -24,12 +26,38 @@ const formatAddress = (address: any) => {
   return parts.length > 0 ? parts.join(' ') : '-';
 };
 
+type ColumnKey = 'name' | 'headquarters' | 'site' | 'mailing' | 'phone' | 'email' | 'taxId';
+
 const Partners = () => {
   const { t } = useTranslation();
   const { partners, isLoading, createPartner, updatePartner } = usePartners();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any>(null);
   const { canEdit, checkReadOnly } = useReadOnlyMode();
+  
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>({
+    name: true,
+    headquarters: true,
+    site: true,
+    mailing: true,
+    phone: true,
+    email: true,
+    taxId: true,
+  });
+
+  const columnConfig: { key: ColumnKey; label: string }[] = [
+    { key: 'name', label: t('partners.name') },
+    { key: 'headquarters', label: t('partners.headquarters') },
+    { key: 'site', label: t('partners.site') },
+    { key: 'mailing', label: t('partners.mailingAddress') },
+    { key: 'phone', label: t('partners.phone') },
+    { key: 'email', label: t('partners.email') },
+    { key: 'taxId', label: t('partners.taxId') },
+  ];
+
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleCreate = (data: any) => {
     createPartner.mutate(data, {
@@ -87,10 +115,40 @@ const Partners = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('partners.list')}</CardTitle>
-            <CardDescription>
-              {t('partners.listDescription')}
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>{t('partners.list')}</CardTitle>
+                <CardDescription>
+                  {t('partners.listDescription')}
+                </CardDescription>
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings2 className="mr-2 h-4 w-4" />
+                    {t('common.columns')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56" align="end">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium mb-3">{t('common.visibleColumns')}</p>
+                    {columnConfig.map(col => (
+                      <div key={col.key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={col.key}
+                          checked={visibleColumns[col.key]}
+                          onCheckedChange={() => toggleColumn(col.key)}
+                          disabled={col.key === 'name'}
+                        />
+                        <Label htmlFor={col.key} className="text-sm cursor-pointer">
+                          {col.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -100,72 +158,92 @@ const Partners = () => {
                 {t('partners.empty')}
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('partners.name')}</TableHead>
-                    <TableHead>{t('partners.headquarters')}</TableHead>
-                    <TableHead>{t('partners.site')}</TableHead>
-                    <TableHead>{t('partners.mailingAddress')}</TableHead>
-                    <TableHead>{t('partners.phone')}</TableHead>
-                    <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {partners.map((partner: any) => {
-                    const headquartersAddress = partner.partner_addresses?.find(
-                      (a: any) => a.address_type === 'headquarters'
-                    );
-                    const siteAddress = partner.partner_addresses?.find(
-                      (a: any) => a.address_type === 'site'
-                    );
-                    const mailingAddress = partner.partner_addresses?.find(
-                      (a: any) => a.address_type === 'mailing'
-                    );
-                    return (
-                      <TableRow key={partner.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {partner.name}
-                            {partner.restrict_access && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <Lock className="h-3 w-3 text-muted-foreground" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {t('partners.restrictAccessLabel')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {formatAddress(headquartersAddress)}
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {formatAddress(siteAddress)}
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {formatAddress(mailingAddress)}
-                        </TableCell>
-                        <TableCell>{partner.phone || '-'}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenEdit(partner)}
-                            disabled={!canEdit}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {visibleColumns.name && <TableHead>{t('partners.name')}</TableHead>}
+                      {visibleColumns.headquarters && <TableHead>{t('partners.headquarters')}</TableHead>}
+                      {visibleColumns.site && <TableHead>{t('partners.site')}</TableHead>}
+                      {visibleColumns.mailing && <TableHead>{t('partners.mailingAddress')}</TableHead>}
+                      {visibleColumns.phone && <TableHead>{t('partners.phone')}</TableHead>}
+                      {visibleColumns.email && <TableHead>{t('partners.email')}</TableHead>}
+                      {visibleColumns.taxId && <TableHead>{t('partners.taxId')}</TableHead>}
+                      <TableHead className="w-[80px]">{t('common.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {partners.map((partner: any) => {
+                      const headquartersAddress = partner.partner_addresses?.find(
+                        (a: any) => a.address_type === 'headquarters'
+                      );
+                      const siteAddress = partner.partner_addresses?.find(
+                        (a: any) => a.address_type === 'site'
+                      );
+                      const mailingAddress = partner.partner_addresses?.find(
+                        (a: any) => a.address_type === 'mailing'
+                      );
+                      return (
+                        <TableRow key={partner.id}>
+                          {visibleColumns.name && (
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {partner.name}
+                                {partner.restrict_access && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger>
+                                        <Lock className="h-3 w-3 text-muted-foreground" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {t('partners.restrictAccessLabel')}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
+                          {visibleColumns.headquarters && (
+                            <TableCell className="max-w-[180px]" title={formatAddress(headquartersAddress)}>
+                              <span className="truncate block">{formatAddress(headquartersAddress)}</span>
+                            </TableCell>
+                          )}
+                          {visibleColumns.site && (
+                            <TableCell className="max-w-[180px]" title={formatAddress(siteAddress)}>
+                              <span className="truncate block">{formatAddress(siteAddress)}</span>
+                            </TableCell>
+                          )}
+                          {visibleColumns.mailing && (
+                            <TableCell className="max-w-[180px]" title={formatAddress(mailingAddress)}>
+                              <span className="truncate block">{formatAddress(mailingAddress)}</span>
+                            </TableCell>
+                          )}
+                          {visibleColumns.phone && (
+                            <TableCell>{partner.phone || '-'}</TableCell>
+                          )}
+                          {visibleColumns.email && (
+                            <TableCell>{partner.email || '-'}</TableCell>
+                          )}
+                          {visibleColumns.taxId && (
+                            <TableCell>{partner.tax_id || '-'}</TableCell>
+                          )}
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEdit(partner)}
+                              disabled={!canEdit}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
