@@ -30,7 +30,8 @@ interface PartnerInput {
   restrict_access?: boolean;
   user_access?: string[];
   headquarters_address?: AddressData;
-  site_address?: AddressData;
+  site_address?: AddressData | null;
+  mailing_address?: AddressData | null;
 }
 
 export const usePartners = () => {
@@ -57,7 +58,7 @@ export const usePartners = () => {
     enabled: !!activeCompany?.id,
   });
 
-  const saveAddresses = async (partnerId: string, headquarters?: AddressData, site?: AddressData) => {
+  const saveAddresses = async (partnerId: string, headquarters?: AddressData, site?: AddressData | null, mailing?: AddressData | null) => {
     // Delete existing addresses
     await supabase
       .from('partner_addresses')
@@ -82,6 +83,14 @@ export const usePartners = () => {
       });
     }
 
+    if (mailing && Object.values(mailing).some(v => v)) {
+      addressesToInsert.push({
+        partner_id: partnerId,
+        address_type: 'mailing',
+        ...mailing,
+      });
+    }
+
     if (addressesToInsert.length > 0) {
       const { error } = await supabase
         .from('partner_addresses')
@@ -97,7 +106,7 @@ export const usePartners = () => {
         throw new Error('No company selected');
       }
 
-      const { user_access, headquarters_address, site_address, ...partnerData } = values;
+      const { user_access, headquarters_address, site_address, mailing_address, ...partnerData } = values;
 
       const { data, error } = await supabase
         .from('partners')
@@ -111,7 +120,7 @@ export const usePartners = () => {
       if (error) throw error;
 
       // Save addresses
-      await saveAddresses(data.id, headquarters_address, site_address);
+      await saveAddresses(data.id, headquarters_address, site_address, mailing_address);
 
       // Add user access records if restriction is enabled
       if (values.restrict_access && user_access && user_access.length > 0) {
@@ -144,7 +153,7 @@ export const usePartners = () => {
   });
 
   const updatePartner = useMutation({
-    mutationFn: async ({ id, user_access, headquarters_address, site_address, ...values }: PartnerInput & { id: string }) => {
+    mutationFn: async ({ id, user_access, headquarters_address, site_address, mailing_address, ...values }: PartnerInput & { id: string }) => {
       const { data, error } = await supabase
         .from('partners')
         .update(values)
@@ -155,7 +164,7 @@ export const usePartners = () => {
       if (error) throw error;
 
       // Save addresses
-      await saveAddresses(id, headquarters_address, site_address);
+      await saveAddresses(id, headquarters_address, site_address, mailing_address);
 
       // Update user access records
       await supabase

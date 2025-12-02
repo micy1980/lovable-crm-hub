@@ -8,7 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Building2, MapPin, FileText, Users, Banknote } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { X, Building2, MapPin, FileText, Users, Banknote, Plus, Mail, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +40,10 @@ const emptyAddress: AddressData = {
   floor_door: '',
 };
 
+const isAddressEmpty = (address: AddressData): boolean => {
+  return !address.country && !address.postal_code && !address.city && !address.street_name;
+};
+
 export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialData }: PartnerDialogProps) {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
@@ -50,10 +55,16 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
   const [notes, setNotes] = useState('');
   const [headquartersAddress, setHeadquartersAddress] = useState<AddressData>(emptyAddress);
   const [siteAddress, setSiteAddress] = useState<AddressData>(emptyAddress);
+  const [mailingAddress, setMailingAddress] = useState<AddressData>(emptyAddress);
+  const [showSiteAddress, setShowSiteAddress] = useState(false);
+  const [showMailingAddress, setShowMailingAddress] = useState(false);
+  const [mailingSameAsHQ, setMailingSameAsHQ] = useState(false);
+  const [mailingSameAsSite, setMailingSameAsSite] = useState(false);
   const { items: categories } = useMasterData('PARTNER_CATEGORY');
   const { items: currencies } = useMasterData('CURRENCY');
 
   const isEdit = !!initialData;
+  const hasSiteAddress = !isAddressEmpty(siteAddress);
 
   useEffect(() => {
     if (open && activeCompany?.id) {
@@ -91,8 +102,26 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
       setSelectedUsers([]);
       setHeadquartersAddress(emptyAddress);
       setSiteAddress(emptyAddress);
+      setMailingAddress(emptyAddress);
+      setShowSiteAddress(false);
+      setShowMailingAddress(false);
+      setMailingSameAsHQ(false);
+      setMailingSameAsSite(false);
     }
   }, [open, initialData, reset]);
+
+  // Handle mailing address sync
+  useEffect(() => {
+    if (mailingSameAsHQ) {
+      setMailingAddress({ ...headquartersAddress });
+    }
+  }, [mailingSameAsHQ, headquartersAddress]);
+
+  useEffect(() => {
+    if (mailingSameAsSite) {
+      setMailingAddress({ ...siteAddress });
+    }
+  }, [mailingSameAsSite, siteAddress]);
 
   const fetchCompanyUsers = async () => {
     if (!activeCompany?.id) return;
@@ -131,6 +160,7 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
     if (data) {
       const hq = data.find((a: any) => a.address_type === 'headquarters');
       const site = data.find((a: any) => a.address_type === 'site');
+      const mailing = data.find((a: any) => a.address_type === 'mailing');
       
       if (hq) {
         setHeadquartersAddress({
@@ -162,6 +192,24 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
           staircase: site.staircase || '',
           floor_door: site.floor_door || '',
         });
+        setShowSiteAddress(true);
+      }
+
+      if (mailing) {
+        setMailingAddress({
+          country: mailing.country || '',
+          county: mailing.county || '',
+          postal_code: mailing.postal_code || '',
+          city: mailing.city || '',
+          street_name: mailing.street_name || '',
+          street_type: mailing.street_type || '',
+          house_number: mailing.house_number || '',
+          plot_number: mailing.plot_number || '',
+          building: mailing.building || '',
+          staircase: mailing.staircase || '',
+          floor_door: mailing.floor_door || '',
+        });
+        setShowMailingAddress(true);
       }
     }
   };
@@ -174,7 +222,8 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
       restrict_access: restrictAccess,
       user_access: restrictAccess ? selectedUsers : [],
       headquarters_address: headquartersAddress,
-      site_address: siteAddress,
+      site_address: showSiteAddress ? siteAddress : null,
+      mailing_address: showMailingAddress ? mailingAddress : null,
     });
   };
 
@@ -191,6 +240,21 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
   const getUserName = (userId: string) => {
     const user = companyUsers.find(u => u.id === userId);
     return user?.full_name || user?.email || userId;
+  };
+
+  const handleRemoveSiteAddress = () => {
+    setShowSiteAddress(false);
+    setSiteAddress(emptyAddress);
+    if (mailingSameAsSite) {
+      setMailingSameAsSite(false);
+    }
+  };
+
+  const handleRemoveMailingAddress = () => {
+    setShowMailingAddress(false);
+    setMailingAddress(emptyAddress);
+    setMailingSameAsHQ(false);
+    setMailingSameAsSite(false);
   };
 
   return (
@@ -322,29 +386,129 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
 
               {/* Címek */}
               <TabsContent value="addresses" className="mt-0 space-y-8">
+                {/* Székhely */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 pb-2 border-b">
                     <Building2 className="h-5 w-5 text-primary" />
                     <h3 className="text-lg font-semibold">{t('partners.headquarters')}</h3>
                   </div>
                   <AddressFields
-                    title=""
                     data={headquartersAddress}
                     onChange={setHeadquartersAddress}
                   />
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">{t('partners.site')}</h3>
+                {/* Telephely */}
+                {showSiteAddress ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-semibold">{t('partners.site')}</h3>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveSiteAddress}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Eltávolítás
+                      </Button>
+                    </div>
+                    <AddressFields
+                      data={siteAddress}
+                      onChange={setSiteAddress}
+                    />
                   </div>
-                  <AddressFields
-                    title=""
-                    data={siteAddress}
-                    onChange={setSiteAddress}
-                  />
-                </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSiteAddress(true)}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Telephely hozzáadása
+                  </Button>
+                )}
+
+                {/* Levelezési cím */}
+                {showMailingAddress ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-semibold">Levelezési cím</h3>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveMailingAddress}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Eltávolítás
+                      </Button>
+                    </div>
+                    
+                    <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="mailingSameAsHQ"
+                          checked={mailingSameAsHQ}
+                          onCheckedChange={(checked) => {
+                            setMailingSameAsHQ(checked as boolean);
+                            if (checked) setMailingSameAsSite(false);
+                          }}
+                        />
+                        <label
+                          htmlFor="mailingSameAsHQ"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Megegyezik a székhely címével
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="mailingSameAsSite"
+                          checked={mailingSameAsSite}
+                          disabled={!hasSiteAddress}
+                          onCheckedChange={(checked) => {
+                            setMailingSameAsSite(checked as boolean);
+                            if (checked) setMailingSameAsHQ(false);
+                          }}
+                        />
+                        <label
+                          htmlFor="mailingSameAsSite"
+                          className={`text-sm font-medium leading-none ${!hasSiteAddress ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          Megegyezik a telephely címével
+                          {!hasSiteAddress && <span className="text-muted-foreground ml-1">(nincs telephely)</span>}
+                        </label>
+                      </div>
+                    </div>
+
+                    {!mailingSameAsHQ && !mailingSameAsSite && (
+                      <AddressFields
+                        data={mailingAddress}
+                        onChange={setMailingAddress}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowMailingAddress(true)}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Levelezési cím hozzáadása
+                  </Button>
+                )}
               </TabsContent>
 
               {/* Megjegyzések */}
