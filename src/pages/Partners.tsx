@@ -26,7 +26,7 @@ const formatAddress = (address: any) => {
   return parts.length > 0 ? parts.join(' ') : '-';
 };
 
-type ColumnKey = 'name' | 'headquarters' | 'site' | 'mailing' | 'phone' | 'email' | 'taxId';
+type ColumnKey = 'name' | 'category' | 'headquarters' | 'site' | 'mailing' | 'phone' | 'email' | 'taxId' | 'euVatNumber' | 'currency';
 
 const Partners = () => {
   const { t } = useTranslation();
@@ -37,22 +37,28 @@ const Partners = () => {
   
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>({
     name: true,
+    category: true,
     headquarters: true,
-    site: true,
-    mailing: true,
+    site: false,
+    mailing: false,
     phone: true,
     email: true,
     taxId: true,
+    euVatNumber: false,
+    currency: false,
   });
 
   const columnConfig: { key: ColumnKey; label: string }[] = [
     { key: 'name', label: t('partners.name') },
+    { key: 'category', label: t('partners.category') },
     { key: 'headquarters', label: t('partners.headquarters') },
     { key: 'site', label: t('partners.site') },
     { key: 'mailing', label: t('partners.mailingAddress') },
     { key: 'phone', label: t('partners.phone') },
     { key: 'email', label: t('partners.email') },
     { key: 'taxId', label: t('partners.taxId') },
+    { key: 'euVatNumber', label: t('partners.euVatNumber') },
+    { key: 'currency', label: t('partners.defaultCurrency') },
   ];
 
   const toggleColumn = (key: ColumnKey) => {
@@ -163,12 +169,15 @@ const Partners = () => {
                   <TableHeader>
                     <TableRow>
                       {visibleColumns.name && <TableHead>{t('partners.name')}</TableHead>}
+                      {visibleColumns.category && <TableHead>{t('partners.category')}</TableHead>}
                       {visibleColumns.headquarters && <TableHead>{t('partners.headquarters')}</TableHead>}
                       {visibleColumns.site && <TableHead>{t('partners.site')}</TableHead>}
                       {visibleColumns.mailing && <TableHead>{t('partners.mailingAddress')}</TableHead>}
                       {visibleColumns.phone && <TableHead>{t('partners.phone')}</TableHead>}
                       {visibleColumns.email && <TableHead>{t('partners.email')}</TableHead>}
                       {visibleColumns.taxId && <TableHead>{t('partners.taxId')}</TableHead>}
+                      {visibleColumns.euVatNumber && <TableHead>{t('partners.euVatNumber')}</TableHead>}
+                      {visibleColumns.currency && <TableHead>{t('partners.defaultCurrency')}</TableHead>}
                       <TableHead className="w-[80px]">{t('common.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -204,6 +213,9 @@ const Partners = () => {
                               </div>
                             </TableCell>
                           )}
+                          {visibleColumns.category && (
+                            <TableCell>{partner.category || '-'}</TableCell>
+                          )}
                           {visibleColumns.headquarters && (
                             <TableCell className="max-w-[180px]" title={formatAddress(headquartersAddress)}>
                               <span className="truncate block">{formatAddress(headquartersAddress)}</span>
@@ -227,6 +239,12 @@ const Partners = () => {
                           )}
                           {visibleColumns.taxId && (
                             <TableCell>{partner.tax_id || '-'}</TableCell>
+                          )}
+                          {visibleColumns.euVatNumber && (
+                            <TableCell>{partner.eu_vat_number || '-'}</TableCell>
+                          )}
+                          {visibleColumns.currency && (
+                            <TableCell>{partner.default_currency || '-'}</TableCell>
                           )}
                           <TableCell>
                             <Button
