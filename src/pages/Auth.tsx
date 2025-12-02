@@ -85,14 +85,19 @@ const Auth = () => {
         queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
       }
 
-      // Check if user must change password
+      // Check if user must change password or password is expired
       const { data: profile } = await supabase
         .from('profiles')
         .select('must_change_password')
         .eq('id', currentUser.id)
         .single();
 
-      if (profile?.must_change_password) {
+      // Check if password is expired (90 days)
+      const { data: isExpired } = await supabase.rpc('is_password_expired', {
+        _user_id: currentUser.id
+      });
+
+      if (profile?.must_change_password || isExpired) {
         navigate('/change-password');
       } else {
         toast({
@@ -233,7 +238,16 @@ const Auth = () => {
           });
         }
       } else if (data?.user) {
-        console.log('Sign-in successful, checking 2FA requirement...');
+        console.log('Sign-in successful, enforcing single session...');
+        
+        // SINGLE SESSION ENFORCEMENT: Sign out all other sessions
+        try {
+          await supabase.auth.signOut({ scope: 'others' });
+          console.log('Other sessions signed out successfully');
+        } catch (signOutError) {
+          console.error('Error signing out other sessions:', signOutError);
+          // Don't block login, just log the error
+        }
         
         // Check if user has 2FA enabled
         const requires2FA = await check2FARequired(validated.email);
@@ -265,17 +279,24 @@ const Auth = () => {
           queryClient.invalidateQueries({ queryKey: ['locked-accounts'] });
         }
         
-        // Check if user must change password
+        // Check if user must change password or password is expired
         const { data: profile } = await supabase
           .from('profiles')
           .select('must_change_password')
           .eq('id', data.user.id)
           .single();
         
-        if (profile?.must_change_password) {
+        // Check if password is expired (90 days)
+        const { data: isExpired } = await supabase.rpc('is_password_expired', {
+          _user_id: data.user.id
+        });
+        
+        if (profile?.must_change_password || isExpired) {
           toast({
             title: t('auth.passwordChangeRequired'),
-            description: t('auth.passwordChangeRequiredMessage'),
+            description: isExpired 
+              ? t('auth.passwordExpiredMessage', 'A jelszavad lejárt. Kérjük, változtasd meg.')
+              : t('auth.passwordChangeRequiredMessage'),
             variant: 'default',
           });
           navigate('/change-password');

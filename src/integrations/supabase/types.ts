@@ -574,6 +574,7 @@ export type Database = {
           is_active: boolean | null
           language: string | null
           must_change_password: boolean | null
+          password_changed_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           two_factor_enabled: boolean | null
           two_factor_secret: string | null
@@ -594,6 +595,7 @@ export type Database = {
           is_active?: boolean | null
           language?: string | null
           must_change_password?: boolean | null
+          password_changed_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null
@@ -614,6 +616,7 @@ export type Database = {
           is_active?: boolean | null
           language?: string | null
           must_change_password?: boolean | null
+          password_changed_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null
@@ -1272,6 +1275,7 @@ export type Database = {
         Args: { _company_id: string }
         Returns: boolean
       }
+      is_password_expired: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_two_factor_locked: { Args: { _user_id: string }; Returns: boolean }
       lock_account_for_email: {
@@ -1289,6 +1293,10 @@ export type Database = {
       }
       unlock_account_by_user_id: {
         Args: { _unlocked_by: string; _user_id: string }
+        Returns: undefined
+      }
+      update_password_changed_at: {
+        Args: { _user_id: string }
         Returns: undefined
       }
       user_has_2fa_enabled: { Args: { _email: string }; Returns: boolean }

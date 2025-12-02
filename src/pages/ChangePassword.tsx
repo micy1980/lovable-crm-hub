@@ -126,14 +126,13 @@ export const ChangePassword = () => {
         return;
       }
 
-      // Clear the must_change_password flag
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ must_change_password: false })
-        .eq('id', user.id);
+      // Update password_changed_at timestamp and clear must_change_password flag
+      const { error: updateError2 } = await supabase.rpc('update_password_changed_at', {
+        _user_id: user.id
+      });
 
-      if (profileError) {
-        console.error('Error clearing must_change_password flag:', profileError);
+      if (updateError2) {
+        console.error('Error updating password_changed_at:', updateError2);
         // Don't show error to user, just log it
       }
 
