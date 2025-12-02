@@ -47,7 +47,22 @@ export const usePartners = () => {
       
       const { data, error } = await supabase
         .from('partners')
-        .select('*')
+        .select(`
+          *,
+          partner_addresses (
+            address_type,
+            country,
+            county,
+            postal_code,
+            city,
+            street_name,
+            street_type,
+            house_number,
+            building,
+            staircase,
+            floor_door
+          )
+        `)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .order('name');
