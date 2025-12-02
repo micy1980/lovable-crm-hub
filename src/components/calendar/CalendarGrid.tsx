@@ -92,8 +92,8 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
                 className={cn(
                   "min-h-[120px] border-r border-b last:border-r-0 cursor-pointer transition-colors p-2",
                   !isCurrentMonth && "bg-muted/20 text-muted-foreground",
-                  isToday && "bg-primary/10",
-                  isSelected && "ring-2 ring-inset ring-primary",
+                  isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
+                  isSelected && !isToday && "ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10",
                   "hover:bg-accent/50"
                 )}
                 onClick={() => onSelectDate(day)}
