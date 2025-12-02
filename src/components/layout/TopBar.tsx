@@ -18,12 +18,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
-import { isSuperAdmin } from '@/lib/roleUtils';
-import { CompanyLicenseWarning } from './CompanyLicenseWarning';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { GlobalSearch } from '@/components/shared/GlobalSearch';
 import { useState } from 'react';
@@ -32,15 +26,11 @@ export function TopBar() {
   const { user } = useAuth();
   const { activeCompany, companies, setActiveCompany } = useCompany();
   const { data: profile } = useUserProfile();
-  const { getLicenseForCompany, getLicenseStatus } = useCompanyLicenses();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
-
-  const license = activeCompany ? getLicenseForCompany(activeCompany.id) : null;
-  const licenseStatus = license ? getLicenseStatus(license) : null;
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -75,48 +65,27 @@ export function TopBar() {
 
         {/* Company Selector */}
         {companies.length > 0 && (
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <span>{activeCompany?.name || t('topbar.selectCompany')}</span>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>{t('topbar.selectCompany')}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {companies.map((company: any) => (
-                  <DropdownMenuItem
-                    key={company.id}
-                    onClick={() => setActiveCompany(company)}
-                    className={activeCompany?.id === company.id ? 'bg-accent' : ''}
-                  >
-                    {company.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {activeCompany && license && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <CompanyLicenseWarning companyId={activeCompany.id} />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <div className="space-y-1 text-xs">
-                      <p className="font-medium">
-                        {t('license.validUntil')}: {format(new Date(license.valid_until), 'yyyy-MM-dd')}
-                      </p>
-                      <p>
-                        {t('license.maxUsers')}: {license.max_users}
-                      </p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="min-w-[200px] justify-between gap-2">
+                <span className="truncate">{activeCompany?.name || t('topbar.selectCompany')}</span>
+                <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px]">
+              <DropdownMenuLabel>{t('topbar.selectCompany')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {companies.map((company: any) => (
+                <DropdownMenuItem
+                  key={company.id}
+                  onClick={() => setActiveCompany(company)}
+                  className={activeCompany?.id === company.id ? 'bg-accent' : ''}
+                >
+                  {company.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Language Selector */}
