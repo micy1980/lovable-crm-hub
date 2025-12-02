@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +13,9 @@ import { useTranslation } from 'react-i18next';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useMasterData } from '@/hooks/useMasterData';
+import { AddressFields, AddressData } from './AddressFields';
+import { TaxIdInput } from './TaxIdInput';
+import { RichTextEditor } from '@/components/shared/RichTextEditor';
 
 interface PartnerDialogProps {
   open: boolean;
@@ -23,6 +25,20 @@ interface PartnerDialogProps {
   initialData?: any;
 }
 
+const emptyAddress: AddressData = {
+  country: '',
+  county: '',
+  postal_code: '',
+  city: '',
+  street_name: '',
+  street_type: '',
+  house_number: '',
+  plot_number: '',
+  building: '',
+  staircase: '',
+  floor_door: '',
+};
+
 export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialData }: PartnerDialogProps) {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
@@ -30,7 +46,12 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
   const [companyUsers, setCompanyUsers] = useState<any[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [restrictAccess, setRestrictAccess] = useState(false);
+  const [taxId, setTaxId] = useState('');
+  const [notes, setNotes] = useState('');
+  const [headquartersAddress, setHeadquartersAddress] = useState<AddressData>(emptyAddress);
+  const [siteAddress, setSiteAddress] = useState<AddressData>(emptyAddress);
   const { items: categories } = useMasterData('PARTNER_CATEGORY');
+  const { items: currencies } = useMasterData('CURRENCY');
 
   const isEdit = !!initialData;
 
@@ -46,27 +67,30 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
         name: initialData.name || '',
         email: initialData.email || '',
         phone: initialData.phone || '',
-        tax_id: initialData.tax_id || '',
         eu_vat_number: initialData.eu_vat_number || '',
-        address: initialData.address || '',
         category: initialData.category || '',
-        notes: initialData.notes || '',
+        default_currency: initialData.default_currency || 'HUF',
       });
+      setTaxId(initialData.tax_id || '');
+      setNotes(initialData.notes || '');
       setRestrictAccess(initialData.restrict_access || false);
       fetchPartnerUserAccess(initialData.id);
+      fetchPartnerAddresses(initialData.id);
     } else if (open) {
       reset({
         name: '',
         email: '',
         phone: '',
-        tax_id: '',
         eu_vat_number: '',
-        address: '',
         category: '',
-        notes: '',
+        default_currency: 'HUF',
       });
+      setTaxId('');
+      setNotes('');
       setRestrictAccess(false);
       setSelectedUsers([]);
+      setHeadquartersAddress(emptyAddress);
+      setSiteAddress(emptyAddress);
     }
   }, [open, initialData, reset]);
 
@@ -98,11 +122,59 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
     }
   };
 
+  const fetchPartnerAddresses = async (partnerId: string) => {
+    const { data } = await supabase
+      .from('partner_addresses')
+      .select('*')
+      .eq('partner_id', partnerId);
+
+    if (data) {
+      const hq = data.find((a: any) => a.address_type === 'headquarters');
+      const site = data.find((a: any) => a.address_type === 'site');
+      
+      if (hq) {
+        setHeadquartersAddress({
+          country: hq.country || '',
+          county: hq.county || '',
+          postal_code: hq.postal_code || '',
+          city: hq.city || '',
+          street_name: hq.street_name || '',
+          street_type: hq.street_type || '',
+          house_number: hq.house_number || '',
+          plot_number: hq.plot_number || '',
+          building: hq.building || '',
+          staircase: hq.staircase || '',
+          floor_door: hq.floor_door || '',
+        });
+      }
+      
+      if (site) {
+        setSiteAddress({
+          country: site.country || '',
+          county: site.county || '',
+          postal_code: site.postal_code || '',
+          city: site.city || '',
+          street_name: site.street_name || '',
+          street_type: site.street_type || '',
+          house_number: site.house_number || '',
+          plot_number: site.plot_number || '',
+          building: site.building || '',
+          staircase: site.staircase || '',
+          floor_door: site.floor_door || '',
+        });
+      }
+    }
+  };
+
   const handleFormSubmit = (data: any) => {
     onSubmit({
       ...data,
+      tax_id: taxId,
+      notes,
       restrict_access: restrictAccess,
       user_access: restrictAccess ? selectedUsers : [],
+      headquarters_address: headquartersAddress,
+      site_address: siteAddress,
     });
   };
 
@@ -123,7 +195,7 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEdit ? t('partners.editTitle') : t('partners.createTitle')}
@@ -158,23 +230,46 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="category">{t('partners.category')}</Label>
-                <Select
-                  value={watch('category') || ''}
-                  onValueChange={(value) => setValue('category', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('partners.selectCategory')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat: any) => (
-                      <SelectItem key={cat.id} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">{t('partners.category')}</Label>
+                  <Select
+                    value={watch('category') || ''}
+                    onValueChange={(value) => setValue('category', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('partners.selectCategory')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.id} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="default_currency">{t('partners.defaultCurrency')}</Label>
+                  <Select
+                    value={watch('default_currency') || 'HUF'}
+                    onValueChange={(value) => setValue('default_currency', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="HUF">HUF</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      {currencies.map((cur: any) => (
+                        <SelectItem key={cur.id} value={cur.value}>
+                          {cur.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -188,7 +283,11 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="tax_id">{t('partners.taxId')}</Label>
-                  <Input id="tax_id" {...register('tax_id')} placeholder="12345678-1-23" />
+                  <TaxIdInput
+                    id="tax_id"
+                    value={taxId}
+                    onChange={setTaxId}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="eu_vat_number">{t('partners.euVatNumber')}</Label>
@@ -198,16 +297,31 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
             </CardContent>
           </Card>
 
-          {/* Cím */}
+          {/* Székhely */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.addressInfo')}</CardTitle>
+              <CardTitle className="text-base text-primary">{t('partners.headquarters')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">{t('partners.address')}</Label>
-                <Textarea id="address" {...register('address')} rows={2} />
-              </div>
+            <CardContent>
+              <AddressFields
+                title=""
+                data={headquartersAddress}
+                onChange={setHeadquartersAddress}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Telephely */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base text-primary">{t('partners.site')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AddressFields
+                title=""
+                data={siteAddress}
+                onChange={setSiteAddress}
+              />
             </CardContent>
           </Card>
 
@@ -218,8 +332,11 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="notes">{t('partners.notes')}</Label>
-                <Textarea id="notes" {...register('notes')} rows={3} />
+                <Label>{t('partners.notes')}</Label>
+                <RichTextEditor
+                  content={notes}
+                  onChange={setNotes}
+                />
               </div>
             </CardContent>
           </Card>
