@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ExportMenu } from '@/components/shared/ExportMenu';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -81,6 +82,46 @@ const Partners = () => {
     { key: 'currency', label: t('partners.defaultCurrency') },
   ];
 
+  // Export columns - only visible ones
+  const exportColumns = useMemo(() => {
+    const keyToHeaderMap: Record<ColumnKey, { header: string; key: string }> = {
+      name: { header: t('partners.name'), key: 'name' },
+      category: { header: t('partners.category'), key: 'category' },
+      headquarters: { header: t('partners.headquarters'), key: 'headquarters' },
+      site: { header: t('partners.site'), key: 'site' },
+      mailing: { header: t('partners.mailingAddress'), key: 'mailing' },
+      phone: { header: t('partners.phone'), key: 'phone' },
+      email: { header: t('partners.email'), key: 'email' },
+      taxId: { header: t('partners.taxId'), key: 'tax_id' },
+      euVatNumber: { header: t('partners.euVatNumber'), key: 'eu_vat_number' },
+      currency: { header: t('partners.defaultCurrency'), key: 'default_currency' },
+    };
+    return columnConfig
+      .filter(col => visibleColumns[col.key])
+      .map(col => keyToHeaderMap[col.key]);
+  }, [visibleColumns, t]);
+
+  // Export data - formatted for export
+  const exportData = useMemo(() => {
+    return partners.map((partner: any) => {
+      const hqAddr = partner.partner_addresses?.find((a: any) => a.address_type === 'headquarters');
+      const siteAddr = partner.partner_addresses?.find((a: any) => a.address_type === 'site');
+      const mailAddr = partner.partner_addresses?.find((a: any) => a.address_type === 'mailing');
+      return {
+        name: partner.name || '-',
+        category: partner.category || '-',
+        headquarters: formatAddress(hqAddr),
+        site: formatAddress(siteAddr),
+        mailing: formatAddress(mailAddr),
+        phone: partner.phone || '-',
+        email: partner.email || '-',
+        tax_id: partner.tax_id || '-',
+        eu_vat_number: partner.eu_vat_number || '-',
+        default_currency: partner.default_currency || '-',
+      };
+    });
+  }, [partners]);
+
   const toggleColumn = (key: ColumnKey) => {
     setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -148,32 +189,40 @@ const Partners = () => {
                   {t('partners.listDescription')}
                 </CardDescription>
               </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    {t('common.columns')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56" align="end">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium mb-3">{t('common.visibleColumns')}</p>
-                    {columnConfig.map(col => (
-                      <div key={col.key} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={col.key}
-                          checked={visibleColumns[col.key]}
-                          onCheckedChange={() => toggleColumn(col.key)}
-                          disabled={col.key === 'name'}
-                        />
-                        <Label htmlFor={col.key} className="text-sm cursor-pointer">
-                          {col.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <div className="flex items-center gap-2">
+                <ExportMenu
+                  data={exportData}
+                  columns={exportColumns}
+                  title="Partnerek"
+                  size="sm"
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Settings2 className="mr-2 h-4 w-4" />
+                      {t('common.columns')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56" align="end">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium mb-3">{t('common.visibleColumns')}</p>
+                      {columnConfig.map(col => (
+                        <div key={col.key} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={col.key}
+                            checked={visibleColumns[col.key]}
+                            onCheckedChange={() => toggleColumn(col.key)}
+                            disabled={col.key === 'name'}
+                          />
+                          <Label htmlFor={col.key} className="text-sm cursor-pointer">
+                            {col.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
