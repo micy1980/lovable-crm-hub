@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { X, Building2, MapPin, FileText, Users, Banknote } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -195,214 +195,233 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle className="text-xl">
             {isEdit ? t('partners.editTitle') : t('partners.createTitle')}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-          {/* Alapadatok */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.basicInfo')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">{t('partners.name')} *</Label>
-                <Input
-                  id="name"
-                  {...register('name', { required: t('partners.nameRequired') })}
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name.message as string}</p>
-                )}
-              </div>
+        
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden">
+          <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="mx-6 mt-4 grid grid-cols-5 w-auto">
+              <TabsTrigger value="basic" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('partners.basicInfo')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="flex items-center gap-2">
+                <Banknote className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('partners.financialInfo')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="addresses" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span className="hidden sm:inline">Címek</span>
+              </TabsTrigger>
+              <TabsTrigger value="notes" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('partners.notesSection')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="access" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('partners.userAccess')}</span>
+              </TabsTrigger>
+            </TabsList>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t('partners.email')}</Label>
-                  <Input id="email" type="email" {...register('email')} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">{t('partners.phone')}</Label>
-                  <Input id="phone" {...register('phone')} />
-                </div>
-              </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {/* Alapadatok */}
+              <TabsContent value="basic" className="mt-0 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-base font-medium">{t('partners.name')} *</Label>
+                      <Input
+                        id="name"
+                        className="h-11"
+                        {...register('name', { required: t('partners.nameRequired') })}
+                      />
+                      {errors.name && (
+                        <p className="text-sm text-destructive">{errors.name.message as string}</p>
+                      )}
+                    </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">{t('partners.category')}</Label>
-                  <Select
-                    value={watch('category') || ''}
-                    onValueChange={(value) => setValue('category', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('partners.selectCategory')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat: any) => (
-                        <SelectItem key={cat.id} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="default_currency">{t('partners.defaultCurrency')}</Label>
-                  <Select
-                    value={watch('default_currency') || 'HUF'}
-                    onValueChange={(value) => setValue('default_currency', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="HUF">HUF</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      {currencies.map((cur: any) => (
-                        <SelectItem key={cur.id} value={cur.value}>
-                          {cur.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-base font-medium">{t('partners.email')}</Label>
+                      <Input id="email" type="email" className="h-11" {...register('email')} />
+                    </div>
 
-          {/* Pénzügyi adatok */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.financialInfo')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tax_id">{t('partners.taxId')}</Label>
-                  <TaxIdInput
-                    id="tax_id"
-                    value={taxId}
-                    onChange={setTaxId}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="eu_vat_number">{t('partners.euVatNumber')}</Label>
-                  <Input id="eu_vat_number" {...register('eu_vat_number')} placeholder="HU12345678" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Székhely */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.headquarters')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AddressFields
-                title=""
-                data={headquartersAddress}
-                onChange={setHeadquartersAddress}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Telephely */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.site')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AddressFields
-                title=""
-                data={siteAddress}
-                onChange={setSiteAddress}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Megjegyzések */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.notesSection')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label>{t('partners.notes')}</Label>
-                <RichTextEditor
-                  content={notes}
-                  onChange={setNotes}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Felhasználói hozzáférések */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-primary">{t('partners.userAccess')}</CardTitle>
-              <CardDescription>{t('partners.userAccessDescription')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="restrict_access"
-                  checked={restrictAccess}
-                  onCheckedChange={setRestrictAccess}
-                />
-                <Label htmlFor="restrict_access">{t('partners.restrictAccessLabel')}</Label>
-              </div>
-
-              {restrictAccess && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label>{t('partners.selectUsers')}</Label>
-                    <Select onValueChange={handleUserSelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('partners.selectUserPlaceholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {companyUsers
-                          .filter(user => !selectedUsers.includes(user.id))
-                          .map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.full_name || user.email}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-base font-medium">{t('partners.phone')}</Label>
+                      <Input id="phone" className="h-11" {...register('phone')} />
+                    </div>
                   </div>
 
-                  {selectedUsers.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedUsers.map((userId) => (
-                        <Badge key={userId} variant="secondary" className="flex items-center gap-1">
-                          {getUserName(userId)}
-                          <button
-                            type="button"
-                            onClick={() => handleUserRemove(userId)}
-                            className="ml-1 hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="category" className="text-base font-medium">{t('partners.category')}</Label>
+                      <Select
+                        value={watch('category') || ''}
+                        onValueChange={(value) => setValue('category', value)}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder={t('partners.selectCategory')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat: any) => (
+                            <SelectItem key={cat.id} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+                    <div className="space-y-2">
+                      <Label htmlFor="default_currency" className="text-base font-medium">{t('partners.defaultCurrency')}</Label>
+                      <Select
+                        value={watch('default_currency') || 'HUF'}
+                        onValueChange={(value) => setValue('default_currency', value)}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="HUF">HUF - Magyar forint</SelectItem>
+                          <SelectItem value="EUR">EUR - Euró</SelectItem>
+                          <SelectItem value="USD">USD - Amerikai dollár</SelectItem>
+                          {currencies.map((cur: any) => (
+                            <SelectItem key={cur.id} value={cur.value}>
+                              {cur.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Pénzügyi adatok */}
+              <TabsContent value="financial" className="mt-0 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="tax_id" className="text-base font-medium">{t('partners.taxId')}</Label>
+                    <TaxIdInput
+                      id="tax_id"
+                      value={taxId}
+                      onChange={setTaxId}
+                    />
+                    <p className="text-xs text-muted-foreground">Formátum: xxxxxxxx-x-xx</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="eu_vat_number" className="text-base font-medium">{t('partners.euVatNumber')}</Label>
+                    <Input id="eu_vat_number" className="h-11" {...register('eu_vat_number')} placeholder="HU12345678" />
+                    <p className="text-xs text-muted-foreground">EU közösségi adószám</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Címek */}
+              <TabsContent value="addresses" className="mt-0 space-y-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <Building2 className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">{t('partners.headquarters')}</h3>
+                  </div>
+                  <AddressFields
+                    title=""
+                    data={headquartersAddress}
+                    onChange={setHeadquartersAddress}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">{t('partners.site')}</h3>
+                  </div>
+                  <AddressFields
+                    title=""
+                    data={siteAddress}
+                    onChange={setSiteAddress}
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Megjegyzések */}
+              <TabsContent value="notes" className="mt-0">
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">{t('partners.notes')}</Label>
+                  <RichTextEditor
+                    content={notes}
+                    onChange={setNotes}
+                    className="min-h-[300px]"
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Felhasználói hozzáférések */}
+              <TabsContent value="access" className="mt-0 space-y-6">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="restrict_access" className="text-base font-medium">{t('partners.restrictAccessLabel')}</Label>
+                      <p className="text-sm text-muted-foreground">{t('partners.userAccessDescription')}</p>
+                    </div>
+                    <Switch
+                      id="restrict_access"
+                      checked={restrictAccess}
+                      onCheckedChange={setRestrictAccess}
+                    />
+                  </div>
+                </div>
+
+                {restrictAccess && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">{t('partners.selectUsers')}</Label>
+                      <Select onValueChange={handleUserSelect}>
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder={t('partners.selectUserPlaceholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {companyUsers
+                            .filter(user => !selectedUsers.includes(user.id))
+                            .map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.full_name || user.email}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedUsers.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg">
+                        {selectedUsers.map((userId) => (
+                          <Badge key={userId} variant="secondary" className="flex items-center gap-1 py-1.5 px-3">
+                            {getUserName(userId)}
+                            <button
+                              type="button"
+                              onClick={() => handleUserRemove(userId)}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </div>
+          </Tabs>
+
+          <div className="flex justify-end gap-3 px-6 py-4 border-t bg-muted/30">
+            <Button type="button" variant="outline" onClick={onClose} className="min-w-[100px]">
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="min-w-[100px]">
               {t('common.save')}
             </Button>
           </div>
