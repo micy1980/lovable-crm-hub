@@ -105,9 +105,9 @@ const Partners = () => {
                   <TableRow>
                     <TableHead>{t('partners.name')}</TableHead>
                     <TableHead>{t('partners.headquarters')}</TableHead>
-                    <TableHead>{t('partners.email')}</TableHead>
+                    <TableHead>{t('partners.site')}</TableHead>
+                    <TableHead>{t('partners.mailingAddress')}</TableHead>
                     <TableHead>{t('partners.phone')}</TableHead>
-                    <TableHead>{t('partners.taxId')}</TableHead>
                     <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -115,6 +115,12 @@ const Partners = () => {
                   {partners.map((partner: any) => {
                     const headquartersAddress = partner.partner_addresses?.find(
                       (a: any) => a.address_type === 'headquarters'
+                    );
+                    const siteAddress = partner.partner_addresses?.find(
+                      (a: any) => a.address_type === 'site'
+                    );
+                    const mailingAddress = partner.partner_addresses?.find(
+                      (a: any) => a.address_type === 'mailing'
                     );
                     return (
                       <TableRow key={partner.id}>
@@ -135,12 +141,16 @@ const Partners = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="max-w-[250px] truncate">
+                        <TableCell className="max-w-[200px] truncate">
                           {formatAddress(headquartersAddress)}
                         </TableCell>
-                        <TableCell>{partner.email || '-'}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {formatAddress(siteAddress)}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {formatAddress(mailingAddress)}
+                        </TableCell>
                         <TableCell>{partner.phone || '-'}</TableCell>
-                        <TableCell>{partner.tax_id || '-'}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"

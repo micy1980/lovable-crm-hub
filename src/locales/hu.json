@@ -189,6 +189,7 @@
     "defaultCurrency": "Alapértelmezett pénznem",
     "headquarters": "Székhely",
     "site": "Telephely",
+    "mailingAddress": "Levelezési cím",
     "address": {
       "country": "Ország",
       "county": "Megye",
