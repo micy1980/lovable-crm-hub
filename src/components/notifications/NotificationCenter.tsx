@@ -1,10 +1,9 @@
-import { Bell, Check, Trash2, CheckCheck } from 'lucide-react';
+import { Bell, Check, Trash2, CheckCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +12,13 @@ import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { hu } from 'date-fns/locale';
+import { useLicenseEnforcement } from '@/hooks/useLicenseEnforcement';
+import { useTranslation } from 'react-i18next';
 
 export const NotificationCenter = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isExpired, daysUntilExpiry, isActive, isReadOnly } = useLicenseEnforcement();
   const {
     notifications,
     unreadCount,
@@ -25,6 +28,13 @@ export const NotificationCenter = () => {
     deleteNotification,
     clearAll,
   } = useNotifications();
+
+  // Check if we should show license warning
+  const showLicenseWarning = isReadOnly || isExpired || !isActive || (daysUntilExpiry !== null && daysUntilExpiry <= 30 && daysUntilExpiry > 0);
+  const isLicenseExpiredOrReadOnly = isReadOnly || isExpired || !isActive;
+
+  // Adjust unread count to include license warning
+  const totalUnreadCount = unreadCount + (showLicenseWarning ? 1 : 0);
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
@@ -63,12 +73,12 @@ export const NotificationCenter = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {totalUnreadCount > 0 && (
             <Badge
               variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
             </Badge>
           )}
         </Button>
@@ -100,9 +110,36 @@ export const NotificationCenter = () => {
         </div>
 
         <ScrollArea className="h-96">
+          {/* Pinned License Warning */}
+          {showLicenseWarning && (
+            <>
+              <div className={`p-4 ${isLicenseExpiredOrReadOnly ? 'bg-destructive/10' : 'bg-yellow-500/10'}`}>
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className={`h-6 w-6 ${isLicenseExpiredOrReadOnly ? 'text-destructive' : 'text-yellow-600'}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm">
+                        {isLicenseExpiredOrReadOnly ? t('license.expired') : t('license.expiringTitle')}
+                      </p>
+                      <Badge variant={isLicenseExpiredOrReadOnly ? 'destructive' : 'outline'} className="shrink-0">
+                        {isLicenseExpiredOrReadOnly ? t('license.critical') : t('license.warning')}
+                      </Badge>
+                    </div>
+                    <p className={`text-sm mt-1 ${isLicenseExpiredOrReadOnly ? 'text-destructive' : 'text-yellow-700 dark:text-yellow-300'}`}>
+                      {isLicenseExpiredOrReadOnly 
+                        ? t('license.readOnlyMode')
+                        : t('license.expiringSoon', { days: daysUntilExpiry })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
           {loading ? (
             <div className="p-4 text-center text-muted-foreground">Betöltés...</div>
-          ) : notifications.length === 0 ? (
+          ) : notifications.length === 0 && !showLicenseWarning ? (
             <div className="p-8 text-center text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>Nincs értesítés</p>

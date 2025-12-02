@@ -460,13 +460,17 @@
     "expiredAdminMessage": "Ennek a vállalatnak a licensze lejárt. A normál felhasználók nem férhetnek hozzá ehhez a funkcióhoz.",
     "featureDisabledAdminMessage": "A {{feature}} funkció le van tiltva ennél a vállalatnál. A normál felhasználók nem férhetnek hozzá.",
     "expiredBanner": "⚠️ A vállalat licensze lejárt. Az írási műveletek blokkolva vannak. Kérjük, hosszabbítsa meg a licenszt.",
-    "readOnlyMode": "⚠️ A licensz lejárt vagy inaktív. A rendszer csak olvasható módban működik. Kérjük, aktiváljon érvényes licensz kulcsot a szerkesztés folytatásához.",
+    "readOnlyMode": "A licensz lejárt vagy inaktív. A rendszer csak olvasható módban működik.",
     "trialExpiredBanner": "⚠️ A 14 napos próbaidőszak lejárt. Kérjük, aktiváljon licensz kulcsot a rendszer teljes funkcionalitású használatához.",
-    "expiringSoon": "⚠️ A licensz {{days}} napon belül lejár. Kérjük, hosszabbítsa meg a szolgáltatás megszakadásának elkerülése érdekében.",
+    "expiringSoon": "A licensz {{days}} napon belül lejár. Kérjük, hosszabbítsa meg a szolgáltatás megszakadásának elkerülése érdekében.",
     "licenseSeatsExceeded": "Nem lehet felhasználót hozzáadni: a vállalat elérte a maximális licenszált felhasználók számát ({{used}}/{{max}}). Kérjük, frissítse a licenszt vagy inaktiváljon egy másik felhasználót.",
     "availableModules": "Elérhető modulok",
     "unavailableModules": "Nem elérhető modulok",
     "noModulesAvailable": "Nincs elérhető modul",
-    "allModulesAvailable": "Minden modul elérhető"
+    "allModulesAvailable": "Minden modul elérhető",
+    "expired": "Licensz Lejárt",
+    "expiringTitle": "Licensz Hamarosan Lejár",
+    "critical": "Kritikus",
+    "warning": "Figyelmeztetés"
   }
 }
