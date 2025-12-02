@@ -69,7 +69,8 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
               key={index}
               className={cn(
                 "py-3 text-center text-sm font-medium border-r last:border-r-0 cursor-pointer hover:bg-accent/50 transition-colors",
-                isToday && "bg-primary/15 dark:bg-primary/25 text-primary font-bold"
+                isToday && "bg-primary/15 dark:bg-primary/25 text-primary font-bold border-b-2 border-b-primary",
+                isSelected && !isToday && "bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold border-b-2 border-b-emerald-400"
               )}
               onClick={() => onSelectDate(day)}
             >
