@@ -2,7 +2,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { useTranslation } from 'react-i18next';
 import { useLoginAttemptsList } from '@/hooks/useLoginAttemptsList';
 import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
@@ -10,8 +9,7 @@ import { CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 
-const LoginAttempts = () => {
-  const { t } = useTranslation();
+export const LoginAttemptsTab = () => {
   const { loginAttempts, isLoading } = useLoginAttemptsList(200);
   const [emailFilter, setEmailFilter] = useState('');
   const [ipFilter, setIpFilter] = useState('');
@@ -44,16 +42,8 @@ const LoginAttempts = () => {
   }, [filteredAttempts]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Login Kísérletek
-          </h1>
-          <p className="text-muted-foreground">
-            Összes bejelentkezési kísérlet nyomon követése és elemzése
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-end">
         <Button onClick={handleRefresh} variant="outline" size="sm">
           <RefreshCw className="mr-2 h-4 w-4" />
           Frissítés
@@ -189,5 +179,3 @@ const LoginAttempts = () => {
     </div>
   );
 };
-
-export default LoginAttempts;

@@ -25,8 +25,7 @@ const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Logs = lazy(() => import("./pages/Logs"));
 const LicenseGenerator = lazy(() => import("./pages/LicenseGenerator"));
-const LockedAccounts = lazy(() => import("./pages/LockedAccounts"));
-const LoginAttempts = lazy(() => import("./pages/LoginAttempts"));
+const AccountManagement = lazy(() => import("./pages/AccountManagement"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
@@ -78,8 +77,7 @@ const App = () => {
                     <Route path="/calendar" element={<MainLayout><CalendarPage /></MainLayout>} />
                     <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
                     <Route path="/logs" element={<MainLayout><Logs /></MainLayout>} />
-                    <Route path="/locked-accounts" element={<MainLayout><LockedAccounts /></MainLayout>} />
-                    <Route path="/login-attempts" element={<MainLayout><LoginAttempts /></MainLayout>} />
+                    <Route path="/account-management" element={<MainLayout><AccountManagement /></MainLayout>} />
                     <Route path="/license-generator" element={<LicenseGenerator />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
