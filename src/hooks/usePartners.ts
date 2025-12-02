@@ -11,17 +11,21 @@ export const usePartners = () => {
   const { activeCompany } = useCompany();
 
   const { data: partners = [], isLoading } = useQuery({
-    queryKey: ['partners'],
+    queryKey: ['partners', activeCompany?.id],
     queryFn: async () => {
+      if (!activeCompany?.id) return [];
+      
       const { data, error } = await supabase
         .from('partners')
         .select('*')
+        .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .order('name');
 
       if (error) throw error;
       return data;
     },
+    enabled: !!activeCompany?.id,
   });
 
   const createPartner = useMutation({
@@ -30,25 +34,45 @@ export const usePartners = () => {
       email?: string; 
       phone?: string; 
       address?: string; 
-      tax_id?: string; 
+      tax_id?: string;
+      eu_vat_number?: string;
       category?: string; 
       notes?: string;
+      restrict_access?: boolean;
+      user_access?: string[];
     }) => {
       if (!activeCompany?.id) {
         throw new Error('No company selected');
       }
 
-      // Automatically add company_id from active company
+      const { user_access, ...partnerData } = values;
+
       const { data, error } = await supabase
         .from('partners')
         .insert({
-          ...values,
+          ...partnerData,
           company_id: activeCompany.id
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Add user access records if restriction is enabled
+      if (values.restrict_access && user_access && user_access.length > 0) {
+        const accessRecords = user_access.map(userId => ({
+          partner_id: data.id,
+          user_id: userId,
+          company_id: activeCompany.id,
+        }));
+
+        const { error: accessError } = await supabase
+          .from('partner_user_access')
+          .insert(accessRecords);
+
+        if (accessError) throw accessError;
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -65,7 +89,7 @@ export const usePartners = () => {
   });
 
   const updatePartner = useMutation({
-    mutationFn: async ({ id, ...values }: any) => {
+    mutationFn: async ({ id, user_access, ...values }: any) => {
       const { data, error } = await supabase
         .from('partners')
         .update(values)
@@ -74,6 +98,29 @@ export const usePartners = () => {
         .single();
 
       if (error) throw error;
+
+      // Update user access records
+      // First delete all existing access records
+      await supabase
+        .from('partner_user_access')
+        .delete()
+        .eq('partner_id', id);
+
+      // Then add new ones if restriction is enabled
+      if (values.restrict_access && user_access && user_access.length > 0 && activeCompany?.id) {
+        const accessRecords = user_access.map((userId: string) => ({
+          partner_id: id,
+          user_id: userId,
+          company_id: activeCompany.id,
+        }));
+
+        const { error: accessError } = await supabase
+          .from('partner_user_access')
+          .insert(accessRecords);
+
+        if (accessError) throw accessError;
+      }
+
       return data;
     },
     onSuccess: () => {

@@ -499,6 +499,59 @@ export type Database = {
           },
         ]
       }
+      partner_user_access: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          partner_id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          partner_id: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          partner_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_user_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_user_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_user_access_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_user_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partners: {
         Row: {
           address: string | null
@@ -507,10 +560,12 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           email: string | null
+          eu_vat_number: string | null
           id: string
           name: string
           notes: string | null
           phone: string | null
+          restrict_access: boolean | null
           tax_id: string | null
           updated_at: string | null
         }
@@ -521,10 +576,12 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           email?: string | null
+          eu_vat_number?: string | null
           id?: string
           name: string
           notes?: string | null
           phone?: string | null
+          restrict_access?: boolean | null
           tax_id?: string | null
           updated_at?: string | null
         }
@@ -535,10 +592,12 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           email?: string | null
+          eu_vat_number?: string | null
           id?: string
           name?: string
           notes?: string | null
           phone?: string | null
+          restrict_access?: boolean | null
           tax_id?: string | null
           updated_at?: string | null
         }
