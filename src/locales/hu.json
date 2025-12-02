@@ -207,7 +207,8 @@
     "month": "Hónap",
     "selectDate": "Válassz egy dátumot",
     "noTasks": "Nincsenek feladatok",
-    "tasksList": "Feladatok listája"
+    "tasksList": "Feladatok listája",
+    "allDay": "Egész nap"
   },
   "tasks": {
     "status": {
