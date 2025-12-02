@@ -1,8 +1,15 @@
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 import { useMasterData } from '@/hooks/useMasterData';
+import { usePostalCodes, usePostalCodeLookup, PostalCodeData } from '@/hooks/usePostalCodes';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface AddressData {
   country: string;
@@ -19,20 +26,90 @@ export interface AddressData {
 }
 
 interface AddressFieldsProps {
-  title: string;
+  title?: string;
   data: AddressData;
   onChange: (data: AddressData) => void;
 }
 
 export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { items: countries } = useMasterData('COUNTRY');
   const { items: counties } = useMasterData('COUNTY');
   const { items: streetTypes } = useMasterData('STREET_TYPE');
+  
+  const [postalCodeSearch, setPostalCodeSearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [postalOpen, setPostalOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  
+  const { data: postalCodes = [] } = usePostalCodes(postalCodeSearch || citySearch);
+  const { data: lookupResult } = usePostalCodeLookup(data.postal_code);
+
+  useEffect(() => {
+    if (lookupResult && data.postal_code === lookupResult.postal_code) {
+      const updates: Partial<AddressData> = {};
+      
+      if (!data.city && lookupResult.city) {
+        updates.city = lookupResult.city;
+      }
+      if (!data.county && lookupResult.county) {
+        const matchingCounty = counties.find((c: any) => 
+          c.label.toLowerCase() === lookupResult.county?.toLowerCase()
+        );
+        if (matchingCounty) {
+          updates.county = matchingCounty.value;
+        }
+      }
+      if (!data.country && lookupResult.country === 'Magyarország') {
+        updates.country = 'HU';
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        onChange({ ...data, ...updates });
+      }
+    }
+  }, [lookupResult, data.postal_code, counties]);
 
   const handleChange = (field: keyof AddressData, value: string) => {
     onChange({ ...data, [field]: value });
   };
+
+  const handlePostalCodeSelect = (postalCode: PostalCodeData) => {
+    const matchingCounty = counties.find((c: any) => 
+      c.label.toLowerCase() === postalCode.county?.toLowerCase()
+    );
+    
+    onChange({
+      ...data,
+      postal_code: postalCode.postal_code,
+      city: postalCode.city,
+      county: matchingCounty?.value || '',
+      country: 'HU'
+    });
+    setPostalOpen(false);
+  };
+
+  const handleCitySelect = (postalCode: PostalCodeData) => {
+    const matchingCounty = counties.find((c: any) => 
+      c.label.toLowerCase() === postalCode.county?.toLowerCase()
+    );
+    
+    onChange({
+      ...data,
+      postal_code: postalCode.postal_code,
+      city: postalCode.city,
+      county: matchingCounty?.value || '',
+      country: 'HU'
+    });
+    setCityOpen(false);
+  };
+
+  const uniquePostalCodes = postalCodes.reduce((acc: PostalCodeData[], curr) => {
+    if (!acc.find(p => p.postal_code === curr.postal_code && p.city === curr.city)) {
+      acc.push(curr);
+    }
+    return acc;
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -72,20 +149,97 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label className="text-sm">{t('partners.address.postalCode')}</Label>
-          <Input 
-            value={data.postal_code || ''} 
-            onChange={(e) => handleChange('postal_code', e.target.value)}
-            placeholder="1234"
-            className="h-10"
-          />
+          <Popover open={postalOpen} onOpenChange={setPostalOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={postalOpen}
+                className="w-full h-10 justify-between font-normal"
+              >
+                {data.postal_code || t('partners.address.selectPostalCode', 'Irányítószám')}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0" align="start">
+              <Command>
+                <CommandInput 
+                  placeholder={t('partners.address.searchPostalCode', 'Keresés...')}
+                  value={postalCodeSearch}
+                  onValueChange={setPostalCodeSearch}
+                />
+                <CommandList>
+                  <CommandEmpty>{t('partners.address.noResults', 'Nincs találat')}</CommandEmpty>
+                  <CommandGroup>
+                    {uniquePostalCodes.map((pc) => (
+                      <CommandItem
+                        key={`${pc.postal_code}-${pc.city}`}
+                        value={`${pc.postal_code} ${pc.city}`}
+                        onSelect={() => handlePostalCodeSelect(pc)}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            data.postal_code === pc.postal_code && data.city === pc.city
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {pc.postal_code} - {pc.city}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="col-span-1 sm:col-span-2 space-y-2">
           <Label className="text-sm">{t('partners.address.city')}</Label>
-          <Input 
-            value={data.city || ''} 
-            onChange={(e) => handleChange('city', e.target.value)}
-            className="h-10"
-          />
+          <Popover open={cityOpen} onOpenChange={setCityOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={cityOpen}
+                className="w-full h-10 justify-between font-normal"
+              >
+                {data.city || t('partners.address.selectCity', 'Település')}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-0" align="start">
+              <Command>
+                <CommandInput 
+                  placeholder={t('partners.address.searchCity', 'Keresés...')}
+                  value={citySearch}
+                  onValueChange={setCitySearch}
+                />
+                <CommandList>
+                  <CommandEmpty>{t('partners.address.noResults', 'Nincs találat')}</CommandEmpty>
+                  <CommandGroup>
+                    {uniquePostalCodes.map((pc) => (
+                      <CommandItem
+                        key={`city-${pc.postal_code}-${pc.city}`}
+                        value={`${pc.city} ${pc.postal_code}`}
+                        onSelect={() => handleCitySelect(pc)}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            data.city === pc.city && data.postal_code === pc.postal_code
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {pc.city} ({pc.postal_code})
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 

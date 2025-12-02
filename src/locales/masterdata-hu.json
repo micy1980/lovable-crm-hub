@@ -8,7 +8,10 @@
       "SALES_STATUS": "Értékesítési Státuszok",
       "COST_CATEGORY": "Költség Kategóriák",
       "BUSINESS_UNIT": "Üzleti Egységek",
-      "TASK_STATUS": "Feladat Státuszok"
+      "TASK_STATUS": "Feladat Státuszok",
+      "COUNTRY": "Országok",
+      "COUNTY": "Vármegyék",
+      "STREET_TYPE": "Közterület típusok"
     },
     "selectType": "Válasszon típust a bal oldalról az elemek kezeléséhez",
     "label": "Címke",

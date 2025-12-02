@@ -1,4 +1,13 @@
 {
+  "partners": {
+    "address": {
+      "searchPostalCode": "Irányítószám keresése...",
+      "selectPostalCode": "Válasszon irányítószámot",
+      "searchCity": "Település keresése...",
+      "selectCity": "Válasszon települést",
+      "noResults": "Nincs találat"
+    }
+  },
   "app": {
     "name": "Mini CRM",
     "tagline": "Többvállalatos ügyfélkapcsolat-kezelő rendszer"
