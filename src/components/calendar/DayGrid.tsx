@@ -12,13 +12,14 @@ interface Task {
 
 interface DayGridProps {
   currentDate: Date;
+  selectedDate?: Date;
   tasks: Task[];
   onTaskClick: (task: Task) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-export const DayGrid = ({ currentDate, tasks, onTaskClick }: DayGridProps) => {
+export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGridProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
 
@@ -51,6 +52,7 @@ export const DayGrid = ({ currentDate, tasks, onTaskClick }: DayGridProps) => {
   };
 
   const isToday = isSameDay(currentDate, new Date());
+  const isSelected = selectedDate && isSameDay(currentDate, selectedDate);
   const allDayTasks = getAllDayTasks();
 
   return (
@@ -59,10 +61,11 @@ export const DayGrid = ({ currentDate, tasks, onTaskClick }: DayGridProps) => {
       <div className="grid grid-cols-[60px_1fr] border-b bg-muted/30">
         <div className="py-3 text-center text-sm font-medium border-r"></div>
         <div className={cn(
-          "py-3 text-center text-sm font-medium text-primary",
-          isToday && "bg-primary/10"
+          "py-3 text-center text-sm font-medium",
+          isToday && "bg-primary/10 dark:bg-primary/20 text-primary font-bold ring-2 ring-inset ring-primary",
+          isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
         )}>
-          {format(currentDate, 'EEEE', { locale })}
+          {format(currentDate, 'yyyy. MMMM d. EEEE', { locale })}
         </div>
       </div>
 
@@ -71,7 +74,11 @@ export const DayGrid = ({ currentDate, tasks, onTaskClick }: DayGridProps) => {
         <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
           {t('calendar.allDay', 'Egész nap')}
         </div>
-        <div className={cn("min-h-[40px] p-1", isToday && "bg-primary/5")}>
+        <div className={cn(
+          "min-h-[40px] p-1",
+          isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
+          isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
+        )}>
           {allDayTasks.slice(0, 3).map((task) => (
             <div
               key={task.id}
@@ -99,7 +106,11 @@ export const DayGrid = ({ currentDate, tasks, onTaskClick }: DayGridProps) => {
               <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
                 {String(hour).padStart(2, '0')}:00
               </div>
-              <div className={cn("min-h-[44px] p-0.5", isToday && "bg-primary/5")}>
+              <div className={cn(
+                "min-h-[44px] p-0.5",
+                isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
+                isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
+              )}>
                 {hourTasks.map((task) => (
                   <div
                     key={task.id}

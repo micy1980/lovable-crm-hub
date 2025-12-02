@@ -181,6 +181,7 @@ const CalendarPage = () => {
             {viewMode === 'day' && (
               <DayGrid
                 currentDate={currentDate}
+                selectedDate={selectedDate}
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
               />

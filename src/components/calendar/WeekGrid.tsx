@@ -2,7 +2,6 @@ import { format, startOfWeek, addDays, isSameDay, getHours } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -69,8 +68,8 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
               key={index}
               className={cn(
                 "py-3 text-center text-sm font-medium border-r last:border-r-0 cursor-pointer hover:bg-accent/50 transition-colors",
-                isToday && "bg-primary/15 dark:bg-primary/25 text-primary font-bold border-b-2 border-b-primary",
-                isSelected && !isToday && "bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold border-b-2 border-b-emerald-400"
+                isToday && "bg-primary/10 dark:bg-primary/20 text-primary font-bold ring-2 ring-inset ring-primary",
+                isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
               )}
               onClick={() => onSelectDate(day)}
             >
@@ -94,8 +93,8 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
               key={index}
               className={cn(
                 "min-h-[40px] border-r last:border-r-0 p-1",
-                isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary",
-                isSelected && !isToday && "bg-emerald-500/10 dark:bg-emerald-500/20 border-l-2 border-l-emerald-400"
+                isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
+                isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
               )}
             >
               {dayTasks.slice(0, 2).map((task) => (
@@ -134,8 +133,8 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
                   key={dayIndex}
                   className={cn(
                     "min-h-[44px] border-r last:border-r-0 p-0.5",
-                    isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary",
-                    isSelected && !isToday && "bg-emerald-500/10 dark:bg-emerald-500/20 border-l-2 border-l-emerald-400"
+                    isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
+                    isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
                   )}
                 >
                   {hourTasks.map((task) => (
