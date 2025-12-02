@@ -174,50 +174,48 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
         })}
       </div>
 
-      {/* Hourly grid with external scrollbar */}
-      <div className="relative">
-        <div className="max-h-[500px] overflow-y-auto pr-3 -mr-3">
-          {HOURS.map((hour, hourIndex) => {
-            const isLastHour = hourIndex === HOURS.length - 1;
-            return (
-              <div 
-                key={hour} 
-                className="grid border-b last:border-b-0"
-                style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
-              >
-                <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
-                  {String(hour).padStart(2, '0')}:00
-                </div>
-                {days.map((day, dayIndex) => {
-                  const hourTasks = getTasksForDateAndHour(day, hour);
-                  return (
-                    <div
-                      key={dayIndex}
-                      className={cn(
-                        "min-h-[44px] p-0.5",
-                        getColumnHighlight(dayIndex),
-                        isLastHour ? getBottomBorder(dayIndex) : getMiddleBorder(dayIndex)
-                      )}
-                    >
-                      {hourTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className={cn(
-                            "text-xs p-1 rounded truncate cursor-pointer border",
-                            getStatusColor(task.status)
-                          )}
-                          onClick={() => onTaskClick(task)}
-                        >
-                          {task.title}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
+      {/* Hourly grid - no inner scroll, uses page scroll */}
+      <div>
+        {HOURS.map((hour, hourIndex) => {
+          const isLastHour = hourIndex === HOURS.length - 1;
+          return (
+            <div 
+              key={hour} 
+              className="grid border-b last:border-b-0"
+              style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
+            >
+              <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
+                {String(hour).padStart(2, '0')}:00
               </div>
-            );
-          })}
-        </div>
+              {days.map((day, dayIndex) => {
+                const hourTasks = getTasksForDateAndHour(day, hour);
+                return (
+                  <div
+                    key={dayIndex}
+                    className={cn(
+                      "min-h-[44px] p-0.5",
+                      getColumnHighlight(dayIndex),
+                      isLastHour ? getBottomBorder(dayIndex) : getMiddleBorder(dayIndex)
+                    )}
+                  >
+                    {hourTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className={cn(
+                          "text-xs p-1 rounded truncate cursor-pointer border",
+                          getStatusColor(task.status)
+                        )}
+                        onClick={() => onTaskClick(task)}
+                      >
+                        {task.title}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
