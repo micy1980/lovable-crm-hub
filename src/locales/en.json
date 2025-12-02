@@ -43,6 +43,7 @@
     "changePasswordRequired": "Password Change Required",
     "changePasswordRequiredDescription": "Your administrator has required you to change your password before continuing.",
     "passwordChangeRequiredMessage": "Please set a new password to continue.",
+    "passwordExpiredMessage": "Your password has expired. Please change it.",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
     "changePassword": "Change Password",

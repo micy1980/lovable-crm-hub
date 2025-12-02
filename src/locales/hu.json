@@ -43,6 +43,7 @@
     "changePasswordRequired": "Jelszóváltoztatás szükséges",
     "changePasswordRequiredDescription": "",
     "passwordChangeRequiredMessage": "Kérjük, állítson be új jelszót a folytatáshoz.",
+    "passwordExpiredMessage": "A jelszavad lejárt. Kérjük, változtasd meg.",
     "newPassword": "Új jelszó",
     "confirmPassword": "Jelszó megerősítése",
     "changePassword": "Jelszó megváltoztatása",
