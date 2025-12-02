@@ -60,7 +60,7 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
     <div className="w-full border rounded-lg overflow-hidden">
       {/* Header row with days */}
       <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b bg-muted/30">
-        <div className="py-3 text-center text-sm font-medium border-r"></div>
+        <div className="py-3 text-center text-sm font-medium border-r" />
         {days.map((day, index) => {
           const isToday = isSameDay(day, new Date());
           const isSelected = selectedDate && isSameDay(day, selectedDate);
@@ -68,9 +68,9 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
             <div
               key={index}
               className={cn(
-                "py-3 text-center text-sm font-medium text-primary border-r last:border-r-0 cursor-pointer hover:bg-accent/50",
-                isToday && "bg-primary/10",
-                isSelected && "bg-primary/20"
+                "py-3 text-center text-sm font-medium border-r last:border-r-0 cursor-pointer hover:bg-accent/50 transition-colors",
+                isToday && "bg-primary/15 dark:bg-primary/25 text-primary font-bold",
+                isSelected && !isToday && "bg-accent"
               )}
               onClick={() => onSelectDate(day)}
             >
@@ -82,7 +82,7 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
 
       {/* All-day row */}
       <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b">
-        <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
+        <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center whitespace-nowrap">
           {t('calendar.allDay', 'Egész nap')}
         </div>
         {days.map((day, index) => {
@@ -93,7 +93,7 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
               key={index}
               className={cn(
                 "min-h-[40px] border-r last:border-r-0 p-1",
-                isToday && "bg-primary/5"
+                isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary"
               )}
             >
               {dayTasks.slice(0, 2).map((task) => (
@@ -131,7 +131,7 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
                   key={dayIndex}
                   className={cn(
                     "min-h-[44px] border-r last:border-r-0 p-0.5",
-                    isToday && "bg-primary/5"
+                    isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary"
                   )}
                 >
                   {hourTasks.map((task) => (
