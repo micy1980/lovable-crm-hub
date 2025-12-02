@@ -36,13 +36,14 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
 
   return (
     <div className="space-y-4">
-      <h4 className="font-medium text-sm text-muted-foreground">{title}</h4>
+      {title && <h4 className="font-medium text-sm text-muted-foreground">{title}</h4>}
       
-      <div className="grid grid-cols-2 gap-4">
+      {/* Ország és megye */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t('partners.address.country')}</Label>
+          <Label className="text-sm">{t('partners.address.country')}</Label>
           <Select value={data.country || ''} onValueChange={(v) => handleChange('country', v)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-10">
               <SelectValue placeholder={t('partners.address.selectCountry')} />
             </SelectTrigger>
             <SelectContent>
@@ -53,9 +54,9 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>{t('partners.address.county')}</Label>
+          <Label className="text-sm">{t('partners.address.county')}</Label>
           <Select value={data.county || ''} onValueChange={(v) => handleChange('county', v)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-10">
               <SelectValue placeholder={t('partners.address.selectCounty')} />
             </SelectTrigger>
             <SelectContent>
@@ -67,36 +68,41 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      {/* Irányítószám és település */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>{t('partners.address.postalCode')}</Label>
+          <Label className="text-sm">{t('partners.address.postalCode')}</Label>
           <Input 
             value={data.postal_code || ''} 
             onChange={(e) => handleChange('postal_code', e.target.value)}
             placeholder="1234"
+            className="h-10"
           />
         </div>
-        <div className="col-span-2 space-y-2">
-          <Label>{t('partners.address.city')}</Label>
+        <div className="col-span-1 sm:col-span-2 space-y-2">
+          <Label className="text-sm">{t('partners.address.city')}</Label>
           <Input 
             value={data.city || ''} 
             onChange={(e) => handleChange('city', e.target.value)}
+            className="h-10"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      {/* Közterület */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="col-span-2 space-y-2">
-          <Label>{t('partners.address.streetName')}</Label>
+          <Label className="text-sm">{t('partners.address.streetName')}</Label>
           <Input 
             value={data.street_name || ''} 
             onChange={(e) => handleChange('street_name', e.target.value)}
+            className="h-10"
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('partners.address.streetType')}</Label>
+          <Label className="text-sm">{t('partners.address.streetType')}</Label>
           <Select value={data.street_type || ''} onValueChange={(v) => handleChange('street_type', v)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-10">
               <SelectValue placeholder={t('partners.address.selectType')} />
             </SelectTrigger>
             <SelectContent>
@@ -107,43 +113,49 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>{t('partners.address.houseNumber')}</Label>
+          <Label className="text-sm">{t('partners.address.houseNumber')}</Label>
           <Input 
             value={data.house_number || ''} 
             onChange={(e) => handleChange('house_number', e.target.value)}
+            className="h-10"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      {/* Egyéb címadatok */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="space-y-2">
-          <Label>{t('partners.address.plotNumber')}</Label>
+          <Label className="text-sm">{t('partners.address.plotNumber')}</Label>
           <Input 
             value={data.plot_number || ''} 
             onChange={(e) => handleChange('plot_number', e.target.value)}
             placeholder="hrsz"
+            className="h-10"
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('partners.address.building')}</Label>
+          <Label className="text-sm">{t('partners.address.building')}</Label>
           <Input 
             value={data.building || ''} 
             onChange={(e) => handleChange('building', e.target.value)}
+            className="h-10"
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('partners.address.staircase')}</Label>
+          <Label className="text-sm">{t('partners.address.staircase')}</Label>
           <Input 
             value={data.staircase || ''} 
             onChange={(e) => handleChange('staircase', e.target.value)}
+            className="h-10"
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('partners.address.floorDoor')}</Label>
+          <Label className="text-sm">{t('partners.address.floorDoor')}</Label>
           <Input 
             value={data.floor_door || ''} 
             onChange={(e) => handleChange('floor_door', e.target.value)}
             placeholder="em./ajtó"
+            className="h-10"
           />
         </div>
       </div>
