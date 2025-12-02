@@ -32,10 +32,10 @@ interface AddressFieldsProps {
 }
 
 export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
-  const { t, i18n } = useTranslation();
-  const { items: countries } = useMasterData('COUNTRY');
-  const { items: counties } = useMasterData('COUNTY');
-  const { items: streetTypes } = useMasterData('STREET_TYPE');
+  const { t } = useTranslation();
+  const { items: countries, isLoading: countriesLoading } = useMasterData('COUNTRY');
+  const { items: counties, isLoading: countiesLoading } = useMasterData('COUNTY');
+  const { items: streetTypes, isLoading: streetTypesLoading } = useMasterData('STREET_TYPE');
   
   const [postalCodeSearch, setPostalCodeSearch] = useState('');
   const [citySearch, setCitySearch] = useState('');
@@ -44,6 +44,9 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
   
   const { data: postalCodes = [] } = usePostalCodes(postalCodeSearch || citySearch);
   const { data: lookupResult } = usePostalCodeLookup(data.postal_code);
+  
+  // Debug log
+  console.log('Master data loaded:', { countries: countries?.length, counties: counties?.length, streetTypes: streetTypes?.length });
 
   useEffect(() => {
     if (lookupResult && data.postal_code === lookupResult.postal_code) {
