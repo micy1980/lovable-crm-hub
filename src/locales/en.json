@@ -1,4 +1,13 @@
 {
+  "partners": {
+    "address": {
+      "searchPostalCode": "Search postal code...",
+      "selectPostalCode": "Select postal code",
+      "searchCity": "Search city...",
+      "selectCity": "Select city",
+      "noResults": "No results"
+    }
+  },
   "app": {
     "name": "Mini CRM",
     "tagline": "Multi-company customer relationship management"

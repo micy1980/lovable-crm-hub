@@ -8,7 +8,10 @@
       "SALES_STATUS": "Sales Statuses",
       "COST_CATEGORY": "Cost Categories",
       "BUSINESS_UNIT": "Business Units",
-      "TASK_STATUS": "Task Statuses"
+      "TASK_STATUS": "Task Statuses",
+      "COUNTRY": "Countries",
+      "COUNTY": "Counties",
+      "STREET_TYPE": "Street Types"
     },
     "selectType": "Select a type from the left to manage items",
     "label": "Label",

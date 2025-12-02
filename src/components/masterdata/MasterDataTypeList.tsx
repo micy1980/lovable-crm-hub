@@ -9,6 +9,9 @@ const MASTER_DATA_TYPES = [
   'COST_CATEGORY',
   'BUSINESS_UNIT',
   'TASK_STATUS',
+  'COUNTRY',
+  'COUNTY',
+  'STREET_TYPE',
 ];
 
 interface MasterDataTypeListProps {

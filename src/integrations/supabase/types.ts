@@ -686,6 +686,36 @@ export type Database = {
           },
         ]
       }
+      postal_codes: {
+        Row: {
+          city: string
+          country: string | null
+          county: string | null
+          created_at: string | null
+          id: string
+          postal_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          city: string
+          country?: string | null
+          county?: string | null
+          created_at?: string | null
+          id?: string
+          postal_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string | null
+          county?: string | null
+          created_at?: string | null
+          id?: string
+          postal_code?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           can_delete: boolean | null
