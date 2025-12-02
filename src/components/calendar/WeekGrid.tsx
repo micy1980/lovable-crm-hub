@@ -19,6 +19,7 @@ interface WeekGridProps {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const WEEK_GRID_TEMPLATE = '80px repeat(7, minmax(0, 1fr))';
 
 export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTaskClick }: WeekGridProps) => {
   const { t, i18n } = useTranslation();
@@ -55,50 +56,102 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
     }
   };
 
-  // Pre-calculate which days are today/selected
+  // Pre-calculate day states
   const dayStates = days.map(day => ({
     isToday: isSameDay(day, new Date()),
     isSelected: selectedDate && isSameDay(day, selectedDate)
   }));
 
+  // Get highlight classes for a day column cell
+  const getColumnHighlight = (index: number) => {
+    const { isToday, isSelected } = dayStates[index];
+    if (isSelected && !isToday) {
+      return 'bg-emerald-500/20 dark:bg-emerald-500/15';
+    }
+    if (isToday) {
+      return 'bg-primary/20 dark:bg-primary/15';
+    }
+    return '';
+  };
+
+  // Get border classes for header cells
+  const getHeaderBorder = (index: number) => {
+    const { isToday, isSelected } = dayStates[index];
+    if (isSelected && !isToday) {
+      return 'border-2 border-emerald-500 border-b-0';
+    }
+    if (isToday) {
+      return 'border-2 border-primary border-b-0';
+    }
+    return 'border border-transparent border-b-0';
+  };
+
+  // Get border classes for middle cells (all-day and hourly)
+  const getMiddleBorder = (index: number) => {
+    const { isToday, isSelected } = dayStates[index];
+    if (isSelected && !isToday) {
+      return 'border-x-2 border-emerald-500';
+    }
+    if (isToday) {
+      return 'border-x-2 border-primary';
+    }
+    return 'border-x border-transparent';
+  };
+
+  // Get border classes for last row cells
+  const getBottomBorder = (index: number) => {
+    const { isToday, isSelected } = dayStates[index];
+    if (isSelected && !isToday) {
+      return 'border-x-2 border-b-2 border-emerald-500';
+    }
+    if (isToday) {
+      return 'border-x-2 border-b-2 border-primary';
+    }
+    return 'border-x border-b border-transparent';
+  };
+
   return (
     <div className="w-full border rounded-lg overflow-hidden">
       {/* Header row with days */}
-      <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b bg-muted/30">
+      <div 
+        className="grid bg-muted/30 border-b"
+        style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
+      >
         <div className="py-3 text-center text-sm font-medium border-r" />
-        {days.map((day, index) => {
-          const { isToday, isSelected } = dayStates[index];
-          return (
-            <div
-              key={index}
-              className={cn(
-                "py-3 text-center text-sm font-medium border-r last:border-r-0 cursor-pointer hover:bg-accent/50 transition-colors",
-                isToday && "bg-primary/10 dark:bg-primary/20 text-primary font-bold ring-2 ring-inset ring-primary",
-                isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
-              )}
-              onClick={() => onSelectDate(day)}
-            >
-              {format(day, 'M. d.', { locale })} {format(day, 'EEE', { locale })}
-            </div>
-          );
-        })}
+        {days.map((day, index) => (
+          <div
+            key={index}
+            className={cn(
+              "py-3 text-center text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors",
+              getColumnHighlight(index),
+              getHeaderBorder(index),
+              dayStates[index].isToday && "text-primary font-bold",
+              dayStates[index].isSelected && !dayStates[index].isToday && "text-emerald-600 dark:text-emerald-400 font-semibold"
+            )}
+            onClick={() => onSelectDate(day)}
+          >
+            {format(day, 'M. d.', { locale })} {format(day, 'EEE', { locale })}
+          </div>
+        ))}
       </div>
 
       {/* All-day row */}
-      <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b">
+      <div 
+        className="grid border-b"
+        style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
+      >
         <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center whitespace-nowrap">
           {t('calendar.allDay', 'Egész nap')}
         </div>
         {days.map((day, index) => {
           const dayTasks = getAllDayTasks(day);
-          const { isToday, isSelected } = dayStates[index];
           return (
             <div
               key={index}
               className={cn(
-                "min-h-[40px] border-r last:border-r-0 p-1",
-                isToday && "bg-primary/10 dark:bg-primary/20",
-                isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10"
+                "min-h-[40px] p-1",
+                getColumnHighlight(index),
+                getMiddleBorder(index)
               )}
             >
               {dayTasks.slice(0, 2).map((task) => (
@@ -121,42 +174,50 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
         })}
       </div>
 
-      {/* Hourly grid */}
-      <div className="max-h-[500px] overflow-y-auto">
-        {HOURS.map((hour) => (
-          <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] border-b last:border-b-0">
-            <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
-              {String(hour).padStart(2, '0')}:00
-            </div>
-            {days.map((day, dayIndex) => {
-              const hourTasks = getTasksForDateAndHour(day, hour);
-              const { isToday, isSelected } = dayStates[dayIndex];
-              return (
-                <div
-                  key={dayIndex}
-                  className={cn(
-                    "min-h-[44px] border-r last:border-r-0 p-0.5",
-                    isToday && "bg-primary/10 dark:bg-primary/20",
-                    isSelected && !isToday && "bg-emerald-500/5 dark:bg-emerald-500/10"
-                  )}
-                >
-                  {hourTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className={cn(
-                        "text-xs p-1 rounded truncate cursor-pointer border",
-                        getStatusColor(task.status)
-                      )}
-                      onClick={() => onTaskClick(task)}
-                    >
-                      {task.title}
-                    </div>
-                  ))}
+      {/* Hourly grid with external scrollbar */}
+      <div className="relative">
+        <div className="max-h-[500px] overflow-y-auto pr-3 -mr-3">
+          {HOURS.map((hour, hourIndex) => {
+            const isLastHour = hourIndex === HOURS.length - 1;
+            return (
+              <div 
+                key={hour} 
+                className="grid border-b last:border-b-0"
+                style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
+              >
+                <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
+                  {String(hour).padStart(2, '0')}:00
                 </div>
-              );
-            })}
-          </div>
-        ))}
+                {days.map((day, dayIndex) => {
+                  const hourTasks = getTasksForDateAndHour(day, hour);
+                  return (
+                    <div
+                      key={dayIndex}
+                      className={cn(
+                        "min-h-[44px] p-0.5",
+                        getColumnHighlight(dayIndex),
+                        isLastHour ? getBottomBorder(dayIndex) : getMiddleBorder(dayIndex)
+                      )}
+                    >
+                      {hourTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className={cn(
+                            "text-xs p-1 rounded truncate cursor-pointer border",
+                            getStatusColor(task.status)
+                          )}
+                          onClick={() => onTaskClick(task)}
+                        >
+                          {task.title}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
