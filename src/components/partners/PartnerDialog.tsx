@@ -300,11 +300,11 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
                       <Label htmlFor="name" className="text-base font-medium">{t('partners.name')} *</Label>
                       <Input
                         id="name"
-                        className="h-11"
-                        {...register('name', { required: t('partners.nameRequired') })}
+                        className={`h-11 ${errors.name ? 'border-destructive border' : ''}`}
+                        {...register('name', { required: true })}
                       />
                       {errors.name && (
-                        <p className="text-sm text-destructive">{errors.name.message as string}</p>
+                        <p className="text-sm text-destructive">Kötelező mező</p>
                       )}
                     </div>
 
