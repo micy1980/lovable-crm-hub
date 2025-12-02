@@ -50,20 +50,7 @@ export function TopBar() {
       <div className="flex h-14 items-center gap-4 px-4">
         <SidebarTrigger />
 
-        <div className="flex-1" />
-
-        {/* Global Search */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSearchOpen(true)}
-          className="gap-2"
-        >
-          <Search className="h-4 w-4" />
-          <span className="hidden md:inline">Keresés</span>
-        </Button>
-
-        {/* Company Selector */}
+        {/* Company Selector - Left side */}
         {companies.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -72,7 +59,7 @@ export function TopBar() {
                 <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuContent align="start" className="w-[200px]">
               <DropdownMenuLabel>{t('topbar.selectCompany')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {companies.map((company: any) => (
@@ -87,6 +74,19 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+
+        <div className="flex-1" />
+
+        {/* Global Search */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSearchOpen(true)}
+          className="gap-2"
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden md:inline">Keresés</span>
+        </Button>
 
         {/* Language Selector */}
         <LanguageSelector />
