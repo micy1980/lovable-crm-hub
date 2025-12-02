@@ -69,8 +69,7 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
               key={index}
               className={cn(
                 "py-3 text-center text-sm font-medium border-r last:border-r-0 cursor-pointer hover:bg-accent/50 transition-colors",
-                isToday && "bg-primary/15 dark:bg-primary/25 text-primary font-bold",
-                isSelected && !isToday && "bg-accent"
+                isToday && "bg-primary/15 dark:bg-primary/25 text-primary font-bold"
               )}
               onClick={() => onSelectDate(day)}
             >
@@ -88,12 +87,14 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
         {days.map((day, index) => {
           const dayTasks = getAllDayTasks(day);
           const isToday = isSameDay(day, new Date());
+          const isSelected = selectedDate && isSameDay(day, selectedDate);
           return (
             <div
               key={index}
               className={cn(
                 "min-h-[40px] border-r last:border-r-0 p-1",
-                isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary"
+                isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary",
+                isSelected && !isToday && "bg-emerald-500/10 dark:bg-emerald-500/20 border-l-2 border-l-emerald-400"
               )}
             >
               {dayTasks.slice(0, 2).map((task) => (
@@ -126,12 +127,14 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
             {days.map((day, dayIndex) => {
               const hourTasks = getTasksForDateAndHour(day, hour);
               const isToday = isSameDay(day, new Date());
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
               return (
                 <div
                   key={dayIndex}
                   className={cn(
                     "min-h-[44px] border-r last:border-r-0 p-0.5",
-                    isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary"
+                    isToday && "bg-primary/10 dark:bg-primary/20 border-l-2 border-l-primary",
+                    isSelected && !isToday && "bg-emerald-500/10 dark:bg-emerald-500/20 border-l-2 border-l-emerald-400"
                   )}
                 >
                   {hourTasks.map((task) => (
