@@ -44,9 +44,6 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
   
   const { data: postalCodes = [] } = usePostalCodes(postalCodeSearch || citySearch);
   const { data: lookupResult } = usePostalCodeLookup(data.postal_code);
-  
-  // Debug log
-  console.log('Master data loaded:', { countries: countries?.length, counties: counties?.length, streetTypes: streetTypes?.length });
 
   useEffect(() => {
     if (lookupResult && data.postal_code === lookupResult.postal_code) {
@@ -56,11 +53,17 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
         updates.city = lookupResult.city;
       }
       if (!data.county && lookupResult.county) {
-        const matchingCounty = counties.find((c: any) => 
-          c.label.toLowerCase() === lookupResult.county?.toLowerCase()
-        );
-        if (matchingCounty) {
-          updates.county = matchingCounty.value;
+        // Handle "-" county for Budapest directly
+        if (lookupResult.county === '-') {
+          updates.county = '-';
+        } else {
+          const matchingCounty = counties.find((c: any) => 
+            c.label.toLowerCase() === lookupResult.county?.toLowerCase() ||
+            c.value.toLowerCase() === lookupResult.county?.toLowerCase()
+          );
+          if (matchingCounty) {
+            updates.county = matchingCounty.value;
+          }
         }
       }
       if (!data.country && lookupResult.country === 'Magyarország') {
@@ -78,30 +81,44 @@ export function AddressFields({ title, data, onChange }: AddressFieldsProps) {
   };
 
   const handlePostalCodeSelect = (postalCode: PostalCodeData) => {
-    const matchingCounty = counties.find((c: any) => 
-      c.label.toLowerCase() === postalCode.county?.toLowerCase()
-    );
+    let countyValue = '';
+    if (postalCode.county === '-') {
+      countyValue = '-';
+    } else if (postalCode.county) {
+      const matchingCounty = counties.find((c: any) => 
+        c.label.toLowerCase() === postalCode.county?.toLowerCase() ||
+        c.value.toLowerCase() === postalCode.county?.toLowerCase()
+      );
+      countyValue = matchingCounty?.value || '';
+    }
     
     onChange({
       ...data,
       postal_code: postalCode.postal_code,
       city: postalCode.city,
-      county: matchingCounty?.value || '',
+      county: countyValue,
       country: 'HU'
     });
     setPostalOpen(false);
   };
 
   const handleCitySelect = (postalCode: PostalCodeData) => {
-    const matchingCounty = counties.find((c: any) => 
-      c.label.toLowerCase() === postalCode.county?.toLowerCase()
-    );
+    let countyValue = '';
+    if (postalCode.county === '-') {
+      countyValue = '-';
+    } else if (postalCode.county) {
+      const matchingCounty = counties.find((c: any) => 
+        c.label.toLowerCase() === postalCode.county?.toLowerCase() ||
+        c.value.toLowerCase() === postalCode.county?.toLowerCase()
+      );
+      countyValue = matchingCounty?.value || '';
+    }
     
     onChange({
       ...data,
       postal_code: postalCode.postal_code,
       city: postalCode.city,
-      county: matchingCounty?.value || '',
+      county: countyValue,
       country: 'HU'
     });
     setCityOpen(false);
