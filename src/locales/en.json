@@ -207,7 +207,8 @@
     "month": "Month",
     "selectDate": "Select a date",
     "noTasks": "No tasks",
-    "tasksList": "Tasks List"
+    "tasksList": "Tasks List",
+    "allDay": "All day"
   },
   "tasks": {
     "status": {
