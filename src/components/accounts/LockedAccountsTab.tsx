@@ -2,14 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useTranslation } from 'react-i18next';
 import { useLockedAccounts } from '@/hooks/useLockedAccounts';
 import { LockOpen, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 
-const LockedAccounts = () => {
-  const { t } = useTranslation();
+export const LockedAccountsTab = () => {
   const { lockedAccounts, isLoading, unlockAccount } = useLockedAccounts();
   const queryClient = useQueryClient();
 
@@ -31,16 +29,8 @@ const LockedAccounts = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Zárolt Fiókok
-          </h1>
-          <p className="text-muted-foreground">
-            Zárolt felhasználói fiókok kezelése és feloldása
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-end">
         <Button onClick={handleRefresh} variant="outline" size="sm">
           <RefreshCw className="mr-2 h-4 w-4" />
           Frissítés
@@ -120,5 +110,3 @@ const LockedAccounts = () => {
     </div>
   );
 };
-
-export default LockedAccounts;

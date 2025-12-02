@@ -8,7 +8,8 @@ import {
   Settings,
   Building2,
   ScrollText,
-  LockKeyhole,
+  ChevronDown,
+  UserCog,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -20,39 +21,47 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarHeader,
 } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { useLocation } from 'react-router-dom';
 
 export function AppSidebar() {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
   const { hasFeatureAccess } = useFeatureAccess();
+  const location = useLocation();
+  const isSuper = isSuperAdmin(profile);
   
-  const allMenuItems = [
+  const mainMenuItems = [
     { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard, feature: null },
     { title: t('nav.partners'), url: '/partners', icon: Users, feature: 'partners' },
     { title: t('nav.projects'), url: '/projects', icon: FolderKanban, feature: 'projects' },
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
     { title: t('nav.documents'), url: '/documents', icon: FileText, feature: 'documents' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
-    { title: t('nav.settings'), url: '/settings', icon: Settings, feature: null },
   ];
 
-  // Only show Logs, Locked Accounts and Login Attempts to super_admin
-  if (isSuperAdmin(profile)) {
-    allMenuItems.splice(6, 0, { title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'logs' });
-    allMenuItems.splice(7, 0, { title: 'Zárolt Fiókok', url: '/locked-accounts', icon: LockKeyhole, feature: null });
-    allMenuItems.splice(8, 0, { title: 'Login Kísérletek', url: '/login-attempts', icon: ScrollText, feature: null });
+  // Add Logs for super_admin
+  if (isSuper) {
+    mainMenuItems.push({ title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'logs' });
   }
 
   // Filter menu items based on license features
-  const menuItems = allMenuItems.filter(item => 
+  const menuItems = mainMenuItems.filter(item => 
     item.feature === null || hasFeatureAccess(item.feature)
   );
+
+  // Check if we're in the settings or account management area
+  const isSettingsActive = location.pathname === '/settings' || location.pathname === '/account-management';
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
@@ -86,6 +95,53 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Settings with collapsible submenu for Super Admin */}
+              <Collapsible defaultOpen={isSettingsActive}>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="w-full justify-between">
+                      <div className="flex items-center gap-3">
+                        <Settings className="h-4 w-4" />
+                        <span>{t('nav.settings')}</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild>
+                          <NavLink
+                            to="/settings"
+                            end
+                            className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                            activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                          >
+                            <Settings className="h-4 w-4" />
+                            <span>Általános</span>
+                          </NavLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      {isSuper && (
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink
+                              to="/account-management"
+                              end
+                              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                              activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                            >
+                              <UserCog className="h-4 w-4" />
+                              <span>Fiókok Kezelése</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
