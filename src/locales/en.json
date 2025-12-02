@@ -189,6 +189,7 @@
     "defaultCurrency": "Default Currency",
     "headquarters": "Headquarters",
     "site": "Site",
+    "mailingAddress": "Mailing Address",
     "address": {
       "country": "Country",
       "county": "County",
