@@ -55,17 +55,11 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
   const isSelected = selectedDate && isSameDay(currentDate, selectedDate);
   const allDayTasks = getAllDayTasks();
 
-  // Highlight styles for the column
-  const columnBg = isToday 
-    ? "bg-primary/10 dark:bg-primary/20" 
-    : isSelected 
-      ? "bg-emerald-500/5 dark:bg-emerald-500/10" 
-      : "";
-
+  // Header highlight only
   const headerHighlight = isToday
-    ? "text-primary font-bold ring-2 ring-inset ring-primary"
+    ? "bg-primary/10 dark:bg-primary/20 text-primary font-bold ring-2 ring-inset ring-primary"
     : isSelected
-      ? "text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
+      ? "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
       : "";
 
   return (
@@ -73,7 +67,7 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
       {/* Header */}
       <div className="grid grid-cols-[60px_1fr] border-b bg-muted/30">
         <div className="py-3 text-center text-sm font-medium border-r"></div>
-        <div className={cn("py-3 text-center text-sm font-medium", columnBg, headerHighlight)}>
+        <div className={cn("py-3 text-center text-sm font-medium", headerHighlight)}>
           {format(currentDate, 'yyyy. MMMM d. EEEE', { locale })}
         </div>
       </div>
@@ -83,7 +77,7 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
         <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
           {t('calendar.allDay', 'Egész nap')}
         </div>
-        <div className={cn("min-h-[40px] p-1", columnBg)}>
+        <div className="min-h-[40px] p-1">
           {allDayTasks.slice(0, 3).map((task) => (
             <div
               key={task.id}
@@ -111,7 +105,7 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
               <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
                 {String(hour).padStart(2, '0')}:00
               </div>
-              <div className={cn("min-h-[44px] p-0.5", columnBg)}>
+              <div className="min-h-[44px] p-0.5">
                 {hourTasks.map((task) => (
                   <div
                     key={task.id}
