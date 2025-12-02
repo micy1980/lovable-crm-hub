@@ -17,6 +17,7 @@ import { useMasterData } from '@/hooks/useMasterData';
 import { AddressFields, AddressData } from './AddressFields';
 import { TaxIdInput } from './TaxIdInput';
 import { RichTextEditor } from '@/components/shared/RichTextEditor';
+import { validateHungarianTaxId } from '@/lib/taxIdValidation';
 
 interface PartnerDialogProps {
   open: boolean;
@@ -68,6 +69,7 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [restrictAccess, setRestrictAccess] = useState(false);
   const [taxId, setTaxId] = useState('');
+  const [taxIdValid, setTaxIdValid] = useState(false);
   const [notes, setNotes] = useState('');
   const [headquartersAddress, setHeadquartersAddress] = useState<AddressData>(emptyAddress);
   const [siteAddress, setSiteAddress] = useState<AddressData>(emptyAddress);
@@ -98,7 +100,9 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
         category: initialData.category || '',
         default_currency: initialData.default_currency || 'HUF',
       });
-      setTaxId(initialData.tax_id || '');
+      const existingTaxId = initialData.tax_id || '';
+      setTaxId(existingTaxId);
+      setTaxIdValid(validateHungarianTaxId(existingTaxId).isValid);
       setNotes(initialData.notes || '');
       setRestrictAccess(initialData.restrict_access || false);
       fetchPartnerUserAccess(initialData.id);
@@ -113,6 +117,7 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
         default_currency: 'HUF',
       });
       setTaxId('');
+      setTaxIdValid(false);
       setNotes('');
       setRestrictAccess(false);
       setSelectedUsers([]);
@@ -399,13 +404,14 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
               <TabsContent value="financial" className="mt-0 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="tax_id" className="text-base font-medium">{t('partners.taxId')}</Label>
+                    <Label htmlFor="tax_id" className="text-base font-medium">{t('partners.taxId')} *</Label>
                     <TaxIdInput
                       id="tax_id"
                       value={taxId}
                       onChange={setTaxId}
+                      onValidationChange={setTaxIdValid}
+                      required
                     />
-                    <p className="text-xs text-muted-foreground">Formátum: xxxxxxxx-x-xx</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="eu_vat_number" className="text-base font-medium">{t('partners.euVatNumber')}</Label>
@@ -616,7 +622,7 @@ export function PartnerDialog({ open, onClose, onSubmit, isSubmitting, initialDa
             <Button type="button" variant="outline" onClick={onClose} className="min-w-[100px]">
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="min-w-[100px]">
+            <Button type="submit" disabled={isSubmitting || !taxIdValid} className="min-w-[100px]">
               {t('common.save')}
             </Button>
           </div>
