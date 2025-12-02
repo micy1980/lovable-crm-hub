@@ -4,6 +4,35 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '@/contexts/CompanyContext';
 
+interface AddressData {
+  country: string;
+  county: string;
+  postal_code: string;
+  city: string;
+  street_name: string;
+  street_type: string;
+  house_number: string;
+  plot_number: string;
+  building: string;
+  staircase: string;
+  floor_door: string;
+}
+
+interface PartnerInput {
+  name: string;
+  email?: string;
+  phone?: string;
+  tax_id?: string;
+  eu_vat_number?: string;
+  category?: string;
+  notes?: string;
+  default_currency?: string;
+  restrict_access?: boolean;
+  user_access?: string[];
+  headquarters_address?: AddressData;
+  site_address?: AddressData;
+}
+
 export const usePartners = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -28,24 +57,47 @@ export const usePartners = () => {
     enabled: !!activeCompany?.id,
   });
 
+  const saveAddresses = async (partnerId: string, headquarters?: AddressData, site?: AddressData) => {
+    // Delete existing addresses
+    await supabase
+      .from('partner_addresses')
+      .delete()
+      .eq('partner_id', partnerId);
+
+    const addressesToInsert = [];
+
+    if (headquarters && Object.values(headquarters).some(v => v)) {
+      addressesToInsert.push({
+        partner_id: partnerId,
+        address_type: 'headquarters',
+        ...headquarters,
+      });
+    }
+
+    if (site && Object.values(site).some(v => v)) {
+      addressesToInsert.push({
+        partner_id: partnerId,
+        address_type: 'site',
+        ...site,
+      });
+    }
+
+    if (addressesToInsert.length > 0) {
+      const { error } = await supabase
+        .from('partner_addresses')
+        .insert(addressesToInsert);
+      
+      if (error) throw error;
+    }
+  };
+
   const createPartner = useMutation({
-    mutationFn: async (values: { 
-      name: string; 
-      email?: string; 
-      phone?: string; 
-      address?: string; 
-      tax_id?: string;
-      eu_vat_number?: string;
-      category?: string; 
-      notes?: string;
-      restrict_access?: boolean;
-      user_access?: string[];
-    }) => {
+    mutationFn: async (values: PartnerInput) => {
       if (!activeCompany?.id) {
         throw new Error('No company selected');
       }
 
-      const { user_access, ...partnerData } = values;
+      const { user_access, headquarters_address, site_address, ...partnerData } = values;
 
       const { data, error } = await supabase
         .from('partners')
@@ -57,6 +109,9 @@ export const usePartners = () => {
         .single();
 
       if (error) throw error;
+
+      // Save addresses
+      await saveAddresses(data.id, headquarters_address, site_address);
 
       // Add user access records if restriction is enabled
       if (values.restrict_access && user_access && user_access.length > 0) {
@@ -89,7 +144,7 @@ export const usePartners = () => {
   });
 
   const updatePartner = useMutation({
-    mutationFn: async ({ id, user_access, ...values }: any) => {
+    mutationFn: async ({ id, user_access, headquarters_address, site_address, ...values }: PartnerInput & { id: string }) => {
       const { data, error } = await supabase
         .from('partners')
         .update(values)
@@ -99,14 +154,15 @@ export const usePartners = () => {
 
       if (error) throw error;
 
+      // Save addresses
+      await saveAddresses(id, headquarters_address, site_address);
+
       // Update user access records
-      // First delete all existing access records
       await supabase
         .from('partner_user_access')
         .delete()
         .eq('partner_id', id);
 
-      // Then add new ones if restriction is enabled
       if (values.restrict_access && user_access && user_access.length > 0 && activeCompany?.id) {
         const accessRecords = user_access.map((userId: string) => ({
           partner_id: id,

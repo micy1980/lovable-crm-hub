@@ -499,6 +499,71 @@ export type Database = {
           },
         ]
       }
+      partner_addresses: {
+        Row: {
+          address_type: string
+          building: string | null
+          city: string | null
+          country: string | null
+          county: string | null
+          created_at: string | null
+          floor_door: string | null
+          house_number: string | null
+          id: string
+          partner_id: string
+          plot_number: string | null
+          postal_code: string | null
+          staircase: string | null
+          street_name: string | null
+          street_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address_type: string
+          building?: string | null
+          city?: string | null
+          country?: string | null
+          county?: string | null
+          created_at?: string | null
+          floor_door?: string | null
+          house_number?: string | null
+          id?: string
+          partner_id: string
+          plot_number?: string | null
+          postal_code?: string | null
+          staircase?: string | null
+          street_name?: string | null
+          street_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address_type?: string
+          building?: string | null
+          city?: string | null
+          country?: string | null
+          county?: string | null
+          created_at?: string | null
+          floor_door?: string | null
+          house_number?: string | null
+          id?: string
+          partner_id?: string
+          plot_number?: string | null
+          postal_code?: string | null
+          staircase?: string | null
+          street_name?: string | null
+          street_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_addresses_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_user_access: {
         Row: {
           company_id: string
@@ -558,6 +623,7 @@ export type Database = {
           category: string | null
           company_id: string | null
           created_at: string | null
+          default_currency: string | null
           deleted_at: string | null
           email: string | null
           eu_vat_number: string | null
@@ -574,6 +640,7 @@ export type Database = {
           category?: string | null
           company_id?: string | null
           created_at?: string | null
+          default_currency?: string | null
           deleted_at?: string | null
           email?: string | null
           eu_vat_number?: string | null
@@ -590,6 +657,7 @@ export type Database = {
           category?: string | null
           company_id?: string | null
           created_at?: string | null
+          default_currency?: string | null
           deleted_at?: string | null
           email?: string | null
           eu_vat_number?: string | null
