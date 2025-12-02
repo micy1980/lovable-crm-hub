@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -28,6 +28,33 @@ const formatAddress = (address: any) => {
 
 type ColumnKey = 'name' | 'category' | 'headquarters' | 'site' | 'mailing' | 'phone' | 'email' | 'taxId' | 'euVatNumber' | 'currency';
 
+const STORAGE_KEY = 'partners-visible-columns';
+
+const defaultColumns: Record<ColumnKey, boolean> = {
+  name: true,
+  category: true,
+  headquarters: true,
+  site: false,
+  mailing: false,
+  phone: true,
+  email: true,
+  taxId: true,
+  euVatNumber: false,
+  currency: false,
+};
+
+const loadColumnSettings = (): Record<ColumnKey, boolean> => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return { ...defaultColumns, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.error('Failed to load column settings', e);
+  }
+  return defaultColumns;
+};
+
 const Partners = () => {
   const { t } = useTranslation();
   const { partners, isLoading, createPartner, updatePartner } = usePartners();
@@ -35,18 +62,11 @@ const Partners = () => {
   const [editingPartner, setEditingPartner] = useState<any>(null);
   const { canEdit, checkReadOnly } = useReadOnlyMode();
   
-  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>({
-    name: true,
-    category: true,
-    headquarters: true,
-    site: false,
-    mailing: false,
-    phone: true,
-    email: true,
-    taxId: true,
-    euVatNumber: false,
-    currency: false,
-  });
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(loadColumnSettings);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   const columnConfig: { key: ColumnKey; label: string }[] = [
     { key: 'name', label: t('partners.name') },
