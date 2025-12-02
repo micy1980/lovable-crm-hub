@@ -18,6 +18,7 @@ interface DayGridProps {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const DAY_GRID_TEMPLATE = '80px minmax(0, 1fr)';
 
 export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGridProps) => {
   const { t, i18n } = useTranslation();
@@ -55,29 +56,68 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
   const isSelected = selectedDate && isSameDay(currentDate, selectedDate);
   const allDayTasks = getAllDayTasks();
 
-  // Header highlight only
-  const headerHighlight = isToday
-    ? "bg-primary/10 dark:bg-primary/20 text-primary font-bold ring-2 ring-inset ring-primary"
+  // Column highlight background
+  const columnHighlight = isToday 
+    ? 'bg-primary/20 dark:bg-primary/15' 
+    : isSelected 
+      ? 'bg-emerald-500/20 dark:bg-emerald-500/15'
+      : '';
+
+  // Header border (top + sides)
+  const headerBorder = isToday
+    ? 'border-2 border-primary border-b-0'
     : isSelected
-      ? "bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500"
-      : "";
+      ? 'border-2 border-emerald-500 border-b-0'
+      : 'border border-transparent border-b-0';
+
+  // Middle cell borders (sides only)
+  const middleBorder = isToday
+    ? 'border-x-2 border-primary'
+    : isSelected
+      ? 'border-x-2 border-emerald-500'
+      : 'border-x border-transparent';
+
+  // Bottom cell border (sides + bottom)
+  const bottomBorder = isToday
+    ? 'border-x-2 border-b-2 border-primary'
+    : isSelected
+      ? 'border-x-2 border-b-2 border-emerald-500'
+      : 'border-x border-b border-transparent';
+
+  // Text styling for header
+  const headerText = isToday
+    ? 'text-primary font-bold'
+    : isSelected
+      ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+      : '';
 
   return (
     <div className="w-full border rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="grid grid-cols-[60px_1fr] border-b bg-muted/30">
+      <div 
+        className="grid border-b bg-muted/30"
+        style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
+      >
         <div className="py-3 text-center text-sm font-medium border-r"></div>
-        <div className={cn("py-3 text-center text-sm font-medium", headerHighlight)}>
+        <div className={cn(
+          "py-3 text-center text-sm font-medium",
+          columnHighlight,
+          headerBorder,
+          headerText
+        )}>
           {format(currentDate, 'yyyy. MMMM d. EEEE', { locale })}
         </div>
       </div>
 
       {/* All-day row */}
-      <div className="grid grid-cols-[60px_1fr] border-b">
+      <div 
+        className="grid border-b"
+        style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
+      >
         <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
           {t('calendar.allDay', 'Egész nap')}
         </div>
-        <div className="min-h-[40px] p-1">
+        <div className={cn("min-h-[40px] p-1", columnHighlight, middleBorder)}>
           {allDayTasks.slice(0, 3).map((task) => (
             <div
               key={task.id}
@@ -96,32 +136,43 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
         </div>
       </div>
 
-      {/* Hourly grid */}
-      <div className="max-h-[500px] overflow-y-auto">
-        {HOURS.map((hour) => {
-          const hourTasks = getTasksForHour(hour);
-          return (
-            <div key={hour} className="grid grid-cols-[60px_1fr] border-b last:border-b-0">
-              <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
-                {String(hour).padStart(2, '0')}:00
+      {/* Hourly grid with external scrollbar */}
+      <div className="relative">
+        <div className="max-h-[500px] overflow-y-auto pr-3 -mr-3">
+          {HOURS.map((hour, hourIndex) => {
+            const hourTasks = getTasksForHour(hour);
+            const isLastHour = hourIndex === HOURS.length - 1;
+            return (
+              <div 
+                key={hour} 
+                className="grid border-b last:border-b-0"
+                style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
+              >
+                <div className="py-2 px-1 text-xs text-muted-foreground border-r text-right pr-2">
+                  {String(hour).padStart(2, '0')}:00
+                </div>
+                <div className={cn(
+                  "min-h-[44px] p-0.5",
+                  columnHighlight,
+                  isLastHour ? bottomBorder : middleBorder
+                )}>
+                  {hourTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={cn(
+                        "text-xs p-1 rounded truncate cursor-pointer border mb-1",
+                        getStatusColor(task.status)
+                      )}
+                      onClick={() => onTaskClick(task)}
+                    >
+                      {format(new Date(task.deadline!), 'HH:mm', { locale })} - {task.title}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="min-h-[44px] p-0.5">
-                {hourTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={cn(
-                      "text-xs p-1 rounded truncate cursor-pointer border mb-1",
-                      getStatusColor(task.status)
-                    )}
-                    onClick={() => onTaskClick(task)}
-                  >
-                    {format(new Date(task.deadline!), 'HH:mm', { locale })} - {task.title}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
