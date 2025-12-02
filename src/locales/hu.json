@@ -134,6 +134,8 @@
     "dark": "Sötét",
     "system": "Rendszer",
     "actions": "Műveletek",
+    "columns": "Oszlopok",
+    "visibleColumns": "Látható oszlopok",
     "yes": "Igen",
     "no": "Nem",
     "errors": {

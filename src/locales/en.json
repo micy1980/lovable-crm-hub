@@ -134,6 +134,8 @@
     "dark": "Dark",
     "system": "System",
     "actions": "Actions",
+    "columns": "Columns",
+    "visibleColumns": "Visible columns",
     "yes": "Yes",
     "no": "No",
     "errors": {
