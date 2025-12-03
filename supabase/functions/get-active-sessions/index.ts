@@ -79,13 +79,31 @@ serve(async (req) => {
     // Create a map of profiles by id
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
+    // Get inactivity timeout from system settings (default 5 minutes)
+    const { data: inactivitySetting } = await supabaseAdmin
+      .from('system_settings')
+      .select('setting_value')
+      .eq('setting_key', 'inactivity_logout_minutes')
+      .single();
+
+    const inactivityMinutes = inactivitySetting?.setting_value 
+      ? parseInt(inactivitySetting.setting_value, 10) 
+      : 5;
+
     // Filter and map to active sessions
-    // Consider a session "active" if user signed in within the last 24 hours
+    // Consider a session "active" only if user signed in within the inactivity timeout
     const now = new Date();
+    const cutoffTime = new Date(now.getTime() - inactivityMinutes * 60 * 1000);
+
     const sessions = authUsers.users
       .filter(u => {
         const profile = profileMap.get(u.id);
-        return profile?.is_active !== false; // Only include active users
+        if (profile?.is_active === false) return false;
+        
+        // Only include users who signed in within the inactivity window
+        if (!u.last_sign_in_at) return false;
+        const signInTime = new Date(u.last_sign_in_at);
+        return signInTime >= cutoffTime;
       })
       .map(u => {
         const profile = profileMap.get(u.id);
@@ -97,7 +115,6 @@ serve(async (req) => {
           created_at: u.created_at,
         };
       })
-      .filter(s => s.last_sign_in_at) // Only users who have signed in
       .sort((a, b) => {
         // Sort by last sign in, most recent first
         const dateA = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0;
@@ -105,7 +122,7 @@ serve(async (req) => {
         return dateB - dateA;
       });
 
-    console.log(`Returning ${sessions.length} active sessions`);
+    console.log(`Returning ${sessions.length} active sessions (cutoff: ${cutoffTime.toISOString()})`);
 
     return new Response(
       JSON.stringify({ sessions }),
