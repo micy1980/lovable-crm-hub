@@ -2,13 +2,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoginAttemptsTab } from '@/components/accounts/LoginAttemptsTab';
 import { LockedAccountsTab } from '@/components/accounts/LockedAccountsTab';
 import { ActiveSessionsTab } from '@/components/accounts/ActiveSessionsTab';
+import { UserList } from '@/components/users/UserList';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { isSuperAdmin } from '@/lib/roleUtils';
+import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { Navigate } from 'react-router-dom';
 
 const AccountManagement = () => {
   const { data: profile, isLoading } = useUserProfile();
   const isSuper = isSuperAdmin(profile);
+  const isAdmin = isAdminOrAbove(profile);
 
   if (isLoading) {
     return (
@@ -18,8 +20,8 @@ const AccountManagement = () => {
     );
   }
 
-  // Only super admins can access this page
-  if (!isSuper) {
+  // Only admins and super admins can access this page
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -32,24 +34,33 @@ const AccountManagement = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="sessions" className="space-y-4">
+      <Tabs defaultValue="users" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="sessions">Aktív Sessionök</TabsTrigger>
-          <TabsTrigger value="locked">Zárolt Fiókok</TabsTrigger>
-          <TabsTrigger value="attempts">Login Kísérletek</TabsTrigger>
+          <TabsTrigger value="users">Felhasználók</TabsTrigger>
+          {isSuper && <TabsTrigger value="sessions">Aktív Sessionök</TabsTrigger>}
+          {isSuper && <TabsTrigger value="locked">Zárolt Fiókok</TabsTrigger>}
+          {isSuper && <TabsTrigger value="attempts">Login Kísérletek</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="sessions">
-          <ActiveSessionsTab />
+        <TabsContent value="users">
+          <UserList />
         </TabsContent>
 
-        <TabsContent value="locked">
-          <LockedAccountsTab />
-        </TabsContent>
+        {isSuper && (
+          <>
+            <TabsContent value="sessions">
+              <ActiveSessionsTab />
+            </TabsContent>
 
-        <TabsContent value="attempts">
-          <LoginAttemptsTab />
-        </TabsContent>
+            <TabsContent value="locked">
+              <LockedAccountsTab />
+            </TabsContent>
+
+            <TabsContent value="attempts">
+              <LoginAttemptsTab />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );

@@ -59,7 +59,7 @@ export function AppSidebar() {
     item.feature === null || hasFeatureAccess(item.feature)
   );
 
-  // Check if we're in the settings or account management area
+  // Check if we're in the settings or account management area (Admin can also access account-management now)
   const isSettingsActive = location.pathname === '/settings' || location.pathname === '/account-management';
 
   return (
@@ -123,21 +123,19 @@ export function AppSidebar() {
                           </NavLink>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      {isSuper && (
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <NavLink
-                              to="/account-management"
-                              end
-                              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
-                              activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                            >
-                              <UserCog className="h-4 w-4" />
-                              <span>Fiókok Kezelése</span>
-                            </NavLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      )}
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild>
+                          <NavLink
+                            to="/account-management"
+                            end
+                            className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                            activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                          >
+                            <UserCog className="h-4 w-4" />
+                            <span>Fiókok Kezelése</span>
+                          </NavLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

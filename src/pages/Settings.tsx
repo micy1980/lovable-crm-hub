@@ -3,13 +3,12 @@ import { useUserCompanies } from '@/hooks/useUserCompanies';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompanyList } from '@/components/companies/CompanyList';
-import { UserList } from '@/components/users/UserList';
 import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { SystemSettings } from '@/components/settings/SystemSettings';
 import { TwoFactorAuth } from '@/components/settings/TwoFactorAuth';
 import { EmailSettings } from '@/components/settings/EmailSettings';
 import { useTranslation } from 'react-i18next';
-import { isSuperAdmin as checkSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
+import { isSuperAdmin as checkSuperAdmin } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +22,6 @@ const Settings = () => {
   const queryClient = useQueryClient();
 
   const isSuperAdmin = checkSuperAdmin(profile);
-  const isAdmin = isAdminOrAbove(profile);
 
   // Update default company mutation
   const updateDefaultCompany = useMutation({
@@ -66,7 +64,6 @@ const Settings = () => {
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
           <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
-          {isAdmin && <TabsTrigger value="users">{t('settings.users')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="companies">{t('settings.companies')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="masterdata">{t('settings.masterdata')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="system">{t('settings.system')}</TabsTrigger>}
@@ -158,12 +155,6 @@ const Settings = () => {
           {/* Two-Factor Authentication */}
           <TwoFactorAuth />
         </TabsContent>
-
-        {isAdmin && (
-          <TabsContent value="users">
-            <UserList />
-          </TabsContent>
-        )}
 
         {isSuperAdmin && (
           <>

@@ -104,7 +104,7 @@ export const ActiveSessionsTab = () => {
                   </TableHead>
                   <TableHead>Felhasználó</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Státusz</TableHead>
+                  <TableHead>Utolsó bejelentkezés</TableHead>
                   <TableHead className="text-right">Műveletek</TableHead>
                 </TableRow>
               </TableHeader>
@@ -134,9 +134,20 @@ export const ActiveSessionsTab = () => {
                       </TableCell>
                       <TableCell>{session.user_email}</TableCell>
                       <TableCell>
-                        <Badge variant="default" className="bg-green-500">
-                          Aktív
-                        </Badge>
+                        {session.last_sign_in_at ? (
+                          <span className="text-sm">
+                            {new Date(session.last_sign_in_at).toLocaleString('hu-HU', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                            })}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

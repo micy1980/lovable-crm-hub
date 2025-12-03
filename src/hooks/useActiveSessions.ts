@@ -20,35 +20,21 @@ export const useActiveSessions = () => {
   const { data: activeSessions = [], isLoading } = useQuery({
     queryKey: ['active-sessions'],
     queryFn: async () => {
-      // Get all active users with their last sign in
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, is_active')
-        .eq('is_active', true)
-        .is('deleted_at', null)
-        .order('email');
+      // Call edge function to get real session data from auth.users
+      const { data, error } = await supabase.functions.invoke('get-active-sessions');
 
       if (error) {
         console.error('Error fetching active sessions:', error);
         throw error;
       }
 
-      // For now, we show active users as "sessions" since Supabase doesn't expose session details
-      // In production, you'd use admin API or custom session tracking
-      return (profiles || []).map(p => ({
-        user_id: p.id,
-        user_email: p.email,
-        user_full_name: p.full_name,
-        last_sign_in_at: null, // Would need admin API access
-        created_at: null,
-      })) as ActiveSession[];
+      return (data?.sessions || []) as ActiveSession[];
     },
     enabled: isSuper,
   });
 
   const terminateSession = useMutation({
     mutationFn: async (userId: string) => {
-      // Call edge function to terminate user's sessions
       const { data, error } = await supabase.functions.invoke('terminate-user-session', {
         body: { userId },
       });
