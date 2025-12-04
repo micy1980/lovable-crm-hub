@@ -17,3 +17,27 @@ verify_jwt = false
 
 [functions.check-api-key-status]
 verify_jwt = true
+
+[functions.get-active-sessions]
+verify_jwt = true
+
+[functions.terminate-user-session]
+verify_jwt = true
+
+[functions.admin-create-user]
+verify_jwt = true
+
+[functions.admin-delete-user]
+verify_jwt = true
+
+[functions.admin-update-password]
+verify_jwt = true
+
+[functions.admin-update-user]
+verify_jwt = true
+
+[functions.generate-recovery-codes]
+verify_jwt = true
+
+[functions.verify-2fa-token]
+verify_jwt = true
