@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2 } from 'lucide-react';
+import { Building2, Sun, Moon } from 'lucide-react';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -19,6 +19,7 @@ import { validatePasswordStrength } from '@/lib/passwordValidation';
 import { useQueryClient } from '@tanstack/react-query';
 import { use2FA } from '@/hooks/use2FA';
 import { useAppLogo } from '@/hooks/useAppLogo';
+import { useTheme } from 'next-themes';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -36,6 +37,7 @@ const Auth = () => {
   const { check2FARequired } = use2FA();
   const queryClient = useQueryClient();
   const { logoUrl } = useAppLogo();
+  const { theme, setTheme } = useTheme();
   
   const authSchema = z.object({
     email: z.string().email({ message: t('auth.invalidEmail') }),
@@ -392,7 +394,14 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/10 p-4">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         <LanguageSelector variant="outline" />
       </div>
       <Card className="w-full max-w-md shadow-lg">
