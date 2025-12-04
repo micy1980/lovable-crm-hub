@@ -9,9 +9,10 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { format } from 'date-fns';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import { validatePasswordWithRoles } from '@/lib/passwordValidation';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserEditFormProps {
   user: any;
@@ -31,6 +32,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const [givenNameTouched, setGivenNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [isSendingInvitation, setIsSendingInvitation] = useState(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: user?.email || '',
@@ -47,9 +49,45 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   
   const currentUserRole = profile?.role || 'normal';
   const targetUserRole = user?.role || 'normal';
+  const isUserRegistered = !!user?.registered_at;
+  const canSendInvitation = isSuperAdmin(profile) && !isUserRegistered;
 
   // Checkbox is disabled if password is empty
   const isCheckboxEnabled = password && password.trim() !== '';
+
+  const handleSendInvitation = async () => {
+    setIsSendingInvitation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-registration-invite', {
+        body: { userId: user.id },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: t('invitation.invitationError'),
+          description: data.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: t('invitation.invitationSent'),
+        description: t('invitation.invitationSentDescription'),
+      });
+    } catch (error: any) {
+      console.error('Failed to send invitation:', error);
+      toast({
+        title: t('invitation.invitationError'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingInvitation(false);
+    }
+  };
 
   const onSubmit = async (data: any) => {
     let hasError = false;
@@ -313,14 +351,49 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
       {user?.user_code && (
         <div className="space-y-2">
           <Label>Felhasználói kód</Label>
-          <Input
-            value={user.user_code}
-            disabled
-            className="font-mono bg-muted"
-          />
-          <p className="text-xs text-muted-foreground">
-            Ez a kód automatikusan generálódott és nem módosítható
-          </p>
+          <div className="flex gap-2">
+            <Input
+              value={user.user_code}
+              disabled
+              className="font-mono bg-muted flex-1"
+            />
+            {canSendInvitation && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSendInvitation}
+                disabled={isSendingInvitation}
+                className="shrink-0"
+              >
+                {isSendingInvitation ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                {user?.invitation_sent_at ? t('invitation.resendInvitation') : t('invitation.sendInvitation')}
+              </Button>
+            )}
+          </div>
+          {user?.invitation_sent_at && !isUserRegistered && (
+            <p className="text-xs text-muted-foreground">
+              {t('invitation.status.invited')} - {format(new Date(user.invitation_sent_at), 'yyyy-MM-dd HH:mm')}
+              {user?.invitation_expires_at && (
+                <span className="ml-2">
+                  ({t('invitation.expiresAt', { date: format(new Date(user.invitation_expires_at), 'yyyy-MM-dd HH:mm') })})
+                </span>
+              )}
+            </p>
+          )}
+          {isUserRegistered && (
+            <p className="text-xs text-green-600">
+              {t('invitation.status.registered')} - {format(new Date(user.registered_at), 'yyyy-MM-dd HH:mm')}
+            </p>
+          )}
+          {!user?.invitation_sent_at && !isUserRegistered && (
+            <p className="text-xs text-muted-foreground">
+              {t('invitation.status.notInvited')}
+            </p>
+          )}
         </div>
       )}
 

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy load all pages for better performance
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
+const Register = lazy(() => import("./pages/Register"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 const Partners = lazy(() => import("./pages/Partners"));
 const Projects = lazy(() => import("./pages/Projects"));
@@ -66,6 +67,7 @@ const App = () => {
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/register" element={<Register />} />
                     <Route path="/change-password" element={<ChangePassword />} />
                     <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
                     <Route path="/partners" element={<MainLayout><Partners /></MainLayout>} />

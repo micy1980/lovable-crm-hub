@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen, LockKeyhole, Unlock } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen, LockKeyhole, Unlock, Mail, UserCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -243,7 +243,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[220px_80px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
+              <div className="grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] gap-4 px-4 py-3 bg-muted/30 border-b border-border">
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
                   onClick={() => handleSort('fullName')}
@@ -256,6 +256,9 @@ export function UserList() {
                 </div>
                 <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
                   {t('users.status')}
+                </div>
+                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                  Regisztráció
                 </div>
                 <div 
                   className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
@@ -299,7 +302,7 @@ export function UserList() {
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[220px_80px_80px_100px_60px_150px_110px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
@@ -366,6 +369,58 @@ export function UserList() {
                                 </Badge>
                               ) : (
                                 <span className="text-muted-foreground">-</span>
+                              )}
+                            </div>
+
+                            {/* Registration Status Column */}
+                            <div className="flex items-center justify-center">
+                              {user.registered_at ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge className="text-xs font-medium bg-green-600 text-white hover:bg-green-700 cursor-help gap-1">
+                                        <UserCheck className="h-3 w-3" />
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {t('invitation.status.registered')} - {format(new Date(user.registered_at), 'yyyy-MM-dd HH:mm')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : user.invitation_sent_at ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge className="text-xs font-medium bg-yellow-600 text-white hover:bg-yellow-700 cursor-help gap-1">
+                                        <Mail className="h-3 w-3" />
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="text-xs">
+                                        <p>{t('invitation.status.invited')}</p>
+                                        <p>{format(new Date(user.invitation_sent_at), 'yyyy-MM-dd HH:mm')}</p>
+                                        {user.invitation_expires_at && (
+                                          <p className="text-yellow-300">
+                                            {new Date(user.invitation_expires_at) < new Date() ? 'Lejárt' : t('invitation.expiresAt', { date: format(new Date(user.invitation_expires_at), 'yyyy-MM-dd HH:mm') })}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-xs font-medium cursor-help gap-1">
+                                        <Clock className="h-3 w-3" />
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {t('invitation.status.notInvited')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               )}
                             </div>
 

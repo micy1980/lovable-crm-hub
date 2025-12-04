@@ -514,5 +514,50 @@
     "expiringTitle": "Licensz Hamarosan Lejár",
     "critical": "Kritikus",
     "warning": "Figyelmeztetés"
+  },
+  "register": {
+    "title": "Regisztráció befejezése",
+    "description": "Töltse ki az adatait a regisztráció befejezéséhez",
+    "email": "E-mail",
+    "emailDisabledHint": "A meghívóban kapott e-mail címet használjuk",
+    "userCode": "Regisztrációs kód",
+    "familyName": "Családi név",
+    "givenName": "Utónév",
+    "password": "Jelszó",
+    "confirmPassword": "Jelszó megerősítése",
+    "submit": "Regisztráció",
+    "alreadyRegistered": "Már van fiókja?",
+    "loginLink": "Bejelentkezés",
+    "success": "Sikeres regisztráció!",
+    "errors": {
+      "emailRequired": "E-mail cím megadása kötelező",
+      "codeRequired": "Regisztrációs kód megadása kötelező",
+      "familyNameRequired": "Családi név megadása kötelező",
+      "givenNameRequired": "Utónév megadása kötelező",
+      "passwordRequired": "Jelszó megadása kötelező",
+      "passwordTooShort": "A jelszónak legalább 8 karakter hosszúnak kell lennie",
+      "passwordMismatch": "A jelszavak nem egyeznek",
+      "invalidCode": "Érvénytelen regisztrációs kód",
+      "alreadyRegistered": "Ez a felhasználó már regisztrált",
+      "invitationExpired": "A meghívó lejárt. Kérjen új meghívót.",
+      "userNotFound": "Nem található meghívó ehhez az e-mail címhez",
+      "weakPassword": "A jelszó túl gyenge",
+      "generic": "Hiba történt a regisztráció során"
+    }
+  },
+  "invitation": {
+    "sendInvitation": "Regisztrációs kód küldése",
+    "sendingInvitation": "Küldés...",
+    "invitationSent": "Meghívó elküldve",
+    "invitationSentDescription": "A regisztrációs link elküldve a felhasználó e-mail címére",
+    "invitationError": "Nem sikerült elküldeni a meghívót",
+    "alreadyRegistered": "A felhasználó már regisztrált",
+    "status": {
+      "notInvited": "Nincs meghívva",
+      "invited": "Meghívó elküldve",
+      "registered": "Regisztrált"
+    },
+    "resendInvitation": "Új kód küldése",
+    "expiresAt": "Lejár: {{date}}"
   }
 }
