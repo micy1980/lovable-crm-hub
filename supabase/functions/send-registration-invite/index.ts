@@ -16,6 +16,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("send-registration-invite: Starting handler");
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -23,34 +25,48 @@ const handler = async (req: Request): Promise<Response> => {
     // Get authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("send-registration-invite: No authorization header");
       return new Response(
         JSON.stringify({ error: "No authorization header" }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Create client with user's token to verify SA status
-    const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    console.log("send-registration-invite: Auth header present");
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    // Use service role client for all operations
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Extract JWT token and verify user
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
     if (userError || !user) {
+      console.error("send-registration-invite: User verification failed:", userError);
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Unauthorized", details: userError?.message }),
         { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
+    console.log("send-registration-invite: User verified:", user.id);
+
     // Verify SA status
-    const { data: isSA } = await supabaseUser.rpc("is_super_admin", { _user_id: user.id });
-    if (!isSA) {
+    const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+      
+    if (callerProfileError || !callerProfile || callerProfile.role !== "super_admin") {
+      console.error("send-registration-invite: Not super admin:", callerProfile?.role);
       return new Response(
         JSON.stringify({ error: "Only super admins can send invitations" }),
         { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    console.log("send-registration-invite: SA verified");
 
     const { userId }: InviteRequest = await req.json();
 
@@ -60,9 +76,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    // Use service role client for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if user already registered
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -86,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate new user_code if not exists, otherwise generate new one for resend
+    // Generate new user_code
     const newUserCode = generateUserCode();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
