@@ -549,6 +549,7 @@
   },
   "invitation": {
     "sendInvitation": "Regisztrációs kód küldése",
+    "sendRegistrationCode": "Mentés és kód küldése",
     "sendingInvitation": "Küldés...",
     "invitationSent": "Meghívó elküldve",
     "invitationSentDescription": "A regisztrációs link elküldve a felhasználó e-mail címére",

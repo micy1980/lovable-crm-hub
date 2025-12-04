@@ -549,6 +549,7 @@
   },
   "invitation": {
     "sendInvitation": "Send Registration Code",
+    "sendRegistrationCode": "Save & Send Code",
     "sendingInvitation": "Sending...",
     "invitationSent": "Invitation Sent",
     "invitationSentDescription": "Registration link sent to user's email",

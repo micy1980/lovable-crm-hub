@@ -210,13 +210,16 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
         <Button type="button" variant="outline" onClick={onClose}>
           {t('common.cancel')}
         </Button>
+        <Button type="submit" variant="secondary" disabled={isSubmitting || !isInviteEnabled}>
+          {t('users.createUser')}
+        </Button>
         <Button 
           type="button" 
           disabled={isSubmitting || !isInviteEnabled}
           onClick={handleSendInvite}
         >
           <Send className="h-4 w-4 mr-2" />
-          {t('users.sendRegistrationCode')}
+          {t('invitation.sendRegistrationCode')}
         </Button>
       </div>
     </form>
