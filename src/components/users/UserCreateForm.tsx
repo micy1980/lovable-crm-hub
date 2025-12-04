@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
-import { Send } from 'lucide-react';
+import { Send, Save } from 'lucide-react';
 
 interface UserCreateFormProps {
   onSubmit: (data: any, sendInvite?: boolean) => void;
@@ -41,11 +41,11 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   
   const canCreateSA = isSuperAdmin(profile);
 
-  // Check if required fields for invite are filled
-  const isInviteEnabled = email?.trim() && familyName?.trim() && givenName?.trim() && 
+  // Check if required fields are filled
+  const isFormValid = email?.trim() && familyName?.trim() && givenName?.trim() && 
     /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
 
-  const handleFormSubmit = async (data: any) => {
+  const validateAndSubmit = async (data: any, sendInvite: boolean) => {
     let hasError = false;
 
     // Validate email is not empty
@@ -74,8 +74,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
     setEmailError(null);
     
     try {
-      // Always send invite - user will set password during registration
-      await onSubmit(data, true);
+      await onSubmit(data, sendInvite);
     } catch (error: any) {
       // Check if this is a duplicate email error
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
@@ -87,8 +86,11 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
     }
   };
 
+  const handleSaveOnly = handleSubmit((data) => validateAndSubmit(data, false));
+  const handleSaveAndSendCode = handleSubmit((data) => validateAndSubmit(data, true));
+
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <form className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">{t('users.email')} *</Label>
         <Input
@@ -203,8 +205,18 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
           {t('common.cancel')}
         </Button>
         <Button 
-          type="submit" 
-          disabled={isSubmitting || !isInviteEnabled}
+          type="button"
+          variant="secondary"
+          onClick={handleSaveOnly}
+          disabled={isSubmitting || !isFormValid}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {t('common.save')}
+        </Button>
+        <Button 
+          type="button"
+          onClick={handleSaveAndSendCode}
+          disabled={isSubmitting || !isFormValid}
         >
           <Send className="h-4 w-4 mr-2" />
           {t('invitation.sendRegistrationCode')}

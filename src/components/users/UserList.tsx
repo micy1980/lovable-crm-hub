@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen, LockKeyhole, Unlock, Mail, UserCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 export function UserList() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
   const { data: currentProfile } = useUserProfile();
   const { users, isLoading, toggleUserFlag, updateUser, createUser, deleteUser } = useUsers();
@@ -76,7 +78,7 @@ export function UserList() {
 
   const handleCreateUser = async (data: any, sendInvite: boolean = false) => {
     try {
-      const result = await createUser.mutateAsync({ ...data, sendInvite });
+      const result = await createUser.mutateAsync({ ...data, sendInvite: false });
       
       // If sendInvite is true and user was created successfully, send registration invite
       if (sendInvite && result?.id) {
@@ -84,6 +86,9 @@ export function UserList() {
           const { data: inviteData, error } = await supabase.functions.invoke('send-registration-invite', {
             body: { userId: result.id }
           });
+          
+          // Force refresh of users list to update badge
+          queryClient.invalidateQueries({ queryKey: ['users'] });
           
           if (error) {
             console.error('Failed to send invite:', error);
@@ -118,6 +123,10 @@ export function UserList() {
             variant: 'destructive',
           });
         }
+      } else if (!sendInvite) {
+        toast({
+          title: t('users.userCreated'),
+        });
       }
       
       setIsCreateOpen(false);
