@@ -116,15 +116,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Password is required unless sendInvite is true (user will set password during registration)
-    if (!payload.sendInvite && !payload.password) {
-      console.error('[admin-create-user] Password required when not sending invite')
-      return new Response(
-        JSON.stringify({ error: 'Password is required when not sending invite' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
     // Admin cannot create SA users
     if (callerProfile.role === 'admin' && payload.role === 'super_admin') {
       console.error('[admin-create-user] Admin cannot create SA users')
@@ -158,10 +149,8 @@ Deno.serve(async (req) => {
     // Build full name from family and given names
     const fullName = `${payload.familyName} ${payload.givenName}`
 
-    // Generate temporary password if sending invite (user will set their own password during registration)
-    const tempPassword = payload.sendInvite 
-      ? Array.from({ length: 24 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%'[Math.floor(Math.random() * 68)]).join('')
-      : payload.password
+    // Always generate temporary password - user will set their own during registration
+    const tempPassword = Array.from({ length: 24 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%'[Math.floor(Math.random() * 68)]).join('')
 
     // Step 4: Generate unique user_code
     const CODE_LENGTH = 5

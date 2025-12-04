@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,6 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const [familyNameTouched, setFamilyNameTouched] = useState(false);
   const [givenNameTouched, setGivenNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
-  const sendInviteRef = useRef(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
@@ -47,9 +46,6 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
     /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
 
   const handleFormSubmit = async (data: any) => {
-    const sendInvite = sendInviteRef.current;
-    sendInviteRef.current = false; // Reset after reading
-    
     let hasError = false;
 
     // Validate email is not empty
@@ -78,7 +74,8 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
     setEmailError(null);
     
     try {
-      await onSubmit(data, sendInvite);
+      // Always send invite - user will set password during registration
+      await onSubmit(data, true);
     } catch (error: any) {
       // Check if this is a duplicate email error
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
@@ -88,11 +85,6 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       // Re-throw other errors to be handled by the caller
       throw error;
     }
-  };
-
-  const handleSendInvite = () => {
-    sendInviteRef.current = true;
-    handleSubmit(handleFormSubmit)();
   };
 
   return (
@@ -210,13 +202,9 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
         <Button type="button" variant="outline" onClick={onClose}>
           {t('common.cancel')}
         </Button>
-        <Button type="submit" variant="secondary" disabled={isSubmitting || !isInviteEnabled}>
-          {t('users.createUser')}
-        </Button>
         <Button 
-          type="button" 
+          type="submit" 
           disabled={isSubmitting || !isInviteEnabled}
-          onClick={handleSendInvite}
         >
           <Send className="h-4 w-4 mr-2" />
           {t('invitation.sendRegistrationCode')}
