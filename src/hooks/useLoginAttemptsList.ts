@@ -1,11 +1,37 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from './useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 
 export const useLoginAttemptsList = (limit = 100) => {
+  const queryClient = useQueryClient();
   const { data: currentProfile } = useUserProfile();
   const isSuper = isSuperAdmin(currentProfile);
+
+  // Real-time subscription for login_attempts
+  useEffect(() => {
+    if (!isSuper) return;
+
+    const channel = supabase
+      .channel('login-attempts-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'login_attempts'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['login-attempts', limit] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isSuper, queryClient, limit]);
 
   const { data: loginAttempts = [], isLoading } = useQuery({
     queryKey: ['login-attempts', limit],
@@ -23,8 +49,7 @@ export const useLoginAttemptsList = (limit = 100) => {
 
       return data || [];
     },
-    enabled: isSuper, // Only fetch if user is super admin
-    refetchInterval: 10000, // Auto-refresh every 10 seconds
+    enabled: isSuper,
   });
 
   return {
