@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { validatePasswordStrength } from '@/lib/passwordValidation';
 import { useTheme } from 'next-themes';
+import { useAppLogo } from '@/hooks/useAppLogo';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ export default function Register() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
+  const { logoUrl } = useAppLogo();
   
   const [email, setEmail] = useState('');
   const [userCode, setUserCode] = useState('');
@@ -187,8 +189,14 @@ export default function Register() {
 
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <UserPlus className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4 w-12 h-12 flex items-center justify-center">
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="h-12 w-12 object-contain" />
+            ) : (
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <UserPlus className="h-6 w-6 text-primary" />
+              </div>
+            )}
           </div>
           <CardTitle className="text-2xl">{t('register.title')}</CardTitle>
           <CardDescription>{t('register.description')}</CardDescription>

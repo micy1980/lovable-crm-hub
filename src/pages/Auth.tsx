@@ -18,6 +18,7 @@ import { useLoginAttempts } from '@/hooks/useLoginAttempts';
 import { validatePasswordStrength } from '@/lib/passwordValidation';
 import { useQueryClient } from '@tanstack/react-query';
 import { use2FA } from '@/hooks/use2FA';
+import { useAppLogo } from '@/hooks/useAppLogo';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,7 @@ const Auth = () => {
   const { logLoginAttempt, checkFailedAttempts } = useLoginAttempts();
   const { check2FARequired } = use2FA();
   const queryClient = useQueryClient();
+  const { logoUrl } = useAppLogo();
   
   const authSchema = z.object({
     email: z.string().email({ message: t('auth.invalidEmail') }),
@@ -396,9 +398,13 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Building2 className="h-8 w-8 text-primary" />
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="h-16 w-16 object-contain" />
+            ) : (
+              <div className="bg-primary/10 p-3 rounded-full">
+                <Building2 className="h-8 w-8 text-primary" />
+              </div>
+            )}
           </div>
           <CardTitle className="text-2xl font-bold">{t('app.name')}</CardTitle>
           <CardDescription>

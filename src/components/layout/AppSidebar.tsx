@@ -32,6 +32,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { useLocation } from 'react-router-dom';
+import { useAppLogo } from '@/hooks/useAppLogo';
 
 export function AppSidebar() {
   const { t } = useTranslation();
@@ -39,6 +40,7 @@ export function AppSidebar() {
   const { hasFeatureAccess } = useFeatureAccess();
   const location = useLocation();
   const isSuper = isSuperAdmin(profile);
+  const { logoUrl } = useAppLogo();
   
   const mainMenuItems = [
     { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard, feature: null },
@@ -66,9 +68,13 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
-          <div className="bg-primary p-2 rounded-md">
-            <Building2 className="h-5 w-5 text-primary-foreground" />
-          </div>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-10 w-10 rounded-md object-contain" />
+          ) : (
+            <div className="bg-primary p-2 rounded-md">
+              <Building2 className="h-5 w-5 text-primary-foreground" />
+            </div>
+          )}
           <div>
             <h2 className="font-semibold text-sidebar-foreground">{t('app.name')}</h2>
             <p className="text-xs text-sidebar-foreground/60">Multi-Company</p>
