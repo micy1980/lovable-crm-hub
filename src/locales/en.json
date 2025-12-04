@@ -554,6 +554,10 @@
     "invitationSentDescription": "Registration link sent to user's email",
     "invitationError": "Failed to send invitation",
     "alreadyRegistered": "User is already registered",
+    "emailFailed": "Email sending failed",
+    "shareManually": "Registration code and link can be shared manually:",
+    "code": "Code",
+    "link": "Link",
     "status": {
       "notInvited": "Not Invited",
       "invited": "Invitation Sent",
