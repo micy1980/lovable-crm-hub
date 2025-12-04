@@ -514,5 +514,50 @@
     "expiringTitle": "License Expiring Soon",
     "critical": "Critical",
     "warning": "Warning"
+  },
+  "register": {
+    "title": "Complete Registration",
+    "description": "Fill in your details to complete registration",
+    "email": "Email",
+    "emailDisabledHint": "We use the email address from your invitation",
+    "userCode": "Registration Code",
+    "familyName": "Family Name",
+    "givenName": "Given Name",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Register",
+    "alreadyRegistered": "Already have an account?",
+    "loginLink": "Sign in",
+    "success": "Registration successful!",
+    "errors": {
+      "emailRequired": "Email is required",
+      "codeRequired": "Registration code is required",
+      "familyNameRequired": "Family name is required",
+      "givenNameRequired": "Given name is required",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "invalidCode": "Invalid registration code",
+      "alreadyRegistered": "This user is already registered",
+      "invitationExpired": "Invitation has expired. Please request a new one.",
+      "userNotFound": "No invitation found for this email",
+      "weakPassword": "Password is too weak",
+      "generic": "An error occurred during registration"
+    }
+  },
+  "invitation": {
+    "sendInvitation": "Send Registration Code",
+    "sendingInvitation": "Sending...",
+    "invitationSent": "Invitation Sent",
+    "invitationSentDescription": "Registration link sent to user's email",
+    "invitationError": "Failed to send invitation",
+    "alreadyRegistered": "User is already registered",
+    "status": {
+      "notInvited": "Not Invited",
+      "invited": "Invitation Sent",
+      "registered": "Registered"
+    },
+    "resendInvitation": "Send New Code",
+    "expiresAt": "Expires: {{date}}"
   }
 }

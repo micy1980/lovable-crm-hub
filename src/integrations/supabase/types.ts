@@ -728,10 +728,14 @@ export type Database = {
           full_name: string | null
           given_name: string | null
           id: string
+          invitation_expires_at: string | null
+          invitation_sent_at: string | null
+          invitation_token: string | null
           is_active: boolean | null
           language: string | null
           must_change_password: boolean | null
           password_changed_at: string | null
+          registered_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           two_factor_enabled: boolean | null
           two_factor_secret: string | null
@@ -749,10 +753,14 @@ export type Database = {
           full_name?: string | null
           given_name?: string | null
           id: string
+          invitation_expires_at?: string | null
+          invitation_sent_at?: string | null
+          invitation_token?: string | null
           is_active?: boolean | null
           language?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
+          registered_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null
@@ -770,10 +778,14 @@ export type Database = {
           full_name?: string | null
           given_name?: string | null
           id?: string
+          invitation_expires_at?: string | null
+          invitation_sent_at?: string | null
+          invitation_token?: string | null
           is_active?: boolean | null
           language?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
+          registered_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           two_factor_enabled?: boolean | null
           two_factor_secret?: string | null
@@ -1332,6 +1344,17 @@ export type Database = {
       cleanup_expired_2fa_verifications: { Args: never; Returns: undefined }
       cleanup_expired_locks: { Args: never; Returns: undefined }
       cleanup_old_login_attempts: { Args: never; Returns: undefined }
+      complete_registration: {
+        Args: {
+          _email: string
+          _family_name: string
+          _full_name: string
+          _given_name: string
+          _password: string
+          _user_code: string
+        }
+        Returns: Json
+      }
       count_recent_failed_attempts: {
         Args: { _email: string; _minutes: number }
         Returns: number
@@ -1342,6 +1365,7 @@ export type Database = {
         Returns: undefined
       }
       generate_2fa_secret: { Args: never; Returns: string }
+      generate_invitation_token: { Args: never; Returns: string }
       generate_license_key: { Args: never; Returns: string }
       get_2fa_settings: {
         Args: never
@@ -1438,6 +1462,14 @@ export type Database = {
       lock_account_for_email: {
         Args: { _email: string; _minutes: number; _reason: string }
         Returns: undefined
+      }
+      prepare_user_invitation: {
+        Args: { _user_id: string }
+        Returns: {
+          email: string
+          expires_at: string
+          token: string
+        }[]
       }
       record_login_attempt: {
         Args: {
