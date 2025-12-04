@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -17,10 +18,33 @@ export const useActiveSessions = () => {
   const { data: currentProfile } = useUserProfile();
   const isSuper = isSuperAdmin(currentProfile);
 
+  // Real-time subscription for login_attempts (triggers refetch when someone logs in)
+  useEffect(() => {
+    if (!isSuper) return;
+
+    const channel = supabase
+      .channel('active-sessions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'login_attempts'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isSuper, queryClient]);
+
   const { data: activeSessions = [], isLoading } = useQuery({
     queryKey: ['active-sessions'],
     queryFn: async () => {
-      // Call edge function to get real session data from auth.users
       const { data, error } = await supabase.functions.invoke('get-active-sessions');
 
       if (error) {
@@ -31,7 +55,6 @@ export const useActiveSessions = () => {
       return (data?.sessions || []) as ActiveSession[];
     },
     enabled: isSuper,
-    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   const terminateSession = useMutation({
