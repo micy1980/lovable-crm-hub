@@ -1,5 +1,5 @@
 import { Resend } from "https://esm.sh/resend@4.0.0";
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 let cachedResend: Resend | null = null;
 let lastApiKey: string | null = null;
