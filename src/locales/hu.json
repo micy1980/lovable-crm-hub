@@ -60,7 +60,8 @@
     "passwordChangedSuccess": "Jelszó sikeresen megváltoztatva",
     "passwordChangeError": "Jelszó megváltoztatása sikertelen",
     "passwordsDoNotMatch": "A jelszavak nem egyeznek",
-    "notAuthenticated": "Nem vagy hitelesítve"
+    "notAuthenticated": "Nem vagy hitelesítve",
+    "passwordRequirements": "Legalább 8 karakter, kis- és nagybetű, szám és speciális karakter (!@#$%^&*)"
   },
   "2fa": {
     "title": "Kétfaktoros hitelesítés (2FA)",

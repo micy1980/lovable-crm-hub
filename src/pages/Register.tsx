@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,15 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { validatePasswordStrength } from '@/lib/passwordValidation';
+import { useTheme } from 'next-themes';
 
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { theme, setTheme } = useTheme();
   
   const [email, setEmail] = useState('');
   const [userCode, setUserCode] = useState('');
@@ -31,9 +34,13 @@ export default function Register() {
   useEffect(() => {
     const emailParam = searchParams.get('email');
     const codeParam = searchParams.get('code');
+    const familyNameParam = searchParams.get('familyName');
+    const givenNameParam = searchParams.get('givenName');
     
     if (emailParam) setEmail(emailParam);
     if (codeParam) setUserCode(codeParam);
+    if (familyNameParam) setFamilyName(familyNameParam);
+    if (givenNameParam) setGivenName(givenNameParam);
   }, [searchParams]);
 
   const validate = () => {
@@ -51,11 +58,17 @@ export default function Register() {
     if (!givenName.trim()) {
       newErrors.givenName = t('register.errors.givenNameRequired');
     }
+    
+    // Use the standard password validation
     if (!password) {
       newErrors.password = t('register.errors.passwordRequired');
-    } else if (password.length < 8) {
-      newErrors.password = t('register.errors.passwordTooShort');
+    } else {
+      const passwordValidation = validatePasswordStrength(password, t);
+      if (!passwordValidation.valid && passwordValidation.message) {
+        newErrors.password = passwordValidation.message;
+      }
     }
+    
     if (password !== confirmPassword) {
       newErrors.confirmPassword = t('register.errors.passwordMismatch');
     }
@@ -107,7 +120,10 @@ export default function Register() {
             });
             break;
           case 'weak_password':
-            setErrors({ password: t('register.errors.weakPassword') });
+            setErrors({ password: data.message || t('register.errors.weakPassword') });
+            break;
+          case 'password_update_failed':
+            setErrors({ password: data.message || t('register.errors.passwordUpdateFailed') });
             break;
           default:
             toast({
@@ -147,9 +163,25 @@ export default function Register() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="h-9 w-9"
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+        </Button>
         <LanguageSelector />
       </div>
 
@@ -182,13 +214,8 @@ export default function Register() {
               <Input
                 id="userCode"
                 value={userCode}
-                onChange={(e) => {
-                  setUserCode(e.target.value.toUpperCase());
-                  setErrors({ ...errors, userCode: '' });
-                }}
-                placeholder="XXXXXXXX"
-                className={`font-mono uppercase ${errors.userCode ? 'border-destructive' : ''}`}
-                maxLength={8}
+                disabled
+                className={`font-mono uppercase bg-muted ${errors.userCode ? 'border-destructive' : ''}`}
               />
               {errors.userCode && (
                 <p className="text-sm text-destructive">{errors.userCode}</p>
@@ -201,11 +228,8 @@ export default function Register() {
                 <Input
                   id="familyName"
                   value={familyName}
-                  onChange={(e) => {
-                    setFamilyName(e.target.value);
-                    setErrors({ ...errors, familyName: '' });
-                  }}
-                  className={errors.familyName ? 'border-destructive' : ''}
+                  disabled
+                  className={`bg-muted ${errors.familyName ? 'border-destructive' : ''}`}
                 />
                 {errors.familyName && (
                   <p className="text-sm text-destructive">{errors.familyName}</p>
@@ -217,11 +241,8 @@ export default function Register() {
                 <Input
                   id="givenName"
                   value={givenName}
-                  onChange={(e) => {
-                    setGivenName(e.target.value);
-                    setErrors({ ...errors, givenName: '' });
-                  }}
-                  className={errors.givenName ? 'border-destructive' : ''}
+                  disabled
+                  className={`bg-muted ${errors.givenName ? 'border-destructive' : ''}`}
                 />
                 {errors.givenName && (
                   <p className="text-sm text-destructive">{errors.givenName}</p>
@@ -250,6 +271,9 @@ export default function Register() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {t('auth.passwordRequirements')}
+              </p>
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
               )}

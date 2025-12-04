@@ -60,7 +60,8 @@
     "passwordChangedSuccess": "Password changed successfully",
     "passwordChangeError": "Failed to change password",
     "passwordsDoNotMatch": "Passwords do not match",
-    "notAuthenticated": "You are not authenticated"
+    "notAuthenticated": "You are not authenticated",
+    "passwordRequirements": "At least 8 characters, lowercase, uppercase, number and special character (!@#$%^&*)"
   },
   "2fa": {
     "title": "Two-Factor Authentication (2FA)",
