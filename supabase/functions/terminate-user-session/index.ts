@@ -111,13 +111,36 @@ Deno.serve(async (req) => {
     }
 
     // Broadcast session termination via realtime
+    // Must subscribe first before sending broadcast
     const channel = supabaseAdmin.channel(`session-terminate-${userId}`);
-    await channel.send({
+    
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.log('Broadcast subscription timeout, proceeding anyway');
+        resolve();
+      }, 3000);
+      
+      channel.subscribe((status) => {
+        console.log(`Channel subscription status: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          clearTimeout(timeout);
+          resolve();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          clearTimeout(timeout);
+          reject(new Error(`Channel subscription failed: ${status}`));
+        }
+      });
+    });
+    
+    const sendResult = await channel.send({
       type: 'broadcast',
       event: 'terminate',
       payload: { userId, terminatedAt: new Date().toISOString() }
     });
-    console.log(`Broadcast sent for user: ${userId}`);
+    console.log(`Broadcast sent for user: ${userId}, result: ${sendResult}`);
+    
+    // Unsubscribe after sending
+    await supabaseAdmin.removeChannel(channel);
 
     // Log the action
     await supabaseAdmin.from('logs').insert({
