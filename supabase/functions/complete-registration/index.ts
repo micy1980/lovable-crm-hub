@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +11,26 @@ interface RegisterRequest {
   familyName: string;
   givenName: string;
   password: string;
+}
+
+// Validate password complexity
+function validatePassword(password: string): { valid: boolean; message: string } {
+  if (password.length < 8) {
+    return { valid: false, message: "A jelszónak legalább 8 karakter hosszúnak kell lennie" };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: "A jelszónak tartalmaznia kell kisbetűt" };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: "A jelszónak tartalmaznia kell nagybetűt" };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: "A jelszónak tartalmaznia kell számot" };
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return { valid: false, message: "A jelszónak tartalmaznia kell speciális karaktert (!@#$%^&* stb.)" };
+  }
+  return { valid: true, message: "" };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,10 +52,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Validate password length
-    if (password.length < 8) {
+    // Validate password complexity
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
       return new Response(
-        JSON.stringify({ error: "weak_password", message: "Password must be at least 8 characters" }),
+        JSON.stringify({ error: "weak_password", message: passwordValidation.message }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -89,6 +110,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (authUpdateError) {
       console.error("Auth update error:", authUpdateError);
+      // Check for weak password error from Supabase (pwned passwords, etc.)
+      if (authUpdateError.message?.includes('weak') || authUpdateError.message?.includes('pwned')) {
+        return new Response(
+          JSON.stringify({ 
+            error: "weak_password", 
+            message: "Ez a jelszó túl gyakori vagy ismert adatlopásban szerepelt. Kérjük, válasszon másik jelszót." 
+          }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
       return new Response(
         JSON.stringify({ error: "password_update_failed", message: "Failed to set password" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

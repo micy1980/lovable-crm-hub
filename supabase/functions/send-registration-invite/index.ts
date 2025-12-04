@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
@@ -67,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if user already registered
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("email, registered_at, user_code")
+      .select("email, registered_at, user_code, family_name, given_name")
       .eq("id", userId)
       .single();
 
@@ -117,9 +117,9 @@ const handler = async (req: Request): Promise<Response> => {
     const fromAddress = emailSettings?.find(s => s.setting_key === "email_from_address")?.setting_value || "onboarding@resend.dev";
     const fromName = emailSettings?.find(s => s.setting_key === "email_from_name")?.setting_value || "Mini CRM";
 
-    // Build registration URL
+    // Build registration URL with names
     const baseUrl = req.headers.get("origin") || supabaseUrl.replace(".supabase.co", "");
-    const registerUrl = `${baseUrl}/register?email=${encodeURIComponent(profile.email)}&code=${newUserCode}`;
+    const registerUrl = `${baseUrl}/register?email=${encodeURIComponent(profile.email)}&code=${newUserCode}&familyName=${encodeURIComponent(profile.family_name || '')}&givenName=${encodeURIComponent(profile.given_name || '')}`;
 
     // Send email
     if (!resendApiKey) {
