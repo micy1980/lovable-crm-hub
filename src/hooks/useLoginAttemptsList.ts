@@ -11,7 +11,12 @@ export const useLoginAttemptsList = (limit = 100) => {
 
   // Real-time subscription for login_attempts
   useEffect(() => {
-    if (!isSuper) return;
+    if (!isSuper) {
+      console.log('[LoginAttempts] Not super admin, skipping realtime subscription');
+      return;
+    }
+
+    console.log('[LoginAttempts] Setting up realtime subscription...');
 
     const channel = supabase
       .channel('login-attempts-realtime')
@@ -22,13 +27,17 @@ export const useLoginAttemptsList = (limit = 100) => {
           schema: 'public',
           table: 'login_attempts'
         },
-        () => {
+        (payload) => {
+          console.log('[LoginAttempts] New login attempt detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['login-attempts', limit] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[LoginAttempts] Subscription status:', status);
+      });
 
     return () => {
+      console.log('[LoginAttempts] Removing channel...');
       supabase.removeChannel(channel);
     };
   }, [isSuper, queryClient, limit]);
@@ -36,6 +45,7 @@ export const useLoginAttemptsList = (limit = 100) => {
   const { data: loginAttempts = [], isLoading } = useQuery({
     queryKey: ['login-attempts', limit],
     queryFn: async () => {
+      console.log('[LoginAttempts] Fetching login attempts...');
       const { data, error } = await supabase
         .from('login_attempts')
         .select('*')
@@ -43,10 +53,11 @@ export const useLoginAttemptsList = (limit = 100) => {
         .limit(limit);
 
       if (error) {
-        console.error('Error fetching login attempts:', error);
+        console.error('[LoginAttempts] Error fetching:', error);
         throw error;
       }
 
+      console.log('[LoginAttempts] Fetched attempts:', data?.length || 0);
       return data || [];
     },
     enabled: isSuper,

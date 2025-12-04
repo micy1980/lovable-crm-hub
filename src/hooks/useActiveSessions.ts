@@ -20,7 +20,12 @@ export const useActiveSessions = () => {
 
   // Real-time subscription for login_attempts and locked_accounts
   useEffect(() => {
-    if (!isSuper) return;
+    if (!isSuper) {
+      console.log('[ActiveSessions] Not super admin, skipping realtime subscription');
+      return;
+    }
+
+    console.log('[ActiveSessions] Setting up realtime subscription...');
 
     const channel = supabase
       .channel('active-sessions-realtime')
@@ -31,7 +36,8 @@ export const useActiveSessions = () => {
           schema: 'public',
           table: 'login_attempts'
         },
-        () => {
+        (payload) => {
+          console.log('[ActiveSessions] login_attempts change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
         }
       )
@@ -42,13 +48,17 @@ export const useActiveSessions = () => {
           schema: 'public',
           table: 'locked_accounts'
         },
-        () => {
+        (payload) => {
+          console.log('[ActiveSessions] locked_accounts change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[ActiveSessions] Subscription status:', status);
+      });
 
     return () => {
+      console.log('[ActiveSessions] Removing channel...');
       supabase.removeChannel(channel);
     };
   }, [isSuper, queryClient]);
@@ -56,13 +66,15 @@ export const useActiveSessions = () => {
   const { data: activeSessions = [], isLoading } = useQuery({
     queryKey: ['active-sessions'],
     queryFn: async () => {
+      console.log('[ActiveSessions] Fetching active sessions...');
       const { data, error } = await supabase.functions.invoke('get-active-sessions');
 
       if (error) {
-        console.error('Error fetching active sessions:', error);
+        console.error('[ActiveSessions] Error fetching:', error);
         throw error;
       }
 
+      console.log('[ActiveSessions] Fetched sessions:', data?.sessions?.length || 0);
       return (data?.sessions || []) as ActiveSession[];
     },
     enabled: isSuper,
@@ -70,6 +82,7 @@ export const useActiveSessions = () => {
 
   const terminateSession = useMutation({
     mutationFn: async (userId: string) => {
+      console.log('[ActiveSessions] Terminating session for:', userId);
       const { data, error } = await supabase.functions.invoke('terminate-user-session', {
         body: { userId },
       });
@@ -78,11 +91,12 @@ export const useActiveSessions = () => {
       return data;
     },
     onSuccess: () => {
+      console.log('[ActiveSessions] Session terminated successfully');
       queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
       toast.success('Felhasználó kijelentkeztetve');
     },
     onError: (error: any) => {
-      console.error('Error terminating session:', error);
+      console.error('[ActiveSessions] Error terminating session:', error);
       toast.error('Hiba a kijelentkeztetés során');
     },
   });
