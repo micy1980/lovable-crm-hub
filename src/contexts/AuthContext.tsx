@@ -36,8 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user || !session) return;
 
-    // Store session creation time
-    sessionCreatedAtRef.current = session.access_token ? new Date().toISOString() : null;
+    // Get the actual login time from user's last_sign_in_at
+    const loginTime = user.last_sign_in_at ? new Date(user.last_sign_in_at).getTime() : null;
+    sessionCreatedAtRef.current = user.last_sign_in_at || null;
 
     const checkForceLogout = async () => {
       try {
@@ -52,12 +53,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const appMetadata = refreshedUser.app_metadata;
         const sessionsInvalidatedAt = appMetadata?.sessions_invalidated_at;
+        const forceLogout = appMetadata?.force_logout;
         
-        if (sessionsInvalidatedAt && sessionCreatedAtRef.current) {
+        console.log('[AuthContext] Checking force logout:', { 
+          sessionsInvalidatedAt, 
+          forceLogout,
+          loginTime: sessionCreatedAtRef.current 
+        });
+        
+        if (sessionsInvalidatedAt && loginTime) {
           const invalidatedTime = new Date(sessionsInvalidatedAt).getTime();
-          const sessionTime = new Date(sessionCreatedAtRef.current).getTime();
           
-          if (invalidatedTime > sessionTime) {
+          // If invalidation happened after login, sign out
+          if (invalidatedTime > loginTime) {
             console.log('[AuthContext] Session was invalidated by admin, signing out');
             toast.info('Az adminisztrátor kijelentkeztette Önt');
             await supabase.auth.signOut();
@@ -72,8 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check immediately
     checkForceLogout();
 
-    // Then check every 30 seconds
-    const interval = setInterval(checkForceLogout, 30000);
+    // Then check every 10 seconds for faster response
+    const interval = setInterval(checkForceLogout, 10000);
 
     return () => clearInterval(interval);
   }, [user, session]);
