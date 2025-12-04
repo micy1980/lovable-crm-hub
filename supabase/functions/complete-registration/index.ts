@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!email || !userCode || !familyName || !givenName || !password) {
       return new Response(
         JSON.stringify({ error: "missing_fields", message: "All fields are required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -57,7 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!passwordValidation.valid) {
       return new Response(
         JSON.stringify({ error: "weak_password", message: passwordValidation.message }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -74,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Profile lookup error:", profileError);
       return new Response(
         JSON.stringify({ error: "user_not_found", message: "No invitation found for this email" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (profile.registered_at) {
       return new Response(
         JSON.stringify({ error: "already_registered", message: "User already registered" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -90,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!profile.invitation_expires_at || new Date(profile.invitation_expires_at) < new Date()) {
       return new Response(
         JSON.stringify({ error: "invitation_expired", message: "Invitation has expired. Please request a new one." }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -98,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (profile.user_code !== userCode.toUpperCase().trim()) {
       return new Response(
         JSON.stringify({ error: "invalid_code", message: "Invalid registration code" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -111,18 +111,19 @@ const handler = async (req: Request): Promise<Response> => {
     if (authUpdateError) {
       console.error("Auth update error:", authUpdateError);
       // Check for weak password error from Supabase (pwned passwords, etc.)
-      if (authUpdateError.message?.includes('weak') || authUpdateError.message?.includes('pwned')) {
+      if (authUpdateError.message?.includes('weak') || authUpdateError.message?.includes('pwned') || 
+          (authUpdateError as any).code === 'weak_password') {
         return new Response(
           JSON.stringify({ 
             error: "weak_password", 
             message: "Ez a jelszó túl gyakori vagy ismert adatlopásban szerepelt. Kérjük, válasszon másik jelszót." 
           }),
-          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
       return new Response(
         JSON.stringify({ error: "password_update_failed", message: "Failed to set password" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
