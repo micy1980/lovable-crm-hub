@@ -166,6 +166,36 @@ Deno.serve(async (req) => {
     await new Promise(resolve => setTimeout(resolve, 100));
     await serviceClient.removeChannel(channel);
 
+    // Delete from locked_accounts
+    const { error: lockedAccountsError } = await serviceClient
+      .from('locked_accounts')
+      .delete()
+      .eq('user_id', targetUserId);
+
+    if (lockedAccountsError) {
+      console.error('Error deleting locked_accounts:', lockedAccountsError);
+    }
+
+    // Delete from login_attempts
+    const { error: loginAttemptsError } = await serviceClient
+      .from('login_attempts')
+      .delete()
+      .eq('user_id', targetUserId);
+
+    if (loginAttemptsError) {
+      console.error('Error deleting login_attempts:', loginAttemptsError);
+    }
+
+    // Delete from user_company_permissions
+    const { error: permissionsError } = await serviceClient
+      .from('user_company_permissions')
+      .delete()
+      .eq('user_id', targetUserId);
+
+    if (permissionsError) {
+      console.error('Error deleting user_company_permissions:', permissionsError);
+    }
+
     // Delete from user_companies
     const { error: userCompaniesError } = await serviceClient
       .from('user_companies')
