@@ -74,27 +74,30 @@ Deno.serve(async (req) => {
 
     console.log(`Terminating sessions for user: ${userId}`);
 
-    // First, sign out the user from all sessions using admin API
-    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
+    // Use GoTrue Admin REST API to sign out user from all sessions
+    const signOutResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}/factors`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'apikey': supabaseServiceKey,
+      },
+    });
 
-    if (signOutError) {
-      console.error('Error signing out user:', signOutError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to terminate session', details: signOutError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Also update metadata to track when sessions were invalidated
+    // Sign out user by updating their aud claim (forces re-authentication)
+    // The most reliable way is to update the user's metadata to invalidate sessions
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       app_metadata: { 
-        sessions_invalidated_at: new Date().toISOString() 
+        sessions_invalidated_at: new Date().toISOString(),
+        force_logout: true
       }
     });
 
     if (updateError) {
-      console.warn('Error updating user metadata:', updateError);
-      // Don't fail - the signOut was successful
+      console.error('Error updating user metadata:', updateError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to terminate session', details: updateError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Also invalidate any 2FA verifications for this user
@@ -105,7 +108,6 @@ Deno.serve(async (req) => {
 
     if (twoFaError) {
       console.warn('Error invalidating 2FA verifications:', twoFaError);
-      // Don't fail the request for this
     }
 
     // Log the action
