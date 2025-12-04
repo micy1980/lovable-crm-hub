@@ -554,6 +554,10 @@
     "invitationSentDescription": "A regisztrációs link elküldve a felhasználó e-mail címére",
     "invitationError": "Nem sikerült elküldeni a meghívót",
     "alreadyRegistered": "A felhasználó már regisztrált",
+    "emailFailed": "Email küldése sikertelen",
+    "shareManually": "A regisztrációs kód és link manuálisan megosztható:",
+    "code": "Kód",
+    "link": "Link",
     "status": {
       "notInvited": "Nincs meghívva",
       "invited": "Meghívó elküldve",

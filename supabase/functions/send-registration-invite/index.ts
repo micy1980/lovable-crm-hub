@@ -163,6 +163,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Registration email sent:", emailResponse);
 
+    // Check for Resend API errors
+    if (emailResponse.error) {
+      console.error("Resend API error:", emailResponse.error);
+      
+      // Return user code so admin can share it manually
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: emailResponse.error.message || "Failed to send email",
+          userCode: newUserCode,
+          registerUrl: registerUrl,
+          hint: "Email küldése sikertelen. A regisztrációs kód és link manuálisan megosztható."
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

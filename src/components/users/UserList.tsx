@@ -81,7 +81,7 @@ export function UserList() {
       // If sendInvite is true and user was created successfully, send registration invite
       if (sendInvite && result?.id) {
         try {
-          const { error } = await supabase.functions.invoke('send-registration-invite', {
+          const { data: inviteData, error } = await supabase.functions.invoke('send-registration-invite', {
             body: { userId: result.id }
           });
           
@@ -91,6 +91,19 @@ export function UserList() {
               title: t('users.userCreatedInviteFailed'),
               description: error.message,
               variant: 'destructive',
+            });
+          } else if (inviteData?.success === false && inviteData?.userCode) {
+            // Email failed but we have the code - show it to admin
+            toast({
+              title: t('invitation.emailFailed'),
+              description: (
+                <div className="space-y-2">
+                  <p>{t('invitation.shareManually')}</p>
+                  <p className="font-mono text-lg font-bold">{t('invitation.code')}: {inviteData.userCode}</p>
+                  <p className="text-xs break-all">{t('invitation.link')}: {inviteData.registerUrl}</p>
+                </div>
+              ),
+              duration: 30000,
             });
           } else {
             toast({

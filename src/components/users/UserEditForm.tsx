@@ -64,6 +64,22 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
 
       if (error) throw error;
 
+      // Check if email sending failed but we have the code
+      if (data?.success === false && data?.userCode) {
+        toast({
+          title: t('invitation.emailFailed'),
+          description: (
+            <div className="space-y-2">
+              <p>{t('invitation.shareManually')}</p>
+              <p className="font-mono text-lg font-bold">{t('invitation.code')}: {data.userCode}</p>
+              <p className="text-xs break-all">{t('invitation.link')}: {data.registerUrl}</p>
+            </div>
+          ),
+          duration: 30000,
+        });
+        return;
+      }
+
       if (data?.error) {
         toast({
           title: t('invitation.invitationError'),
