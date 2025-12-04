@@ -150,6 +150,22 @@ Deno.serve(async (req) => {
     // No activity found, proceed with hard delete
     console.log(`Deleting user ${targetUserId} (no activity found)`);
 
+    // Broadcast session termination BEFORE deletion so the user gets logged out
+    const channelName = `session-terminate-${targetUserId}`;
+    const channel = serviceClient.channel(channelName);
+    
+    await channel.subscribe();
+    await channel.send({
+      type: 'broadcast',
+      event: 'terminate',
+      payload: { reason: 'user_deleted' }
+    });
+    console.log(`Broadcast terminate event to channel ${channelName}`);
+    
+    // Small delay to ensure broadcast is sent
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await serviceClient.removeChannel(channel);
+
     // Delete from user_companies
     const { error: userCompaniesError } = await serviceClient
       .from('user_companies')
