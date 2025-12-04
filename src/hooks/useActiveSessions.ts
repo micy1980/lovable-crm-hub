@@ -18,7 +18,7 @@ export const useActiveSessions = () => {
   const { data: currentProfile } = useUserProfile();
   const isSuper = isSuperAdmin(currentProfile);
 
-  // Real-time subscription for login_attempts (triggers refetch when someone logs in)
+  // Real-time subscription for login_attempts and locked_accounts
   useEffect(() => {
     if (!isSuper) return;
 
@@ -30,6 +30,17 @@ export const useActiveSessions = () => {
           event: '*',
           schema: 'public',
           table: 'login_attempts'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'locked_accounts'
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
