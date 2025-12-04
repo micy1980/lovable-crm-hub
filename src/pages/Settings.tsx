@@ -7,6 +7,7 @@ import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { SystemSettings } from '@/components/settings/SystemSettings';
 import { TwoFactorAuth } from '@/components/settings/TwoFactorAuth';
 import { EmailSettings } from '@/components/settings/EmailSettings';
+import { LogoSettings } from '@/components/settings/LogoSettings';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
@@ -167,7 +168,10 @@ const Settings = () => {
             </TabsContent>
 
             <TabsContent value="system">
-              <SystemSettings />
+              <div className="space-y-6">
+                <LogoSettings />
+                <SystemSettings />
+              </div>
             </TabsContent>
 
             <TabsContent value="email">
