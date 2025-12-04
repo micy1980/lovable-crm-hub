@@ -184,6 +184,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: "Invitation sent successfully",
+        userCode: newUserCode,
         expiresAt: expiresAt.toISOString()
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
