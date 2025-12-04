@@ -17,9 +17,10 @@ import { supabase } from '@/integrations/supabase/client';
 interface UserEditFormProps {
   user: any;
   onClose: () => void;
+  onUserUpdated?: () => void;
 }
 
-export function UserEditForm({ user, onClose }: UserEditFormProps) {
+export function UserEditForm({ user, onClose, onUserUpdated }: UserEditFormProps) {
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
   const { updateUser } = useUsers();
@@ -33,6 +34,9 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
   const [emailTouched, setEmailTouched] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [isSendingInvitation, setIsSendingInvitation] = useState(false);
+  const [displayedUserCode, setDisplayedUserCode] = useState(user?.user_code || '');
+  const [invitationSentAt, setInvitationSentAt] = useState(user?.invitation_sent_at);
+  const [invitationExpiresAt, setInvitationExpiresAt] = useState(user?.invitation_expires_at);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: user?.email || '',
@@ -66,6 +70,11 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
 
       // Check if email sending failed but we have the code
       if (data?.success === false && data?.userCode) {
+        // Update displayed code even if email failed
+        setDisplayedUserCode(data.userCode);
+        setInvitationSentAt(new Date().toISOString());
+        if (data.expiresAt) setInvitationExpiresAt(data.expiresAt);
+        
         toast({
           title: t('invitation.emailFailed'),
           description: (
@@ -77,6 +86,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
           ),
           duration: 30000,
         });
+        onUserUpdated?.();
         return;
       }
 
@@ -89,10 +99,21 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         return;
       }
 
+      // Success - update displayed code and timestamps
+      if (data?.userCode) {
+        setDisplayedUserCode(data.userCode);
+      }
+      if (data?.expiresAt) {
+        setInvitationExpiresAt(data.expiresAt);
+      }
+      setInvitationSentAt(new Date().toISOString());
+      
       toast({
         title: t('invitation.invitationSent'),
         description: t('invitation.invitationSentDescription'),
       });
+      
+      onUserUpdated?.();
     } catch (error: any) {
       console.error('Failed to send invitation:', error);
       toast({
@@ -364,12 +385,12 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
         </div>
       </div>
 
-      {user?.user_code && (
+      {displayedUserCode && (
         <div className="space-y-2">
           <Label>Felhasználói kód</Label>
           <div className="flex gap-2">
             <Input
-              value={user.user_code}
+              value={displayedUserCode}
               disabled
               className="font-mono bg-muted flex-1"
             />
@@ -386,16 +407,16 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
                 ) : (
                   <Send className="h-4 w-4 mr-2" />
                 )}
-                {user?.invitation_sent_at ? t('invitation.resendInvitation') : t('invitation.sendInvitation')}
+                {invitationSentAt ? t('invitation.resendInvitation') : t('invitation.sendInvitation')}
               </Button>
             )}
           </div>
-          {user?.invitation_sent_at && !isUserRegistered && (
+          {invitationSentAt && !isUserRegistered && (
             <p className="text-xs text-muted-foreground">
-              {t('invitation.status.invited')} - {format(new Date(user.invitation_sent_at), 'yyyy-MM-dd HH:mm')}
-              {user?.invitation_expires_at && (
+              {t('invitation.status.invited')} - {format(new Date(invitationSentAt), 'yyyy-MM-dd HH:mm')}
+              {invitationExpiresAt && (
                 <span className="ml-2">
-                  ({t('invitation.expiresAt', { date: format(new Date(user.invitation_expires_at), 'yyyy-MM-dd HH:mm') })})
+                  ({t('invitation.expiresAt', { date: format(new Date(invitationExpiresAt), 'yyyy-MM-dd HH:mm') })})
                 </span>
               )}
             </p>
@@ -405,7 +426,7 @@ export function UserEditForm({ user, onClose }: UserEditFormProps) {
               {t('invitation.status.registered')} - {format(new Date(user.registered_at), 'yyyy-MM-dd HH:mm')}
             </p>
           )}
-          {!user?.invitation_sent_at && !isUserRegistered && (
+          {!invitationSentAt && !isUserRegistered && (
             <p className="text-xs text-muted-foreground">
               {t('invitation.status.notInvited')}
             </p>
