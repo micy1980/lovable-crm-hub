@@ -92,6 +92,7 @@ serve(async (req) => {
 
     // Filter and map to active sessions
     // Consider a session "active" only if user signed in within the inactivity timeout
+    // AND their session hasn't been invalidated after sign in
     const now = new Date();
     const cutoffTime = new Date(now.getTime() - inactivityMinutes * 60 * 1000);
 
@@ -103,7 +104,20 @@ serve(async (req) => {
         // Only include users who signed in within the inactivity window
         if (!u.last_sign_in_at) return false;
         const signInTime = new Date(u.last_sign_in_at);
-        return signInTime >= cutoffTime;
+        if (signInTime < cutoffTime) return false;
+        
+        // Check if session was invalidated after sign in
+        const sessionsInvalidatedAt = u.app_metadata?.sessions_invalidated_at;
+        if (sessionsInvalidatedAt) {
+          const invalidatedTime = new Date(sessionsInvalidatedAt);
+          // If sessions were invalidated after the last sign in, exclude this user
+          if (invalidatedTime > signInTime) {
+            console.log(`Excluding user ${u.email}: session invalidated at ${sessionsInvalidatedAt}`);
+            return false;
+          }
+        }
+        
+        return true;
       })
       .map(u => {
         const profile = profileMap.get(u.id);

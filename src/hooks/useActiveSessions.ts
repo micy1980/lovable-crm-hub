@@ -31,6 +31,7 @@ export const useActiveSessions = () => {
       return (data?.sessions || []) as ActiveSession[];
     },
     enabled: isSuper,
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   const terminateSession = useMutation({
