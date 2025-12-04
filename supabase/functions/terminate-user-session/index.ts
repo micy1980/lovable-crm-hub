@@ -79,21 +79,27 @@ serve(async (req) => {
 
     console.log(`Terminating sessions for user: ${userId}`);
 
-    // Use the admin API to delete all sessions for the user
-    // This is done by updating the user's aud claim timestamp which invalidates all tokens
+    // First, sign out the user from all sessions using admin API
+    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
+
+    if (signOutError) {
+      console.error('Error signing out user:', signOutError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to terminate session', details: signOutError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Also update metadata to track when sessions were invalidated
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      // Setting app_metadata forces token refresh and invalidates old sessions
       app_metadata: { 
         sessions_invalidated_at: new Date().toISOString() 
       }
     });
 
     if (updateError) {
-      console.error('Error invalidating user sessions:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to terminate session', details: updateError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.warn('Error updating user metadata:', updateError);
+      // Don't fail - the signOut was successful
     }
 
     // Also invalidate any 2FA verifications for this user
