@@ -42,22 +42,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const checkForceLogout = async () => {
       try {
-        // Refresh user data to get latest metadata
-        const { data: { user: refreshedUser }, error } = await supabase.auth.getUser();
+        // Force refresh session to get latest metadata from server
+        const { data, error } = await supabase.auth.refreshSession();
         
-        if (error || !refreshedUser) {
-          console.log('[AuthContext] User check failed, signing out');
+        if (error || !data.session) {
+          console.log('[AuthContext] Session refresh failed, signing out');
           await supabase.auth.signOut();
           return;
         }
 
+        const refreshedUser = data.session.user;
         const appMetadata = refreshedUser.app_metadata;
         const sessionsInvalidatedAt = appMetadata?.sessions_invalidated_at;
-        const forceLogout = appMetadata?.force_logout;
         
         console.log('[AuthContext] Checking force logout:', { 
           sessionsInvalidatedAt, 
-          forceLogout,
           loginTime: sessionCreatedAtRef.current 
         });
         
