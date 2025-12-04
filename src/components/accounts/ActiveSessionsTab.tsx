@@ -47,7 +47,12 @@ export const ActiveSessionsTab = () => {
   };
 
   const handleTerminateSingle = (userId: string) => {
-    terminateSession.mutate(userId);
+    terminateSession.mutate(userId, {
+      onSuccess: () => {
+        // Clear this user from selection if selected
+        setSelectedUsers(prev => prev.filter(id => id !== userId));
+      }
+    });
   };
 
   const selectableCount = activeSessions.filter(s => s.user_id !== currentProfile?.id).length;
