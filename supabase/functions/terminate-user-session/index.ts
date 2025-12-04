@@ -110,6 +110,15 @@ Deno.serve(async (req) => {
       console.warn('Error invalidating 2FA verifications:', twoFaError);
     }
 
+    // Broadcast session termination via realtime
+    const channel = supabaseAdmin.channel(`session-terminate-${userId}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'terminate',
+      payload: { userId, terminatedAt: new Date().toISOString() }
+    });
+    console.log(`Broadcast sent for user: ${userId}`);
+
     // Log the action
     await supabaseAdmin.from('logs').insert({
       entity_type: 'session',
