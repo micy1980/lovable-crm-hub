@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { i18n } = useTranslation();
   const sessionCreatedAtRef = useRef<string | null>(null);
 
-  // Check for force logout periodically
+  // Check for force logout periodically - but not too often to avoid rate limits
   useEffect(() => {
     if (!user || !session) return;
 
@@ -40,25 +40,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const loginTime = user.last_sign_in_at ? new Date(user.last_sign_in_at).getTime() : null;
     sessionCreatedAtRef.current = user.last_sign_in_at || null;
 
+    let isChecking = false;
+
     const checkForceLogout = async () => {
+      // Prevent concurrent checks
+      if (isChecking) return;
+      isChecking = true;
+
       try {
-        // Force refresh session to get latest metadata from server
-        const { data, error } = await supabase.auth.refreshSession();
+        // Use getUser instead of refreshSession to avoid rate limits
+        const { data: { user: refreshedUser }, error } = await supabase.auth.getUser();
         
-        if (error || !data.session) {
-          console.log('[AuthContext] Session refresh failed, signing out');
+        if (error) {
+          // Don't sign out on rate limit or network errors
+          if (error.message?.includes('rate limit') || error.status === 429) {
+            console.log('[AuthContext] Rate limited, skipping check');
+            return;
+          }
+          console.log('[AuthContext] User fetch failed:', error.message);
+          return;
+        }
+
+        if (!refreshedUser) {
+          console.log('[AuthContext] No user found, signing out');
           await supabase.auth.signOut();
           return;
         }
 
-        const refreshedUser = data.session.user;
         const appMetadata = refreshedUser.app_metadata;
         const sessionsInvalidatedAt = appMetadata?.sessions_invalidated_at;
-        
-        console.log('[AuthContext] Checking force logout:', { 
-          sessionsInvalidatedAt, 
-          loginTime: sessionCreatedAtRef.current 
-        });
         
         if (sessionsInvalidatedAt && loginTime) {
           const invalidatedTime = new Date(sessionsInvalidatedAt).getTime();
@@ -73,16 +83,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (err) {
         console.error('[AuthContext] Force logout check error:', err);
+      } finally {
+        isChecking = false;
       }
     };
 
-    // Check immediately
-    checkForceLogout();
+    // Initial delay before first check to let login complete
+    const initialTimeout = setTimeout(checkForceLogout, 5000);
 
-    // Then check every 10 seconds for faster response
-    const interval = setInterval(checkForceLogout, 10000);
+    // Then check every 60 seconds to avoid rate limits
+    const interval = setInterval(checkForceLogout, 60000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, [user, session]);
 
   useEffect(() => {
