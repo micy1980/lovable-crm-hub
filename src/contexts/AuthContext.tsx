@@ -32,73 +32,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { i18n } = useTranslation();
   const sessionCreatedAtRef = useRef<string | null>(null);
 
-  // Check for force logout periodically - but not too often to avoid rate limits
+  // Listen for realtime broadcast to terminate session immediately
   useEffect(() => {
-    if (!user || !session) return;
+    if (!user) return;
 
-    // Get the actual login time from user's last_sign_in_at
-    const loginTime = user.last_sign_in_at ? new Date(user.last_sign_in_at).getTime() : null;
-    sessionCreatedAtRef.current = user.last_sign_in_at || null;
-
-    let isChecking = false;
-
-    const checkForceLogout = async () => {
-      // Prevent concurrent checks
-      if (isChecking) return;
-      isChecking = true;
-
-      try {
-        // Use getUser instead of refreshSession to avoid rate limits
-        const { data: { user: refreshedUser }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          // Don't sign out on rate limit or network errors
-          if (error.message?.includes('rate limit') || error.status === 429) {
-            console.log('[AuthContext] Rate limited, skipping check');
-            return;
-          }
-          console.log('[AuthContext] User fetch failed:', error.message);
-          return;
-        }
-
-        if (!refreshedUser) {
-          console.log('[AuthContext] No user found, signing out');
-          await supabase.auth.signOut();
-          return;
-        }
-
-        const appMetadata = refreshedUser.app_metadata;
-        const sessionsInvalidatedAt = appMetadata?.sessions_invalidated_at;
-        
-        if (sessionsInvalidatedAt && loginTime) {
-          const invalidatedTime = new Date(sessionsInvalidatedAt).getTime();
-          
-          // If invalidation happened after login, sign out
-          if (invalidatedTime > loginTime) {
-            console.log('[AuthContext] Session was invalidated by admin, signing out');
-            toast.info('Az adminisztrátor kijelentkeztette Önt');
-            await supabase.auth.signOut();
-            return;
-          }
-        }
-      } catch (err) {
-        console.error('[AuthContext] Force logout check error:', err);
-      } finally {
-        isChecking = false;
-      }
-    };
-
-    // Initial delay before first check to let login complete
-    const initialTimeout = setTimeout(checkForceLogout, 5000);
-
-    // Then check every 60 seconds to avoid rate limits
-    const interval = setInterval(checkForceLogout, 60000);
+    const channel = supabase.channel(`session-terminate-${user.id}`);
+    
+    channel
+      .on('broadcast', { event: 'terminate' }, async (payload) => {
+        console.log('[AuthContext] Received terminate broadcast:', payload);
+        toast.info('Az adminisztrátor kijelentkeztette Önt');
+        await supabase.auth.signOut();
+      })
+      .subscribe((status) => {
+        console.log('[AuthContext] Session terminate channel status:', status);
+      });
 
     return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(interval);
+      supabase.removeChannel(channel);
     };
-  }, [user, session]);
+  }, [user]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
