@@ -41,3 +41,9 @@ verify_jwt = true
 
 [functions.verify-2fa-token]
 verify_jwt = true
+
+[functions.send-registration-invite]
+verify_jwt = true
+
+[functions.complete-registration]
+verify_jwt = false
