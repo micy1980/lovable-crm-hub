@@ -381,6 +381,8 @@
     "addUser": "New User",
     "createUser": "Create User",
     "userCreated": "User created successfully",
+    "userCreatedAndInviteSent": "User created and registration invite sent",
+    "userCreatedInviteFailed": "User created but failed to send invite",
     "emailRequired": "Email is required",
     "emailInvalid": "Invalid email address",
     "fullNamePlaceholder": "Enter full name",

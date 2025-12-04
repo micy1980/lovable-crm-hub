@@ -280,17 +280,19 @@ export const useUsers = () => {
       is_active, 
       can_delete, 
       can_view_logs,
-      mustChangePassword
+      mustChangePassword,
+      sendInvite
     }: { 
       email: string;
-      password: string;
+      password?: string;
       family_name: string;
       given_name: string;
       role: 'super_admin' | 'admin' | 'normal' | 'viewer'; 
       is_active: boolean; 
-      can_delete: boolean; 
-      can_view_logs: boolean;
+      can_delete?: boolean; 
+      can_view_logs?: boolean;
       mustChangePassword?: boolean;
+      sendInvite?: boolean;
     }) => {
       // Get the current session token to authenticate with the edge function
       const { data: { session } } = await supabase.auth.getSession();
@@ -312,6 +314,7 @@ export const useUsers = () => {
           canDelete: can_delete,
           canViewLogs: can_view_logs,
           mustChangePassword,
+          sendInvite,
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,

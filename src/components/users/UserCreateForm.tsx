@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Send } from 'lucide-react';
 import { validatePasswordWithRoles } from '@/lib/passwordValidation';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserCreateFormProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any, sendInvite?: boolean) => void;
   onClose: () => void;
   isSubmitting: boolean;
 }
@@ -31,6 +31,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const [givenNameTouched, setGivenNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const sendInviteRef = useRef(false);
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
@@ -50,12 +51,20 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
   const givenName = watch('given_name');
   
   const canCreateSA = isSuperAdmin(profile);
+  const isSA = isSuperAdmin(profile);
   const currentUserRole = profile?.role || 'normal';
 
   // Checkbox is disabled if password is empty
   const isCheckboxEnabled = password && password.trim() !== '';
 
+  // Check if required fields for invite are filled (password NOT required for invite flow)
+  const isInviteEnabled = email?.trim() && familyName?.trim() && givenName?.trim() && 
+    /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
+
   const handleFormSubmit = async (data: any) => {
+    const sendInvite = sendInviteRef.current;
+    sendInviteRef.current = false; // Reset after reading
+    
     let hasError = false;
 
     // Validate email is not empty
@@ -77,28 +86,32 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       hasError = true;
     }
 
-    // Validate password is not empty (required on create)
-    if (!data.password || data.password.trim() === '') {
-      setPasswordError(t('users.passwordRequired'));
-      setPasswordTouched(true);
-      hasError = true;
+    // Validate password only if NOT sending invite (password not required for invite flow)
+    if (!sendInvite) {
+      if (!data.password || data.password.trim() === '') {
+        setPasswordError(t('users.passwordRequired'));
+        setPasswordTouched(true);
+        hasError = true;
+      }
     }
 
     if (hasError) {
       return;
     }
     
-    // Validate password with role-based rules
-    const validation = validatePasswordWithRoles(data.password, {
-      currentUserRole,
-      targetUserRole: data.role,
-      t,
-    });
-    
-    if (!validation.valid) {
-      setPasswordError(validation.message);
-      setPasswordTouched(true);
-      return;
+    // Validate password with role-based rules (only if password provided)
+    if (data.password && data.password.trim() !== '') {
+      const validation = validatePasswordWithRoles(data.password, {
+        currentUserRole,
+        targetUserRole: data.role,
+        t,
+      });
+      
+      if (!validation.valid) {
+        setPasswordError(validation.message);
+        setPasswordTouched(true);
+        return;
+      }
     }
     
     setPasswordError(null);
@@ -108,7 +121,7 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       await onSubmit({
         ...data,
         mustChangePassword,
-      });
+      }, sendInvite);
     } catch (error: any) {
       // Check if this is a duplicate email error
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED') {
@@ -123,6 +136,11 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
       // Re-throw other errors to be handled by the caller
       throw error;
     }
+  };
+
+  const handleSendInvite = () => {
+    sendInviteRef.current = true;
+    handleSubmit(handleFormSubmit)();
   };
 
   return (
@@ -323,6 +341,17 @@ export function UserCreateForm({ onSubmit, onClose, isSubmitting }: UserCreateFo
         <Button type="button" variant="outline" onClick={onClose}>
           {t('common.cancel')}
         </Button>
+        {isSA && (
+          <Button 
+            type="button" 
+            variant="secondary"
+            disabled={isSubmitting || !isInviteEnabled}
+            onClick={handleSendInvite}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            {t('users.sendRegistrationCode')}
+          </Button>
+        )}
         <Button type="submit" disabled={isSubmitting}>
           {t('users.createUser')}
         </Button>
