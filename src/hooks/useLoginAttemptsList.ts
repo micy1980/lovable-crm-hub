@@ -24,6 +24,7 @@ export const useLoginAttemptsList = (limit = 100) => {
       return data || [];
     },
     enabled: isSuper, // Only fetch if user is super admin
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   return {
