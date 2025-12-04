@@ -21,9 +21,12 @@ import { format } from 'date-fns';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserList() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const { data: currentProfile } = useUserProfile();
   const { users, isLoading, toggleUserFlag, updateUser, createUser, deleteUser } = useUsers();
@@ -71,9 +74,39 @@ export function UserList() {
     });
   };
 
-  const handleCreateUser = async (data: any) => {
+  const handleCreateUser = async (data: any, sendInvite: boolean = false) => {
     try {
-      await createUser.mutateAsync(data);
+      const result = await createUser.mutateAsync({ ...data, sendInvite });
+      
+      // If sendInvite is true and user was created successfully, send registration invite
+      if (sendInvite && result?.id) {
+        try {
+          const { error } = await supabase.functions.invoke('send-registration-invite', {
+            body: { userId: result.id }
+          });
+          
+          if (error) {
+            console.error('Failed to send invite:', error);
+            toast({
+              title: t('users.userCreatedInviteFailed'),
+              description: error.message,
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: t('users.userCreatedAndInviteSent'),
+            });
+          }
+        } catch (inviteError: any) {
+          console.error('Failed to send invite:', inviteError);
+          toast({
+            title: t('users.userCreatedInviteFailed'),
+            description: inviteError.message,
+            variant: 'destructive',
+          });
+        }
+      }
+      
       setIsCreateOpen(false);
     } catch (error: any) {
       // Email duplicate and weak password errors should be re-thrown

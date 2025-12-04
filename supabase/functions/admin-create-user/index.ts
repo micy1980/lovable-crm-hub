@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     // Step 3: Parse and validate request body
     const payload = await req.json() as {
       email: string
-      password: string
+      password?: string
       familyName: string
       givenName: string
       role: string
@@ -105,12 +105,22 @@ Deno.serve(async (req) => {
       canDelete: boolean
       canViewLogs: boolean
       mustChangePassword?: boolean
+      sendInvite?: boolean
     }
 
-    if (!payload.email || !payload.password || !payload.familyName || !payload.givenName || !payload.role) {
+    if (!payload.email || !payload.familyName || !payload.givenName || !payload.role) {
       console.error('[admin-create-user] Missing required fields')
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, familyName, givenName, and role' }),
+        JSON.stringify({ error: 'Missing required fields: email, familyName, givenName, and role' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Password is required unless sendInvite is true (user will set password during registration)
+    if (!payload.sendInvite && !payload.password) {
+      console.error('[admin-create-user] Password required when not sending invite')
+      return new Response(
+        JSON.stringify({ error: 'Password is required when not sending invite' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -124,12 +134,12 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('[admin-create-user] Creating user:', payload.email, 'Target role:', payload.role)
+    console.log('[admin-create-user] Creating user:', payload.email, 'Target role:', payload.role, 'sendInvite:', payload.sendInvite)
 
-    // Validate password based on roles
+    // Validate password based on roles (only if password provided)
     // SA creating non-SA or Admin creating non-SA/non-Admin: minimum 6 chars (platform requirement)
     // All other cases: full validation would be needed but Supabase handles this
-    if (payload.password.length < 6) {
+    if (payload.password && payload.password.length < 6) {
       console.error('[admin-create-user] Password too short')
       return new Response(
         JSON.stringify({ 
@@ -147,6 +157,11 @@ Deno.serve(async (req) => {
 
     // Build full name from family and given names
     const fullName = `${payload.familyName} ${payload.givenName}`
+
+    // Generate temporary password if sending invite (user will set their own password during registration)
+    const tempPassword = payload.sendInvite 
+      ? Array.from({ length: 24 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%'[Math.floor(Math.random() * 68)]).join('')
+      : payload.password
 
     // Step 4: Generate unique user_code
     const CODE_LENGTH = 5
@@ -182,7 +197,7 @@ Deno.serve(async (req) => {
     // Step 5: Create the auth user using service client
     const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
       email: payload.email,
-      password: payload.password,
+      password: tempPassword,
       email_confirm: true,
       user_metadata: {
         full_name: fullName,

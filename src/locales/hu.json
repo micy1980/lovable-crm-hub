@@ -381,6 +381,8 @@
     "addUser": "Új felhasználó",
     "createUser": "Felhasználó létrehozása",
     "userCreated": "Felhasználó sikeresen létrehozva",
+    "userCreatedAndInviteSent": "Felhasználó létrehozva és regisztrációs meghívó elküldve",
+    "userCreatedInviteFailed": "Felhasználó létrehozva, de a meghívó küldése sikertelen",
     "emailRequired": "E-mail cím megadása kötelező",
     "emailInvalid": "Érvénytelen e-mail cím",
     "fullNamePlaceholder": "Teljes név megadása",
