@@ -38,7 +38,7 @@ export const PersonalColorSettings = () => {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       toast.success('Személyes színek mentve');
     } catch (error: any) {
       console.error('Error saving personal colors:', error);
