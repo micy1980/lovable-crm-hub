@@ -111,70 +111,73 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
   };
 
   return (
-    <div className="w-full border rounded-lg overflow-hidden">
-      {/* Header row with days */}
-      <div 
-        className="grid bg-muted/30 border-b"
-        style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
-      >
-        <div className="py-3 text-center text-sm font-medium border-r" />
-        {days.map((day, index) => (
-          <div
-            key={index}
-            className={cn(
-              "py-3 text-center text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors",
-              getColumnHighlight(index),
-              getHeaderBorder(index),
-              dayStates[index].isToday && "text-primary font-bold",
-              dayStates[index].isSelected && !dayStates[index].isToday && "text-emerald-600 dark:text-emerald-400 font-semibold"
-            )}
-            onClick={() => onSelectDate(day)}
-          >
-            {format(day, 'M. d.', { locale })} {format(day, 'EEE', { locale })}
-          </div>
-        ))}
-      </div>
-
-      {/* All-day row */}
-      <div 
-        className="grid border-b"
-        style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
-      >
-        <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center whitespace-nowrap">
-          {t('calendar.allDay', 'Egész nap')}
-        </div>
-        {days.map((day, index) => {
-          const dayTasks = getAllDayTasks(day);
-          return (
+    <div className="w-full border rounded-lg overflow-hidden max-h-[calc(100vh-280px)] overflow-y-auto relative">
+      {/* Sticky header container */}
+      <div className="sticky top-0 z-20 bg-background">
+        {/* Header row with days */}
+        <div 
+          className="grid bg-muted/30 border-b"
+          style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
+        >
+          <div className="py-3 text-center text-sm font-medium border-r" />
+          {days.map((day, index) => (
             <div
               key={index}
               className={cn(
-                "min-h-[40px] p-1",
+                "py-3 text-center text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors",
                 getColumnHighlight(index),
-                getMiddleBorder(index)
+                getHeaderBorder(index),
+                dayStates[index].isToday && "text-primary font-bold",
+                dayStates[index].isSelected && !dayStates[index].isToday && "text-emerald-600 dark:text-emerald-400 font-semibold"
               )}
+              onClick={() => onSelectDate(day)}
             >
-              {dayTasks.slice(0, 2).map((task) => (
-                <div
-                  key={task.id}
-                  className={cn(
-                    "text-xs p-1 rounded truncate mb-1 cursor-pointer border",
-                    getStatusColor(task.status)
-                  )}
-                  onClick={() => onTaskClick(task)}
-                >
-                  {task.title}
-                </div>
-              ))}
-              {dayTasks.length > 2 && (
-                <div className="text-xs text-muted-foreground">+{dayTasks.length - 2}</div>
-              )}
+              {format(day, 'M. d.', { locale })} {format(day, 'EEE', { locale })}
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* All-day row */}
+        <div 
+          className="grid border-b bg-background"
+          style={{ gridTemplateColumns: WEEK_GRID_TEMPLATE }}
+        >
+          <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center whitespace-nowrap">
+            {t('calendar.allDay', 'Egész nap')}
+          </div>
+          {days.map((day, index) => {
+            const dayTasks = getAllDayTasks(day);
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "min-h-[40px] p-1",
+                  getColumnHighlight(index),
+                  getMiddleBorder(index)
+                )}
+              >
+                {dayTasks.slice(0, 2).map((task) => (
+                  <div
+                    key={task.id}
+                    className={cn(
+                      "text-xs p-1 rounded truncate mb-1 cursor-pointer border",
+                      getStatusColor(task.status)
+                    )}
+                    onClick={() => onTaskClick(task)}
+                  >
+                    {task.title}
+                  </div>
+                ))}
+                {dayTasks.length > 2 && (
+                  <div className="text-xs text-muted-foreground">+{dayTasks.length - 2}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Hourly grid - no inner scroll, uses page scroll */}
+      {/* Hourly grid - scrollable content */}
       <div>
         {HOURS.map((hour, hourIndex) => {
           const isLastHour = hourIndex === HOURS.length - 1;
