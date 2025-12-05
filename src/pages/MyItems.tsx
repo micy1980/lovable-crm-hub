@@ -48,6 +48,8 @@ import { toast } from '@/hooks/use-toast';
 
 type FilterType = 'all' | 'personal' | 'project';
 
+// Component for managing user's personal tasks and events
+
 const MyItems = () => {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();

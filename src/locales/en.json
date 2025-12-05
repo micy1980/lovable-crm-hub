@@ -262,8 +262,9 @@
   "tasks": {
     "status": {
       "pending": "Pending",
-      "inProgress": "In Progress",
-      "completed": "Completed"
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     },
     "responsible": "Responsible"
   },
