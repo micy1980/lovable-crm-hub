@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { X, UserPlus, Mail, Users, Calendar } from 'lucide-react';
+import { X, UserPlus, Mail, Users, Calendar, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useEvents } from '@/hooks/useEvents';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -71,11 +82,13 @@ export const EventDialog = ({
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const { createEvent, updateEvent } = useEvents();
+  const queryClient = useQueryClient();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [externalEmail, setExternalEmail] = useState('');
   const [externalName, setExternalName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       title: '',
@@ -256,6 +269,32 @@ export const EventDialog = ({
 
   const removeParticipant = (index: number) => {
     setParticipants(participants.filter((_, i) => i !== index));
+  };
+
+  const handleDelete = async () => {
+    if (!event) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', event.id);
+
+      if (error) throw error;
+      
+      toast.success(t('events.deleted', 'Esemény sikeresen törölve'));
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+      queryClient.invalidateQueries({ queryKey: ['my-items'] });
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error deleting event:', error);
+      toast.error(t('events.deleteError', 'Nincs jogosultságod törölni ezt az eseményt'));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const availableUsers = users.filter(u => !participants.some(p => p.user_id === u.id));
@@ -477,16 +516,51 @@ export const EventDialog = ({
             )}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={createEvent.isPending || updateEvent.isPending}>
-              {event ? t('common.save') : t('events.create')}
-            </Button>
+          <DialogFooter className="flex justify-between">
+            <div>
+              {event && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('common.delete', 'Törlés')}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={createEvent.isPending || updateEvent.isPending}>
+                {event ? t('common.save') : t('events.create')}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('events.deleteConfirmTitle', 'Esemény törlése')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('events.deleteConfirmDescription', 'Biztosan törölni szeretnéd ezt az eseményt? Ez a művelet nem vonható vissza.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel', 'Mégse')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t('common.deleting', 'Törlés...') : t('common.delete', 'Törlés')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
