@@ -1474,6 +1474,10 @@ export type Database = {
         Returns: undefined
       }
       can_add_seat: { Args: { _company_id: string }; Returns: boolean }
+      can_soft_delete_project: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_user_delete_in_company: {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
