@@ -109,6 +109,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
 
       queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['sales-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-items'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       onOpenChange(false);
       reset();
     } catch (error: any) {
