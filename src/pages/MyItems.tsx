@@ -14,13 +14,14 @@ import {
   Pencil,
   Trash2,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { useMyItems } from '@/hooks/useEvents';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -29,9 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { TaskDialog } from '@/components/projects/TaskDialog';
 import { EventDialog } from '@/components/events/EventDialog';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,8 +55,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 
 type FilterType = 'all' | 'personal' | 'project';
-
-// Component for managing user's personal tasks and events
 
 export default function MyItems() {
   const { t } = useTranslation();
@@ -141,10 +147,10 @@ export default function MyItems() {
 
   return (
     <LicenseGuard feature="calendar">
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">{t('myItems.title')}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('myItems.title')}</h1>
             <p className="text-muted-foreground">{t('myItems.description')}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -174,150 +180,194 @@ export default function MyItems() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tasks" className="space-y-4">
-            <div className="flex justify-end">
-              <Button onClick={() => { setSelectedTask(null); setTaskDialogOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                {t('myItems.newTask')}
-              </Button>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
-                ))}
-              </div>
-            ) : filteredTasks.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <CheckSquare className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">{t('myItems.noTasks')}</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2">
-                {filteredTasks.map((task: any) => {
-                  const typeInfo = getItemTypeLabel(task);
-                  const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'completed';
-                  
-                  return (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="flex items-center justify-between p-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium truncate">{task.title}</h3>
-                            <Badge variant={getStatusBadge(task.status)}>
-                              {t(`tasks.status.${task.status}`)}
-                            </Badge>
-                            {isOverdue && (
-                              <AlertCircle className="h-4 w-4 text-destructive" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className={`flex items-center gap-1 ${typeInfo.color}`}>
-                              <typeInfo.icon className="h-3 w-3" />
-                              {typeInfo.label}
-                            </span>
-                            {task.deadline && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {format(new Date(task.deadline), 'yyyy.MM.dd HH:mm', { locale: hu })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditTask(task)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick('task', task.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+          <TabsContent value="tasks">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('myItems.tasks')}</CardTitle>
+                  <CardDescription>{t('myItems.tasksDescription')}</CardDescription>
+                </div>
+                <Button onClick={() => { setSelectedTask(null); setTaskDialogOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('myItems.newTask')}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredTasks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">{t('myItems.noTasks')}</p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('tasks.title')}</TableHead>
+                          <TableHead>{t('tasks.status')}</TableHead>
+                          <TableHead>{t('myItems.type')}</TableHead>
+                          <TableHead>{t('tasks.deadline')}</TableHead>
+                          <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTasks.map((task: any) => {
+                          const typeInfo = getItemTypeLabel(task);
+                          const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'completed';
+                          
+                          return (
+                            <TableRow key={task.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{task.title}</span>
+                                  {isOverdue && (
+                                    <AlertCircle className="h-4 w-4 text-destructive" />
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={getStatusBadge(task.status)}>
+                                  {t(`tasks.status.${task.status}`)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`flex items-center gap-1 ${typeInfo.color}`}>
+                                  <typeInfo.icon className="h-4 w-4" />
+                                  {typeInfo.label}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {task.deadline ? (
+                                  <span className="flex items-center gap-1 text-sm">
+                                    <Clock className="h-3 w-3" />
+                                    {format(new Date(task.deadline), 'yyyy.MM.dd HH:mm', { locale: hu })}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditTask(task)}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteClick('task', task.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="events" className="space-y-4">
-            <div className="flex justify-end">
-              <Button onClick={() => { setSelectedEvent(null); setEventDialogOpen(true); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                {t('myItems.newEvent')}
-              </Button>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
-                ))}
-              </div>
-            ) : filteredEvents.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">{t('myItems.noEvents')}</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2">
-                {filteredEvents.map((event: any) => {
-                  const typeInfo = getItemTypeLabel(event);
-                  
-                  return (
-                    <Card key={event.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="flex items-center justify-between p-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium truncate">{event.title}</h3>
-                            {event.is_all_day && (
-                              <Badge variant="outline">{t('events.allDay')}</Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className={`flex items-center gap-1 ${typeInfo.color}`}>
-                              <typeInfo.icon className="h-3 w-3" />
-                              {typeInfo.label}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {format(new Date(event.start_time), event.is_all_day ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm', { locale: hu })}
-                              {event.end_time && (
-                                <> - {format(new Date(event.end_time), event.is_all_day ? 'yyyy.MM.dd' : 'HH:mm', { locale: hu })}</>
-                              )}
-                            </span>
-                            {event.location && (
-                              <span className="truncate max-w-[200px]">{event.location}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick('event', event.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+          <TabsContent value="events">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('myItems.events')}</CardTitle>
+                  <CardDescription>{t('myItems.eventsDescription')}</CardDescription>
+                </div>
+                <Button onClick={() => { setSelectedEvent(null); setEventDialogOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('myItems.newEvent')}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredEvents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">{t('myItems.noEvents')}</p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('events.title')}</TableHead>
+                          <TableHead>{t('myItems.type')}</TableHead>
+                          <TableHead>{t('events.startTime')}</TableHead>
+                          <TableHead>{t('events.location')}</TableHead>
+                          <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEvents.map((event: any) => {
+                          const typeInfo = getItemTypeLabel(event);
+                          
+                          return (
+                            <TableRow key={event.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{event.title}</span>
+                                  {event.is_all_day && (
+                                    <Badge variant="outline">{t('events.allDay')}</Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`flex items-center gap-1 ${typeInfo.color}`}>
+                                  <typeInfo.icon className="h-4 w-4" />
+                                  {typeInfo.label}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="flex items-center gap-1 text-sm">
+                                  <Clock className="h-3 w-3" />
+                                  {format(new Date(event.start_time), event.is_all_day ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm', { locale: hu })}
+                                  {event.end_time && (
+                                    <> - {format(new Date(event.end_time), event.is_all_day ? 'yyyy.MM.dd' : 'HH:mm', { locale: hu })}</>
+                                  )}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {event.location ? (
+                                  <span className="text-sm truncate max-w-[200px] block">{event.location}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteClick('event', event.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
