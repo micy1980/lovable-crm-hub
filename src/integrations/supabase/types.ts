@@ -883,6 +883,8 @@ export type Database = {
           language: string | null
           must_change_password: boolean | null
           password_changed_at: string | null
+          personal_event_color: string | null
+          personal_task_color: string | null
           registered_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           two_factor_enabled: boolean | null
@@ -908,6 +910,8 @@ export type Database = {
           language?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
+          personal_event_color?: string | null
+          personal_task_color?: string | null
           registered_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           two_factor_enabled?: boolean | null
@@ -933,6 +937,8 @@ export type Database = {
           language?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
+          personal_event_color?: string | null
+          personal_task_color?: string | null
           registered_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           two_factor_enabled?: boolean | null
@@ -964,12 +970,14 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           description: string | null
+          event_color: string | null
           id: string
           name: string
           owner_user_id: string | null
           responsible1_user_id: string | null
           responsible2_user_id: string | null
           status: string | null
+          task_color: string | null
           updated_at: string | null
         }
         Insert: {
@@ -978,12 +986,14 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
+          event_color?: string | null
           id?: string
           name: string
           owner_user_id?: string | null
           responsible1_user_id?: string | null
           responsible2_user_id?: string | null
           status?: string | null
+          task_color?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -992,12 +1002,14 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
+          event_color?: string | null
           id?: string
           name?: string
           owner_user_id?: string | null
           responsible1_user_id?: string | null
           responsible2_user_id?: string | null
           status?: string | null
+          task_color?: string | null
           updated_at?: string | null
         }
         Relationships: [

@@ -56,6 +56,7 @@ export const WeekGrid = ({
         status: task.status,
         deadline: task.deadline,
         is_all_day: task.is_all_day,
+        color: task.project?.task_color || null,
       }));
 
     const hourEvents: CalendarItem[] = events
@@ -71,6 +72,7 @@ export const WeekGrid = ({
         start_time: event.start_time,
         end_time: event.end_time,
         is_all_day: event.is_all_day,
+        color: event.project?.event_color || null,
       }));
 
     return [...hourTasks, ...hourEvents];
@@ -90,6 +92,7 @@ export const WeekGrid = ({
         status: task.status,
         deadline: task.deadline,
         is_all_day: true,
+        color: task.project?.task_color || null,
       }));
 
     const allDayEvents: CalendarItem[] = events
@@ -105,6 +108,7 @@ export const WeekGrid = ({
         start_time: event.start_time,
         end_time: event.end_time,
         is_all_day: true,
+        color: event.project?.event_color || null,
       }));
 
     return [...allDayTasks, ...allDayEvents];

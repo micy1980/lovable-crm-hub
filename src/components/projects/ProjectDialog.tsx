@@ -11,7 +11,8 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ColorPicker } from '@/components/shared/ColorPicker';
 
 interface ProjectDialogProps {
   open: boolean;
@@ -46,6 +47,9 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
     }
   });
 
+  const [taskColor, setTaskColor] = useState<string | null>(null);
+  const [eventColor, setEventColor] = useState<string | null>(null);
+
   // Reset form when dialog opens or project changes
   useEffect(() => {
     if (open) {
@@ -58,6 +62,8 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
         responsible1_user_id: project?.responsible1_user_id || '',
         responsible2_user_id: project?.responsible2_user_id || '',
       });
+      setTaskColor(project?.task_color || null);
+      setEventColor(project?.event_color || null);
     }
   }, [open, project, reset]);
 
@@ -88,6 +94,8 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
         owner_user_id: data.owner_user_id || null,
         responsible1_user_id: data.responsible1_user_id || null,
         responsible2_user_id: data.responsible2_user_id || null,
+        task_color: taskColor,
+        event_color: eventColor,
       };
 
       if (project) {
@@ -237,6 +245,19 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <ColorPicker 
+              value={taskColor} 
+              onChange={setTaskColor} 
+              label="Feladatok színe"
+            />
+            <ColorPicker 
+              value={eventColor} 
+              onChange={setEventColor} 
+              label="Események színe"
+            />
           </div>
 
           <DialogFooter>
