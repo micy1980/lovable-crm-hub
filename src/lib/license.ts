@@ -12,11 +12,12 @@
 
 export type LicenseFeature = 
   | 'partners'
-  | 'sales'
-  | 'calendar'
   | 'projects'
+  | 'sales'
   | 'documents'
-  | 'logs';
+  | 'calendar'
+  | 'my_items'
+  | 'audit';
 
 export interface DecodedLicense {
   version: number;
@@ -38,8 +39,8 @@ const EPOCH = new Date('2000-01-01T00:00:00Z');
 const LICENSE_VERSION = 1;
 const SECRET_KEY = 'ORBIX_LICENSE_SECRET_2025';
 
-// Feature bit positions (MSB first)
-const FEATURE_ORDER: LicenseFeature[] = ['partners', 'sales', 'calendar', 'projects', 'documents', 'logs'];
+// Feature bit positions (MSB first) - 8 bits for 7 features
+const FEATURE_ORDER: LicenseFeature[] = ['partners', 'projects', 'sales', 'documents', 'calendar', 'my_items', 'audit'];
 
 /**
  * Convert a date to days since epoch
@@ -58,25 +59,25 @@ function daysToDate(days: number): Date {
 }
 
 /**
- * Convert features array to 6-bit mask
+ * Convert features array to 8-bit mask
  */
 function featuresToMask(features: LicenseFeature[]): number {
   let mask = 0;
   for (let i = 0; i < FEATURE_ORDER.length; i++) {
     if (features.includes(FEATURE_ORDER[i])) {
-      mask |= (1 << (5 - i)); // MSB first
+      mask |= (1 << (7 - i)); // MSB first
     }
   }
   return mask;
 }
 
 /**
- * Convert 6-bit mask to features array
+ * Convert 8-bit mask to features array
  */
 function maskToFeatures(mask: number): LicenseFeature[] {
   const features: LicenseFeature[] = [];
   for (let i = 0; i < FEATURE_ORDER.length; i++) {
-    if (mask & (1 << (5 - i))) {
+    if (mask & (1 << (7 - i))) {
       features.push(FEATURE_ORDER[i]);
     }
   }
@@ -206,13 +207,13 @@ export async function generateLicenseKey(input: LicenseInput): Promise<string> {
     throw new Error('Dates out of range (must be within ~89 years of epoch 2000-01-01)');
   }
   
-  // Build 50-bit payload (big-endian)
+  // Build 52-bit payload (big-endian) - 8 bits for features instead of 6
   let payload = 0n;
   payload = (payload << 4n) | BigInt(version);        // 4 bits
   payload = (payload << 10n) | BigInt(maxUsers);      // 10 bits
   payload = (payload << 15n) | BigInt(validFromDays); // 15 bits
   payload = (payload << 15n) | BigInt(validUntilDays);// 15 bits
-  payload = (payload << 6n) | BigInt(featuresMask);   // 6 bits
+  payload = (payload << 8n) | BigInt(featuresMask);   // 8 bits (was 6)
   
   // Convert to bytes (50 bits = 7 bytes minimum, but we'll use 7)
   const payloadBytes = bigIntToBytes(payload, 7);
@@ -268,15 +269,15 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
       return null; // Invalid MAC
     }
     
-    // Decode payload (50 bits)
+    // Decode payload (52 bits)
     const payload = bytesToBigInt(payloadBytes);
     
     // Extract fields (big-endian, MSB first)
-    const featuresMask = Number(payload & 0x3Fn);                    // 6 bits
-    const validUntilDays = Number((payload >> 6n) & 0x7FFFn);        // 15 bits
-    const validFromDays = Number((payload >> 21n) & 0x7FFFn);        // 15 bits
-    const maxUsers = Number((payload >> 36n) & 0x3FFn);              // 10 bits
-    const version = Number((payload >> 46n) & 0xFn);                 // 4 bits
+    const featuresMask = Number(payload & 0xFFn);                     // 8 bits (was 6)
+    const validUntilDays = Number((payload >> 8n) & 0x7FFFn);         // 15 bits
+    const validFromDays = Number((payload >> 23n) & 0x7FFFn);         // 15 bits
+    const maxUsers = Number((payload >> 38n) & 0x3FFn);               // 10 bits
+    const version = Number((payload >> 48n) & 0xFn);                  // 4 bits
     
     // Validate version
     if (version !== LICENSE_VERSION) {

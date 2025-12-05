@@ -50,12 +50,12 @@ export function AppSidebar() {
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
     { title: t('nav.documents'), url: '/documents', icon: FileText, feature: 'documents' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
-    { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'calendar' },
+    { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'my_items' },
   ];
 
-  // Add Logs for super_admin
+  // Add Audit for super_admin
   if (isSuper) {
-    mainMenuItems.push({ title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'logs' });
+    mainMenuItems.push({ title: t('nav.logs'), url: '/logs', icon: ScrollText, feature: 'audit' });
   }
 
   // Filter menu items based on license features

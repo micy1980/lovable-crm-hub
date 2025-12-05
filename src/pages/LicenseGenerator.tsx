@@ -23,7 +23,8 @@ const LicenseGenerator = () => {
     sales: true,
     documents: true,
     calendar: true,
-    logs: false,
+    my_items: true,
+    audit: false,
   });
   
   const [generatedKey, setGeneratedKey] = useState("");
@@ -73,11 +74,12 @@ const LicenseGenerator = () => {
       // Format feature names for display
       const featureNames: Record<string, string> = {
         'partners': 'Partnerek',
-        'sales': 'Értékesítés',
-        'calendar': 'Naptár',
         'projects': 'Projektek',
+        'sales': 'Értékesítés',
         'documents': 'Dokumentumok',
-        'logs': 'Naplók'
+        'calendar': 'Naptár',
+        'my_items': 'Saját dolgaim',
+        'audit': 'Audit napló'
       };
       
       const featureList = selectedFeatures.map(f => featureNames[f] || f).join(', ');
@@ -109,7 +111,8 @@ const LicenseGenerator = () => {
       sales: true,
       documents: true,
       calendar: true,
-      logs: false,
+      my_items: true,
+      audit: false,
     });
     setGeneratedKey("");
     setLicenseInfo("");
@@ -173,7 +176,8 @@ const LicenseGenerator = () => {
                   { key: 'sales', label: 'Értékesítés' },
                   { key: 'documents', label: 'Dokumentumok' },
                   { key: 'calendar', label: 'Naptár' },
-                  { key: 'logs', label: 'Naplók' },
+                  { key: 'my_items', label: 'Saját dolgaim' },
+                  { key: 'audit', label: 'Audit napló' },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox

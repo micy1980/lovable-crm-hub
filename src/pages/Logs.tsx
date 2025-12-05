@@ -5,6 +5,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useNavigate } from 'react-router-dom';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { useTranslation } from 'react-i18next';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 import {
   Card,
   CardContent,
@@ -280,13 +281,14 @@ const Logs = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('logs.title')}</h1>
-        <p className="text-muted-foreground">{t('logs.description')}</p>
-      </div>
+    <LicenseGuard feature="audit">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('logs.title')}</h1>
+          <p className="text-muted-foreground">{t('logs.description')}</p>
+        </div>
 
-      <Tabs defaultValue="logs" className="space-y-4">
+        <Tabs defaultValue="logs" className="space-y-4">
         <TabsList>
           <TabsTrigger value="logs">{t('logs.auditLog')}</TabsTrigger>
           <TabsTrigger value="assignments">{t('logs.userAssignments')}</TabsTrigger>
@@ -434,6 +436,7 @@ const Logs = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </LicenseGuard>
   );
 };
 

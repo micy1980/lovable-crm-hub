@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, FileText, Download, ExternalLink } from 'lucide-react';
 import { DocumentDialog } from '@/components/documents/DocumentDialog';
 import { toast } from 'sonner';
+import { LicenseGuard } from '@/components/license/LicenseGuard';
 
 const Documents = () => {
   const { activeCompany } = useCompany();
@@ -100,21 +101,24 @@ const Documents = () => {
 
   if (!activeCompany) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Nincs kiválasztott cég</CardTitle>
-            <CardDescription>
-              Válasszon ki egy céget a folytatáshoz
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <LicenseGuard feature="documents">
+        <div className="flex h-full items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>Nincs kiválasztott cég</CardTitle>
+              <CardDescription>
+                Válasszon ki egy céget a folytatáshoz
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </LicenseGuard>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <LicenseGuard feature="documents">
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dokumentumok</h1>
@@ -233,6 +237,7 @@ const Documents = () => {
         document={selectedDocument}
       />
     </div>
+    </LicenseGuard>
   );
 };
 
