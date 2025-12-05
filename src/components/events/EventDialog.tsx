@@ -276,10 +276,9 @@ export const EventDialog = ({
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', event.id);
+      const { error } = await supabase.rpc('soft_delete_event', {
+        _event_id: event.id
+      });
 
       if (error) throw error;
       

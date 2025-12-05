@@ -147,18 +147,17 @@ export const useDocuments = () => {
 
   const deleteDocument = useMutation({
     mutationFn: async (id: string) => {
-      // Get document to retrieve file path
+      // Get document to retrieve file path first
       const { data: doc } = await supabase
         .from('documents')
         .select('file_path')
         .eq('id', id)
         .single();
 
-      // Soft delete document record
-      const { error } = await supabase
-        .from('documents')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
+      // Soft delete document record via RPC
+      const { error } = await supabase.rpc('soft_delete_document', {
+        _document_id: id
+      });
 
       if (error) throw error;
 

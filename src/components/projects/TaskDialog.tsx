@@ -213,10 +213,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', task.id);
+      const { error } = await supabase.rpc('soft_delete_task', {
+        _task_id: task.id
+      });
 
       if (error) throw error;
       

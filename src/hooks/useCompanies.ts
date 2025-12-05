@@ -172,10 +172,9 @@ export const useCompanies = () => {
 
   const deleteCompany = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('companies')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
+      const { error } = await supabase.rpc('soft_delete_company', {
+        _company_id: id
+      });
 
       if (error) throw error;
     },
