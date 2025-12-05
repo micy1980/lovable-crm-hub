@@ -252,7 +252,10 @@
     "selectDate": "Select a date",
     "noTasks": "No tasks",
     "tasksList": "Tasks List",
-    "allDay": "All day"
+    "allDay": "All day",
+    "taskMoved": "Task moved",
+    "taskMovedDescription": "Task deadline updated.",
+    "taskMoveError": "Failed to move task."
   },
   "tasks": {
     "status": {

@@ -252,7 +252,10 @@
     "selectDate": "Válassz egy dátumot",
     "noTasks": "Nincsenek feladatok",
     "tasksList": "Feladatok listája",
-    "allDay": "Egész nap"
+    "allDay": "Egész nap",
+    "taskMoved": "Feladat áthelyezve",
+    "taskMovedDescription": "A feladat határideje frissítve.",
+    "taskMoveError": "Nem sikerült a feladat áthelyezése."
   },
   "tasks": {
     "status": {
