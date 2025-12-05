@@ -56,6 +56,7 @@ export const CalendarGrid = ({
         status: task.status,
         deadline: task.deadline,
         is_all_day: task.is_all_day,
+        color: task.project?.task_color || null,
       }));
     
     const dayEvents: CalendarItem[] = events
@@ -67,6 +68,7 @@ export const CalendarGrid = ({
         start_time: event.start_time,
         end_time: event.end_time,
         is_all_day: event.is_all_day,
+        color: event.project?.event_color || null,
       }));
 
     return [...dayTasks, ...dayEvents];

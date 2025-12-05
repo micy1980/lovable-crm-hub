@@ -13,6 +13,8 @@ export interface CalendarItem {
   // Event fields
   start_time?: string;
   end_time?: string | null;
+  // Color field
+  color?: string | null;
 }
 
 interface DraggableItemProps {
@@ -33,6 +35,32 @@ const getStatusIcon = (status: string) => {
     default:
       return null;
   }
+};
+
+// Color map for custom colors
+const colorMap: Record<string, { bg: string; bgLight: string; border: string; text: string; darkBg: string; darkBorder: string; darkText: string }> = {
+  blue: { bg: 'bg-blue-500', bgLight: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', darkBg: 'dark:bg-blue-900/30', darkBorder: 'dark:border-blue-700', darkText: 'dark:text-blue-300' },
+  green: { bg: 'bg-green-500', bgLight: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', darkBg: 'dark:bg-green-900/30', darkBorder: 'dark:border-green-700', darkText: 'dark:text-green-300' },
+  orange: { bg: 'bg-orange-500', bgLight: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', darkBg: 'dark:bg-orange-900/30', darkBorder: 'dark:border-orange-700', darkText: 'dark:text-orange-300' },
+  red: { bg: 'bg-red-500', bgLight: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', darkBg: 'dark:bg-red-900/30', darkBorder: 'dark:border-red-700', darkText: 'dark:text-red-300' },
+  purple: { bg: 'bg-purple-500', bgLight: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-800', darkBg: 'dark:bg-purple-900/30', darkBorder: 'dark:border-purple-700', darkText: 'dark:text-purple-300' },
+  pink: { bg: 'bg-pink-500', bgLight: 'bg-pink-100', border: 'border-pink-300', text: 'text-pink-800', darkBg: 'dark:bg-pink-900/30', darkBorder: 'dark:border-pink-700', darkText: 'dark:text-pink-300' },
+  cyan: { bg: 'bg-cyan-500', bgLight: 'bg-cyan-100', border: 'border-cyan-300', text: 'text-cyan-800', darkBg: 'dark:bg-cyan-900/30', darkBorder: 'dark:border-cyan-700', darkText: 'dark:text-cyan-300' },
+  yellow: { bg: 'bg-yellow-500', bgLight: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-800', darkBg: 'dark:bg-yellow-900/30', darkBorder: 'dark:border-yellow-700', darkText: 'dark:text-yellow-300' },
+  indigo: { bg: 'bg-indigo-500', bgLight: 'bg-indigo-100', border: 'border-indigo-300', text: 'text-indigo-800', darkBg: 'dark:bg-indigo-900/30', darkBorder: 'dark:border-indigo-700', darkText: 'dark:text-indigo-300' },
+  teal: { bg: 'bg-teal-500', bgLight: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', darkBg: 'dark:bg-teal-900/30', darkBorder: 'dark:border-teal-700', darkText: 'dark:text-teal-300' },
+  violet: { bg: 'bg-violet-500', bgLight: 'bg-violet-100', border: 'border-violet-300', text: 'text-violet-800', darkBg: 'dark:bg-violet-900/30', darkBorder: 'dark:border-violet-700', darkText: 'dark:text-violet-300' },
+};
+
+const getCustomColorClass = (color: string | null | undefined): string => {
+  if (!color || !colorMap[color]) return '';
+  const c = colorMap[color];
+  return `${c.bgLight} ${c.border} ${c.text} ${c.darkBg} ${c.darkBorder} ${c.darkText}`;
+};
+
+const getCustomColorCompact = (color: string | null | undefined): string => {
+  if (!color || !colorMap[color]) return '';
+  return `${colorMap[color].bg}/20 hover:${colorMap[color].bg}/30`;
 };
 
 const getTaskStatusColor = (status: string) => {
@@ -82,7 +110,21 @@ export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTi
   };
 
   const isEvent = item.type === 'event';
-  const colorClass = isEvent ? getEventColor() : getTaskStatusColor(item.status || 'pending');
+  const hasCustomColor = !!item.color;
+  
+  // Determine color class - custom color takes precedence
+  let colorClass: string;
+  let compactBgClass: string;
+  
+  if (hasCustomColor) {
+    colorClass = getCustomColorClass(item.color);
+    compactBgClass = item.color && colorMap[item.color] 
+      ? `${colorMap[item.color].bgLight}/50 hover:${colorMap[item.color].bgLight}`
+      : '';
+  } else {
+    colorClass = isEvent ? getEventColor() : getTaskStatusColor(item.status || 'pending');
+    compactBgClass = isEvent ? "bg-violet-500/20 hover:bg-violet-500/30" : "bg-primary/10 hover:bg-primary/20";
+  }
 
   if (variant === 'compact') {
     return (
@@ -91,9 +133,7 @@ export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTi
         style={style}
         className={cn(
           "text-xs p-1 rounded truncate flex items-center gap-1 group",
-          isEvent 
-            ? "bg-violet-500/20 hover:bg-violet-500/30" 
-            : "bg-primary/10 hover:bg-primary/20",
+          compactBgClass,
           isDragging && "opacity-50 z-50 shadow-lg"
         )}
       >

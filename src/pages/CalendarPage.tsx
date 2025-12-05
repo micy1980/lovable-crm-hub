@@ -4,7 +4,7 @@ import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertCircle, Plus, ListTodo, Calendar } from 'lucide-react';
@@ -17,6 +17,7 @@ import { useUpdateTaskDeadline } from '@/hooks/useUpdateTaskDeadline';
 import { TaskDialog } from '@/components/projects/TaskDialog';
 import { EventDialog } from '@/components/events/EventDialog';
 import { toast } from '@/hooks/use-toast';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,7 @@ const CalendarPage = () => {
   const { t, i18n } = useTranslation();
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
+  const { data: userProfile } = useUserProfile();
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -94,7 +96,7 @@ const CalendarPage = () => {
       const { start, end } = getDateRange();
       const { data, error } = await supabase
         .from('tasks')
-        .select(`*, responsible:responsible_user_id(full_name, email), creator:created_by(full_name, email), project:projects(id, name), sales:sales(id, name)`)
+        .select(`*, responsible:responsible_user_id(full_name, email), creator:created_by(full_name, email), project:projects(id, name, task_color, event_color), sales:sales(id, name)`)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .gte('deadline', start.toISOString())
@@ -113,7 +115,7 @@ const CalendarPage = () => {
       const { start, end } = getDateRange();
       const { data, error } = await supabase
         .from('events')
-        .select(`*, responsible_user:profiles!events_responsible_user_id_fkey(full_name, email), project:projects(id, name), sales:sales(id, name)`)
+        .select(`*, responsible_user:profiles!events_responsible_user_id_fkey(full_name, email), project:projects(id, name, task_color, event_color), sales:sales(id, name)`)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .gte('start_time', start.toISOString())

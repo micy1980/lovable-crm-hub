@@ -8,6 +8,7 @@ import { SystemSettings } from '@/components/settings/SystemSettings';
 import { TwoFactorAuth } from '@/components/settings/TwoFactorAuth';
 import { EmailSettings } from '@/components/settings/EmailSettings';
 import { LogoSettings } from '@/components/settings/LogoSettings';
+import { PersonalColorSettings } from '@/components/settings/PersonalColorSettings';
 import { useTranslation } from 'react-i18next';
 import { isSuperAdmin as checkSuperAdmin } from '@/lib/roleUtils';
 import { Badge } from '@/components/ui/badge';
@@ -155,6 +156,9 @@ const Settings = () => {
 
           {/* Two-Factor Authentication */}
           <TwoFactorAuth />
+
+          {/* Personal Colors */}
+          <PersonalColorSettings />
         </TabsContent>
 
         {isSuperAdmin && (
