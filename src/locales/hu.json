@@ -468,7 +468,7 @@
   "logs": {
     "title": "Audit",
     "description": "Rendszeraktivitás és felhasználói hozzárendelések megtekintése (csak Super Admin)",
-    "auditLog": "Audit Napló",
+    "auditLog": "Audit",
     "auditDescription": "Rendszerszintű tevékenységi napló részletes változáskövetéssel",
     "userAssignments": "Felhasználó-Vállalat Hozzárendelések",
     "userAssignmentsDescription": "Megtekinthető, hogy melyik felhasználó melyik vállalathoz van hozzárendelve",
