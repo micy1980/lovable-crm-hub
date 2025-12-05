@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
   const queryClient = useQueryClient();
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<TaskFormData>({
-    defaultValues: task || {
+    defaultValues: {
       title: '',
       description: '',
       status: 'pending',
@@ -39,6 +40,27 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
       responsible_user_id: '',
     }
   });
+
+  // Update form when task changes or dialog opens
+  useEffect(() => {
+    if (open && task) {
+      reset({
+        title: task.title || '',
+        description: task.description || '',
+        status: task.status || 'pending',
+        deadline: task.deadline ? task.deadline.split('T')[0] : '',
+        responsible_user_id: task.responsible_user_id || '',
+      });
+    } else if (open && !task) {
+      reset({
+        title: '',
+        description: '',
+        status: 'pending',
+        deadline: '',
+        responsible_user_id: '',
+      });
+    }
+  }, [open, task, reset]);
 
   // Fetch users for responsible dropdown using RPC function
   const { data: users = [] } = useQuery({
