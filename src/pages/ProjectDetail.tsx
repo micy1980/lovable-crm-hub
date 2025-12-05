@@ -37,9 +37,9 @@ const ProjectDetail = () => {
         .from('projects')
         .select(`
           *,
-          owner:profiles!projects_owner_user_id_fkey(full_name, email),
-          responsible1:profiles!projects_responsible1_user_id_fkey(full_name, email),
-          responsible2:profiles!projects_responsible2_user_id_fkey(full_name, email)
+          owner:profiles!owner_user_id(full_name, email),
+          responsible1:profiles!responsible1_user_id(full_name, email),
+          responsible2:profiles!responsible2_user_id(full_name, email)
         `)
         .eq('id', id)
         .is('deleted_at', null)
