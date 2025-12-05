@@ -140,6 +140,9 @@
     "visibleColumns": "Látható oszlopok",
     "yes": "Igen",
     "no": "Nem",
+    "createdAt": "Létrehozva",
+    "none": "Nincs",
+    "create": "Létrehozás",
     "errors": {
       "userUpdateFailed": "Hiba történt a felhasználó frissítése során."
     }

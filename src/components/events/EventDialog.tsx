@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { X, UserPlus, Mail, Users } from 'lucide-react';
+import { X, UserPlus, Mail, Users, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useEvents } from '@/hooks/useEvents';
@@ -266,6 +266,19 @@ export const EventDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Created at - read only, only for existing events */}
+          {event?.created_at && (
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{t('common.createdAt', 'Létrehozva')}</Label>
+              <Input
+                value={format(new Date(event.created_at), 'yyyy.MM.dd HH:mm:ss')}
+                readOnly
+                disabled
+                className="bg-muted"
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="title">{t('events.title')} *</Label>
             <Input

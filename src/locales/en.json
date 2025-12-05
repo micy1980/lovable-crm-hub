@@ -140,6 +140,9 @@
     "visibleColumns": "Visible columns",
     "yes": "Yes",
     "no": "No",
+    "createdAt": "Created",
+    "none": "None",
+    "create": "Create",
     "errors": {
       "userUpdateFailed": "An error occurred while updating the user."
     }

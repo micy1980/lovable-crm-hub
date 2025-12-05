@@ -10,6 +10,8 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 
 interface TaskDialogProps {
   open: boolean;
@@ -23,11 +25,13 @@ interface TaskFormData {
   title: string;
   description: string;
   status: string;
-  deadline: string;
+  deadline_date: string;
+  deadline_time: string;
   responsible_user_id: string;
 }
 
 export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: TaskDialogProps) => {
+  const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
   
@@ -36,7 +40,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
       title: '',
       description: '',
       status: 'pending',
-      deadline: '',
+      deadline_date: '',
+      deadline_time: '',
       responsible_user_id: '',
     }
   });
@@ -44,11 +49,13 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
   // Update form when task changes or dialog opens
   useEffect(() => {
     if (open && task) {
+      const deadlineDate = task.deadline ? new Date(task.deadline) : null;
       reset({
         title: task.title || '',
         description: task.description || '',
         status: task.status || 'pending',
-        deadline: task.deadline ? task.deadline.split('T')[0] : '',
+        deadline_date: deadlineDate ? format(deadlineDate, 'yyyy-MM-dd') : '',
+        deadline_time: deadlineDate ? format(deadlineDate, 'HH:mm') : '',
         responsible_user_id: task.responsible_user_id || '',
       });
     } else if (open && !task) {
@@ -56,7 +63,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
         title: '',
         description: '',
         status: 'pending',
-        deadline: '',
+        deadline_date: '',
+        deadline_time: '',
         responsible_user_id: '',
       });
     }
@@ -77,17 +85,32 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
     enabled: !!activeCompany && open,
   });
 
+  const formatCreatedAt = (dateString: string | null) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return format(date, 'yyyy.MM.dd HH:mm:ss');
+  };
+
   const onSubmit = async (data: TaskFormData) => {
     if (!activeCompany) return;
 
     try {
+      // Combine date and time for deadline
+      let deadlineISO: string | null = null;
+      if (data.deadline_date) {
+        const timeStr = data.deadline_time || '00:00';
+        deadlineISO = new Date(`${data.deadline_date}T${timeStr}:00`).toISOString();
+      }
+
       const taskData = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        status: data.status,
         company_id: activeCompany.id,
-        project_id: projectId || null,
-        sales_id: salesId || null,
+        project_id: projectId || task?.project_id || null,
+        sales_id: salesId || task?.sales_id || null,
         responsible_user_id: data.responsible_user_id || null,
-        deadline: data.deadline || null,
+        deadline: deadlineISO,
       };
 
       if (task) {
@@ -97,14 +120,14 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
           .eq('id', task.id);
 
         if (error) throw error;
-        toast.success('Feladat sikeresen frissítve');
+        toast.success(t('tasks.updated', 'Feladat sikeresen frissítve'));
       } else {
         const { error } = await supabase
           .from('tasks')
           .insert([taskData]);
 
         if (error) throw error;
-        toast.success('Feladat sikeresen létrehozva');
+        toast.success(t('tasks.created', 'Feladat sikeresen létrehozva'));
       }
 
       queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
@@ -116,7 +139,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
       reset();
     } catch (error: any) {
       console.error('Error saving task:', error);
-      toast.error('Hiba történt: ' + error.message);
+      toast.error(t('common.error', 'Hiba történt') + ': ' + error.message);
     }
   };
 
@@ -124,35 +147,48 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{task ? 'Feladat szerkesztése' : 'Új feladat létrehozása'}</DialogTitle>
+          <DialogTitle>{task ? t('tasks.edit', 'Feladat szerkesztése') : t('tasks.create', 'Új feladat létrehozása')}</DialogTitle>
           <DialogDescription>
-            Töltse ki a feladat részleteit
+            {t('tasks.fillDetails', 'Töltse ki a feladat részleteit')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Created at - read only, only for existing tasks */}
+          {task?.created_at && (
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">{t('common.createdAt', 'Létrehozva')}</Label>
+              <Input
+                value={formatCreatedAt(task.created_at)}
+                readOnly
+                disabled
+                className="bg-muted"
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="title">Cím *</Label>
+            <Label htmlFor="title">{t('common.title', 'Cím')} *</Label>
             <Input
               id="title"
               {...register('title', { required: true })}
-              placeholder="Feladat címe"
+              placeholder={t('tasks.titlePlaceholder', 'Feladat címe')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Leírás</Label>
+            <Label htmlFor="description">{t('common.description', 'Leírás')}</Label>
             <Textarea
               id="description"
               {...register('description')}
-              placeholder="Feladat részletes leírása"
+              placeholder={t('tasks.descriptionPlaceholder', 'Feladat részletes leírása')}
               rows={3}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="status">Státusz</Label>
+              <Label htmlFor="status">{t('tasks.statusLabel', 'Státusz')}</Label>
               <Select
                 value={watch('status') || 'pending'}
                 onValueChange={(value) => setValue('status', value)}
@@ -161,34 +197,41 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Függőben</SelectItem>
-                  <SelectItem value="in_progress">Folyamatban</SelectItem>
-                  <SelectItem value="completed">Befejezett</SelectItem>
+                  <SelectItem value="pending">{t('tasks.status.pending', 'Függőben')}</SelectItem>
+                  <SelectItem value="in_progress">{t('tasks.status.inProgress', 'Folyamatban')}</SelectItem>
+                  <SelectItem value="completed">{t('tasks.status.completed', 'Befejezett')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deadline">Határidő</Label>
-              <Input
-                id="deadline"
-                type="date"
-                {...register('deadline')}
-              />
+              <Label>{t('common.deadline', 'Határidő')}</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  {...register('deadline_date')}
+                  className="flex-1"
+                />
+                <Input
+                  type="time"
+                  {...register('deadline_time')}
+                  className="w-24"
+                />
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="responsible_user_id">Felelős</Label>
+            <Label htmlFor="responsible_user_id">{t('common.responsible', 'Felelős')}</Label>
             <Select
               value={watch('responsible_user_id') || 'none'}
               onValueChange={(value) => setValue('responsible_user_id', value === 'none' ? '' : value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Válasszon felelőst" />
+                <SelectValue placeholder={t('tasks.selectResponsible', 'Válasszon felelőst')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nincs</SelectItem>
+                <SelectItem value="none">{t('common.none', 'Nincs')}</SelectItem>
                 {users.map((user: any) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.full_name || user.email}
@@ -200,10 +243,10 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Mégse
+              {t('common.cancel', 'Mégse')}
             </Button>
             <Button type="submit">
-              {task ? 'Mentés' : 'Létrehozás'}
+              {task ? t('common.save', 'Mentés') : t('common.create', 'Létrehozás')}
             </Button>
           </DialogFooter>
         </form>
