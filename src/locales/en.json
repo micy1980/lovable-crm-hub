@@ -262,6 +262,7 @@
   "tasks": {
     "title": "Title",
     "deadline": "Deadline",
+    "statusLabel": "Status",
     "status": {
       "pending": "Pending",
       "in_progress": "In Progress",

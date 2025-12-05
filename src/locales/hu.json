@@ -262,6 +262,7 @@
   "tasks": {
     "title": "Cím",
     "deadline": "Határidő",
+    "statusLabel": "Státusz",
     "status": {
       "pending": "Függőben",
       "in_progress": "Folyamatban",
