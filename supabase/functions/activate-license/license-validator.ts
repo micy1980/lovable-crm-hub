@@ -2,6 +2,17 @@
  * Server-side license validation for activate-license edge function
  * This duplicates the core validation logic from src/lib/license.ts
  * to run in the Deno environment without browser dependencies.
+ * 
+ * Format (64-bit payload):
+ * - version: 4 bits
+ * - nonce: 12 bits (random, ensures unique keys for same parameters)
+ * - maxUsers: 10 bits
+ * - validFromDays: 15 bits
+ * - validUntilDays: 15 bits
+ * - features: 8 bits
+ * - Total payload: 64 bits (8 bytes)
+ * - HMAC-SHA256 tag: 56 bits (7 bytes, truncated)
+ * - Total: 120 bits = 15 bytes encoded as 25 base-36 characters
  */
 
 export type LicenseFeature = 
@@ -115,6 +126,7 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
     const normalized = rawKey.replace(/[^A-Z0-9]/gi, '').toUpperCase();
     
     if (normalized.length !== 25) {
+      console.log('License key length invalid:', normalized.length);
       return null;
     }
     
@@ -122,33 +134,42 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
     const combined = bigIntToBytes(combinedBigInt, 15);
     
     if (combined.length !== 15) {
+      console.log('Combined bytes length invalid:', combined.length);
       return null;
     }
     
-    const payloadBytes = combined.slice(0, 7);
-    const receivedMac = combined.slice(7, 15);
+    // Split into payload (8 bytes) and MAC (7 bytes)
+    const payloadBytes = combined.slice(0, 8);
+    const receivedMac = combined.slice(8, 15);
     
     const computedMac = await hmacSha256(SECRET_KEY, payloadBytes);
-    const expectedMac = computedMac.slice(0, 8);
+    const expectedMac = computedMac.slice(0, 7);
     
     if (!constantTimeCompare(receivedMac, expectedMac)) {
+      console.log('HMAC verification failed');
       return null;
     }
     
     const payload = bytesToBigInt(payloadBytes);
     
-    // Extract fields (big-endian, MSB first) - 8-bit features
+    // Extract fields (big-endian, MSB first)
+    // Layout: version(4) + nonce(12) + maxUsers(10) + validFrom(15) + validUntil(15) + features(8) = 64 bits
     const featuresMask = Number(payload & 0xFFn);                     // 8 bits
     const validUntilDays = Number((payload >> 8n) & 0x7FFFn);         // 15 bits
     const validFromDays = Number((payload >> 23n) & 0x7FFFn);         // 15 bits
     const maxUsers = Number((payload >> 38n) & 0x3FFn);               // 10 bits
-    const version = Number((payload >> 48n) & 0xFn);                  // 4 bits
+    // nonce at bits 48-59 (12 bits) - we don't need to decode it
+    const version = Number((payload >> 60n) & 0xFn);                  // 4 bits
+    
+    console.log('Decoded license fields:', { version, maxUsers, validFromDays, validUntilDays, featuresMask });
     
     if (version !== LICENSE_VERSION) {
+      console.log('Version mismatch:', version, 'expected:', LICENSE_VERSION);
       return null;
     }
     
     if (maxUsers < 1) {
+      console.log('Invalid maxUsers:', maxUsers);
       return null;
     }
     
@@ -156,10 +177,13 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
     const validUntil = daysToDate(validUntilDays);
     
     if (validUntil < validFrom) {
+      console.log('Invalid date range: validUntil < validFrom');
       return null;
     }
     
     const features = maskToFeatures(featuresMask);
+    
+    console.log('License validated successfully:', { maxUsers, validFrom, validUntil, features });
     
     return {
       version,

@@ -4,10 +4,16 @@
  * Format: 25 alphanumeric characters (base-36) displayed as 5 blocks of 5
  * Example: AB4KD-9ZQ1M-F7H2P-WX3C8-R2L0S
  * 
- * Encoding:
- * - 50-bit payload: version(4) + maxUsers(10) + validFromDays(15) + validUntilDays(15) + features(6)
- * - 64-bit HMAC-SHA256 tag (truncated to 8 bytes)
- * - Total: 114 bits encoded as 25 base-36 characters
+ * Encoding (64-bit payload):
+ * - version: 4 bits
+ * - nonce: 12 bits (random, ensures unique keys for same parameters)
+ * - maxUsers: 10 bits
+ * - validFromDays: 15 bits
+ * - validUntilDays: 15 bits
+ * - features: 8 bits
+ * - Total payload: 64 bits (8 bytes)
+ * - HMAC-SHA256 tag: 56 bits (7 bytes, truncated)
+ * - Total: 120 bits = 15 bytes encoded as 25 base-36 characters
  */
 
 export type LicenseFeature = 
@@ -185,6 +191,15 @@ function constantTimeCompare(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 /**
+ * Generate a random 12-bit nonce
+ */
+function generateNonce(): number {
+  const randomBytes = new Uint8Array(2);
+  crypto.getRandomValues(randomBytes);
+  return ((randomBytes[0] << 8) | randomBytes[1]) & 0xFFF; // 12 bits = 0-4095
+}
+
+/**
  * Generate a license key from input parameters
  */
 export async function generateLicenseKey(input: LicenseInput): Promise<string> {
@@ -197,6 +212,7 @@ export async function generateLicenseKey(input: LicenseInput): Promise<string> {
   }
   
   const version = LICENSE_VERSION;
+  const nonce = generateNonce(); // 12-bit random value
   const maxUsers = input.maxUsers;
   const validFromDays = dateToDays(input.validFrom);
   const validUntilDays = dateToDays(input.validUntil);
@@ -207,25 +223,27 @@ export async function generateLicenseKey(input: LicenseInput): Promise<string> {
     throw new Error('Dates out of range (must be within ~89 years of epoch 2000-01-01)');
   }
   
-  // Build 52-bit payload (big-endian) - 8 bits for features instead of 6
+  // Build 64-bit payload (big-endian)
   let payload = 0n;
   payload = (payload << 4n) | BigInt(version);        // 4 bits
+  payload = (payload << 12n) | BigInt(nonce);         // 12 bits (NEW)
   payload = (payload << 10n) | BigInt(maxUsers);      // 10 bits
   payload = (payload << 15n) | BigInt(validFromDays); // 15 bits
   payload = (payload << 15n) | BigInt(validUntilDays);// 15 bits
-  payload = (payload << 8n) | BigInt(featuresMask);   // 8 bits (was 6)
+  payload = (payload << 8n) | BigInt(featuresMask);   // 8 bits
+  // Total: 64 bits = 8 bytes
   
-  // Convert to bytes (50 bits = 7 bytes minimum, but we'll use 7)
-  const payloadBytes = bigIntToBytes(payload, 7);
+  // Convert to bytes
+  const payloadBytes = bigIntToBytes(payload, 8);
   
-  // Compute HMAC-SHA256 and truncate to 8 bytes
+  // Compute HMAC-SHA256 and truncate to 7 bytes
   const mac = await hmacSha256(SECRET_KEY, payloadBytes);
-  const macBytes = mac.slice(0, 8);
+  const macBytes = mac.slice(0, 7);
   
-  // Concatenate payload + MAC (7 + 8 = 15 bytes)
+  // Concatenate payload + MAC (8 + 7 = 15 bytes)
   const combined = new Uint8Array(15);
   combined.set(payloadBytes, 0);
-  combined.set(macBytes, 7);
+  combined.set(macBytes, 8);
   
   // Convert to BigInt and then to base-36 (25 characters)
   const combinedBigInt = bytesToBigInt(combined);
@@ -257,27 +275,29 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
       return null;
     }
     
-    // Split into payload and MAC
-    const payloadBytes = combined.slice(0, 7);
-    const receivedMac = combined.slice(7, 15);
+    // Split into payload (8 bytes) and MAC (7 bytes)
+    const payloadBytes = combined.slice(0, 8);
+    const receivedMac = combined.slice(8, 15);
     
     // Verify HMAC
     const computedMac = await hmacSha256(SECRET_KEY, payloadBytes);
-    const expectedMac = computedMac.slice(0, 8);
+    const expectedMac = computedMac.slice(0, 7);
     
     if (!constantTimeCompare(receivedMac, expectedMac)) {
       return null; // Invalid MAC
     }
     
-    // Decode payload (52 bits)
+    // Decode payload (64 bits)
     const payload = bytesToBigInt(payloadBytes);
     
     // Extract fields (big-endian, MSB first)
-    const featuresMask = Number(payload & 0xFFn);                     // 8 bits (was 6)
+    // Layout: version(4) + nonce(12) + maxUsers(10) + validFrom(15) + validUntil(15) + features(8) = 64 bits
+    const featuresMask = Number(payload & 0xFFn);                     // 8 bits
     const validUntilDays = Number((payload >> 8n) & 0x7FFFn);         // 15 bits
     const validFromDays = Number((payload >> 23n) & 0x7FFFn);         // 15 bits
     const maxUsers = Number((payload >> 38n) & 0x3FFn);               // 10 bits
-    const version = Number((payload >> 48n) & 0xFn);                  // 4 bits
+    // nonce at bits 48-59 (12 bits) - we don't need to decode it
+    const version = Number((payload >> 60n) & 0xFn);                  // 4 bits
     
     // Validate version
     if (version !== LICENSE_VERSION) {
