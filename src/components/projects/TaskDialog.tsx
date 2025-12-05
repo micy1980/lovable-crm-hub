@@ -163,6 +163,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         }
       }
 
+      // Get current user id
+      const { data: { user } } = await supabase.auth.getUser();
+
       const taskData = {
         title: data.title,
         description: data.description,
@@ -186,7 +189,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       } else {
         const { error } = await supabase
           .from('tasks')
-          .insert([taskData]);
+          .insert([{ ...taskData, created_by: user?.id }]);
 
         if (error) throw error;
         toast.success(t('tasks.created', 'Feladat sikeresen létrehozva'));
@@ -200,10 +203,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       onOpenChange(false);
       reset();
     } catch (error: any) {
-      console.error('Error deleting task:', error);
-      toast.error(t('tasks.deleteError', 'Nincs jogosultságod törölni ezt a feladatot'));
-    } finally {
-      setIsDeleting(false);
+      console.error('Error saving task:', error);
+      toast.error(t('common.error', 'Hiba történt') + ': ' + error.message);
     }
   };
 
@@ -228,8 +229,10 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       setDeleteDialogOpen(false);
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error saving task:', error);
-      toast.error(t('common.error', 'Hiba történt') + ': ' + error.message);
+      console.error('Error deleting task:', error);
+      toast.error(t('tasks.deleteError', 'Nincs jogosultságod törölni ezt a feladatot'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
