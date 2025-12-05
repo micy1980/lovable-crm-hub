@@ -1556,6 +1556,14 @@ export type Database = {
         Returns: string
       }
       get_company_used_seats: { Args: { _company_id: string }; Returns: number }
+      get_company_users_for_assignment: {
+        Args: { _company_id: string }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_locked_accounts_with_details: {
         Args: never
         Returns: {

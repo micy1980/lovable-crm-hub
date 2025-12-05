@@ -40,19 +40,17 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
     }
   });
 
-  // Fetch users for responsible dropdown
+  // Fetch users for responsible dropdown using RPC function
   const { data: users = [] } = useQuery({
     queryKey: ['company-users', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany) return [];
       
       const { data, error } = await supabase
-        .from('user_company_permissions')
-        .select('user_id, profiles:user_id(id, full_name, email)')
-        .eq('company_id', activeCompany.id);
+        .rpc('get_company_users_for_assignment', { _company_id: activeCompany.id });
       
       if (error) throw error;
-      return data.map((item: any) => item.profiles);
+      return data || [];
     },
     enabled: !!activeCompany && open,
   });
