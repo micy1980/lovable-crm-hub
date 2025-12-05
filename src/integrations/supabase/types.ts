@@ -254,6 +254,154 @@ export type Database = {
           },
         ]
       }
+      event_participants: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          external_email: string | null
+          external_name: string | null
+          id: string
+          notified_at: string | null
+          responded_at: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          external_email?: string | null
+          external_name?: string | null
+          id?: string
+          notified_at?: string | null
+          responded_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          external_email?: string | null
+          external_name?: string | null
+          id?: string
+          notified_at?: string | null
+          responded_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string
+          deleted_at: string | null
+          description: string | null
+          end_time: string | null
+          id: string
+          is_all_day: boolean | null
+          location: string | null
+          project_id: string | null
+          responsible_user_id: string | null
+          sales_id: string | null
+          start_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by: string
+          deleted_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          location?: string | null
+          project_id?: string | null
+          responsible_user_id?: string | null
+          sales_id?: string | null
+          start_time: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string
+          deleted_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          location?: string | null
+          project_id?: string | null
+          responsible_user_id?: string | null
+          sales_id?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_rates: {
         Row: {
           created_at: string | null
