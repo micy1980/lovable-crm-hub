@@ -1,48 +1,75 @@
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isSameMonth, setHours, setMinutes } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isSameMonth } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { DndContext, DragEndEvent, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { useState } from 'react';
-import { DraggableTask } from './DraggableTask';
+import { DraggableItem, CalendarItem } from './DraggableItem';
 import { DroppableCell } from './DroppableCell';
-
-interface Task {
-  id: string;
-  title: string;
-  status: string;
-  deadline: string | null;
-  is_all_day?: boolean;
-}
+import { Calendar } from 'lucide-react';
 
 interface CalendarGridProps {
   currentDate: Date;
   selectedDate: Date | undefined;
   onSelectDate: (date: Date) => void;
-  tasks: Task[];
-  onTaskClick: (task: Task) => void;
+  tasks: any[];
+  events?: any[];
+  onTaskClick: (task: any) => void;
+  onEventClick?: (event: any) => void;
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
+  onEventMove?: (eventId: string, newStartTime: Date) => void;
   onCellClick?: (date: Date) => void;
 }
 
 const WEEKDAYS_HU = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
 const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTaskClick, onTaskMove, onCellClick }: CalendarGridProps) => {
+export const CalendarGrid = ({ 
+  currentDate, 
+  selectedDate, 
+  onSelectDate, 
+  tasks, 
+  events = [],
+  onTaskClick, 
+  onEventClick,
+  onTaskMove, 
+  onEventMove,
+  onCellClick 
+}: CalendarGridProps) => {
   const { i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
   const weekdays = i18n.language === 'hu' ? WEEKDAYS_HU : WEEKDAYS_EN;
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeItem, setActiveItem] = useState<CalendarItem | null>(null);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const getTasksForDate = (date: Date) => {
-    return tasks.filter((task) => 
-      task.deadline && isSameDay(new Date(task.deadline), date)
-    );
+  const getItemsForDate = (date: Date): CalendarItem[] => {
+    const dayTasks: CalendarItem[] = tasks
+      .filter((task) => task.deadline && isSameDay(new Date(task.deadline), date))
+      .map(task => ({
+        id: task.id,
+        title: task.title,
+        type: 'task' as const,
+        status: task.status,
+        deadline: task.deadline,
+        is_all_day: task.is_all_day,
+      }));
+    
+    const dayEvents: CalendarItem[] = events
+      .filter((event) => event.start_time && isSameDay(new Date(event.start_time), date))
+      .map(event => ({
+        id: event.id,
+        title: event.title,
+        type: 'event' as const,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        is_all_day: event.is_all_day,
+      }));
+
+    return [...dayTasks, ...dayEvents];
   };
 
   // Build weeks array
@@ -58,21 +85,21 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
   }
 
   const handleDragStart = (event: any) => {
-    const task = event.active.data.current?.task;
-    if (task) {
-      setActiveTask(task);
+    const item = event.active.data.current?.item;
+    if (item) {
+      setActiveItem(item);
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveTask(null);
+    setActiveItem(null);
     const { active, over } = event;
     
-    if (!over || !onTaskMove) return;
+    if (!over) return;
     
-    const taskId = active.id as string;
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+    const itemId = active.id as string;
+    const item = active.data.current?.item as CalendarItem;
+    if (!item) return;
 
     // Parse the drop target date from the droppable ID (format: "day-YYYY-MM-DD")
     const dropId = over.id as string;
@@ -81,23 +108,53 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
     const dateStr = dropId.replace('day-', '');
     const newDate = new Date(dateStr);
     
-    // Preserve the original time from the task (or set to 00:00 for all-day)
-    if (task.deadline) {
-      const originalDate = new Date(task.deadline);
-      if (task.is_all_day) {
-        newDate.setHours(0, 0, 0, 0);
+    if (item.type === 'task') {
+      if (!onTaskMove) return;
+      const task = tasks.find(t => t.id === itemId);
+      if (!task) return;
+      
+      if (task.deadline) {
+        const originalDate = new Date(task.deadline);
+        if (task.is_all_day) {
+          newDate.setHours(0, 0, 0, 0);
+        } else {
+          newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), 0, 0);
+        }
       } else {
-        newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), 0, 0);
+        newDate.setHours(9, 0, 0, 0);
       }
-    } else {
-      // Default to 9:00 if no previous deadline
-      newDate.setHours(9, 0, 0, 0);
+      
+      if (task.deadline && isSameDay(new Date(task.deadline), newDate)) return;
+      onTaskMove(itemId, newDate);
+    } else if (item.type === 'event') {
+      if (!onEventMove) return;
+      const ev = events.find(e => e.id === itemId);
+      if (!ev) return;
+      
+      if (ev.start_time) {
+        const originalDate = new Date(ev.start_time);
+        if (ev.is_all_day) {
+          newDate.setHours(0, 0, 0, 0);
+        } else {
+          newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), 0, 0);
+        }
+      } else {
+        newDate.setHours(9, 0, 0, 0);
+      }
+      
+      if (ev.start_time && isSameDay(new Date(ev.start_time), newDate)) return;
+      onEventMove(itemId, newDate);
     }
-    
-    // Only update if date actually changed
-    if (task.deadline && isSameDay(new Date(task.deadline), newDate)) return;
-    
-    onTaskMove(taskId, newDate);
+  };
+
+  const handleItemClick = (item: CalendarItem) => {
+    if (item.type === 'task') {
+      const task = tasks.find(t => t.id === item.id);
+      if (task) onTaskClick(task);
+    } else if (item.type === 'event' && onEventClick) {
+      const event = events.find(e => e.id === item.id);
+      if (event) onEventClick(event);
+    }
   };
 
   return (
@@ -123,7 +180,7 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
         <div className="grid grid-cols-7">
           {weeks.map((week, weekIndex) =>
             week.map((day, dayIndex) => {
-              const dayTasks = getTasksForDate(day);
+              const dayItems = getItemsForDate(day);
               const isToday = isSameDay(day, new Date());
               const isSelected = selectedDate && isSameDay(day, selectedDate);
               const isCurrentMonth = isSameMonth(day, currentDate);
@@ -156,17 +213,17 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-1 overflow-hidden">
-                    {dayTasks.slice(0, 3).map((task) => (
-                      <DraggableTask
-                        key={task.id}
-                        task={task}
-                        onClick={() => onTaskClick(task)}
+                    {dayItems.slice(0, 3).map((item) => (
+                      <DraggableItem
+                        key={item.id}
+                        item={item}
+                        onClick={() => handleItemClick(item)}
                         variant="compact"
                       />
                     ))}
-                    {dayTasks.length > 3 && (
+                    {dayItems.length > 3 && (
                       <div className="text-xs text-muted-foreground px-1">
-                        +{dayTasks.length - 3}
+                        +{dayItems.length - 3}
                       </div>
                     )}
                   </div>
@@ -178,9 +235,15 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
       </div>
 
       <DragOverlay>
-        {activeTask && (
-          <div className="text-xs p-2 rounded bg-primary text-primary-foreground shadow-lg">
-            {activeTask.title}
+        {activeItem && (
+          <div className={cn(
+            "text-xs p-2 rounded shadow-lg",
+            activeItem.type === 'event' 
+              ? "bg-violet-500 text-white" 
+              : "bg-primary text-primary-foreground"
+          )}>
+            {activeItem.type === 'event' && <Calendar className="h-3 w-3 inline mr-1" />}
+            {activeItem.title}
           </div>
         )}
       </DragOverlay>

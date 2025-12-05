@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useState } from 'react';
@@ -16,6 +16,7 @@ import { DayGrid } from '@/components/calendar/DayGrid';
 import { useUpdateTaskDeadline } from '@/hooks/useUpdateTaskDeadline';
 import { TaskDialog } from '@/components/projects/TaskDialog';
 import { EventDialog } from '@/components/events/EventDialog';
+import { toast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,11 +35,14 @@ type ViewMode = 'day' | 'week' | 'month';
 const CalendarPage = () => {
   const { t, i18n } = useTranslation();
   const { activeCompany } = useCompany();
+  const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [taskViewOpen, setTaskViewOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [eventViewOpen, setEventViewOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
@@ -48,6 +52,27 @@ const CalendarPage = () => {
 
   const handleTaskMove = (taskId: string, newDeadline: Date) => {
     updateTaskDeadline.mutate({ taskId, newDeadline });
+  };
+
+  const updateEventTime = useMutation({
+    mutationFn: async ({ eventId, newStartTime }: { eventId: string; newStartTime: Date }) => {
+      const { error } = await supabase
+        .from('events')
+        .update({ start_time: newStartTime.toISOString() })
+        .eq('id', eventId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+      toast({ title: t('common.success'), description: t('events.updated') });
+    },
+    onError: (error) => {
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const handleEventMove = (eventId: string, newStartTime: Date) => {
+    updateEventTime.mutate({ eventId, newStartTime });
   };
 
   const getDateRange = () => {
@@ -62,7 +87,7 @@ const CalendarPage = () => {
     }
   };
 
-  const { data: tasks = [], isLoading } = useQuery({
+  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery({
     queryKey: ['calendar-tasks', activeCompany?.id, viewMode, currentDate.toISOString()],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
@@ -81,6 +106,27 @@ const CalendarPage = () => {
     enabled: !!activeCompany?.id,
   });
 
+  const { data: events = [], isLoading: isLoadingEvents } = useQuery({
+    queryKey: ['calendar-events', activeCompany?.id, viewMode, currentDate.toISOString()],
+    queryFn: async () => {
+      if (!activeCompany?.id) return [];
+      const { start, end } = getDateRange();
+      const { data, error } = await supabase
+        .from('events')
+        .select(`*, responsible_user:profiles!events_responsible_user_id_fkey(full_name, email), project:projects(id, name), sales:sales(id, name)`)
+        .eq('company_id', activeCompany.id)
+        .is('deleted_at', null)
+        .gte('start_time', start.toISOString())
+        .lte('start_time', end.toISOString())
+        .order('start_time', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany?.id,
+  });
+
+  const isLoading = isLoadingTasks || isLoadingEvents;
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle className="h-3 w-3 text-green-500" />;
@@ -98,6 +144,11 @@ const CalendarPage = () => {
   const handleTaskClick = (task: any) => {
     setSelectedTask(task);
     setTaskViewOpen(true);
+  };
+
+  const handleEventClick = (event: any) => {
+    setSelectedEvent(event);
+    setEventViewOpen(true);
   };
 
   const handlePrevious = () => {
@@ -136,6 +187,7 @@ const CalendarPage = () => {
 
   const handleSelectCreateEvent = () => {
     setCreateTypeDialogOpen(false);
+    setSelectedEvent(null);
     setEventDialogOpen(true);
   };
 
@@ -149,6 +201,7 @@ const CalendarPage = () => {
   const handleCreateEvent = () => {
     setCreateDate(selectedDate || new Date());
     setCreateTime('09:00');
+    setSelectedEvent(null);
     setEventDialogOpen(true);
   };
 
@@ -167,7 +220,9 @@ const CalendarPage = () => {
 
   const locale = i18n.language === 'hu' ? hu : undefined;
   const getTasksForDate = (date: Date) => tasks.filter((task: any) => task.deadline && isSameDay(new Date(task.deadline), date));
+  const getEventsForDate = (date: Date) => events.filter((event: any) => event.start_time && isSameDay(new Date(event.start_time), date));
   const filteredTasks = selectedDate ? getTasksForDate(selectedDate) : tasks;
+  const filteredEvents = selectedDate ? getEventsForDate(selectedDate) : events;
 
   return (
     <LicenseGuard feature="calendar">
@@ -239,8 +294,11 @@ const CalendarPage = () => {
                 selectedDate={selectedDate}
                 onSelectDate={setSelectedDate}
                 tasks={tasks}
+                events={events}
                 onTaskClick={handleTaskClick}
+                onEventClick={handleEventClick}
                 onTaskMove={handleTaskMove}
+                onEventMove={handleEventMove}
                 onCellClick={(date) => handleCellClick(date)}
               />
             )}
@@ -250,8 +308,11 @@ const CalendarPage = () => {
                 selectedDate={selectedDate}
                 onSelectDate={setSelectedDate}
                 tasks={tasks}
+                events={events}
                 onTaskClick={handleTaskClick}
+                onEventClick={handleEventClick}
                 onTaskMove={handleTaskMove}
+                onEventMove={handleEventMove}
                 onCellClick={handleCellClick}
               />
             )}
@@ -260,69 +321,131 @@ const CalendarPage = () => {
                 currentDate={currentDate}
                 selectedDate={selectedDate}
                 tasks={tasks}
+                events={events}
                 onTaskClick={handleTaskClick}
+                onEventClick={handleEventClick}
                 onTaskMove={handleTaskMove}
+                onEventMove={handleEventMove}
                 onCellClick={handleCellClick}
               />
             )}
 
-            {/* Tasks List Section */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-4">
-                  {t('calendar.tasksList')} ({filteredTasks.length})
-                </h3>
+            {/* Items List Section */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Tasks List */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <ListTodo className="h-5 w-5" />
+                    {t('calendar.tasksList')} ({filteredTasks.length})
+                  </h3>
 
-                {isLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
-                ) : filteredTasks.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">{t('calendar.noTasks')}</div>
-                ) : (
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredTasks.map((task: any) => (
-                      <div
-                        key={task.id}
-                        className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-                        onClick={() => handleTaskClick(task)}
-                      >
-                        <div className="flex items-start gap-2 mb-2">
-                          {getStatusIcon(task.status)}
-                          <h4 className="font-medium text-sm flex-1">{task.title}</h4>
-                        </div>
-                        {task.description && (
-                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
-                        )}
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          <Badge variant={getStatusBadge(task.status)} className="text-xs">
-                            {task.status === 'pending' && t('tasks.status.pending')}
-                            {task.status === 'in_progress' && t('tasks.status.inProgress')}
-                            {task.status === 'completed' && t('tasks.status.completed')}
-                          </Badge>
-                          {(task.project || task.sales) && (
-                            <Badge variant="secondary" className="text-xs">
-                              {task.project?.name || task.sales?.name}
+                  {isLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
+                  ) : filteredTasks.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">{t('calendar.noTasks')}</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredTasks.map((task: any) => (
+                        <div
+                          key={task.id}
+                          className="border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          <div className="flex items-start gap-2 mb-2">
+                            {getStatusIcon(task.status)}
+                            <h4 className="font-medium text-sm flex-1">{task.title}</h4>
+                          </div>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            <Badge variant={getStatusBadge(task.status)} className="text-xs">
+                              {task.status === 'pending' && t('tasks.status.pending')}
+                              {task.status === 'in_progress' && t('tasks.status.inProgress')}
+                              {task.status === 'completed' && t('tasks.status.completed')}
                             </Badge>
+                            {(task.project || task.sales) && (
+                              <Badge variant="secondary" className="text-xs">
+                                {task.project?.name || task.sales?.name}
+                              </Badge>
+                            )}
+                          </div>
+                          {task.responsible && (
+                            <p className="text-xs text-muted-foreground">
+                              {t('tasks.responsible')}: {task.responsible.full_name || task.responsible.email}
+                            </p>
+                          )}
+                          {task.deadline && (
+                            <p className="text-xs text-muted-foreground">
+                              {format(new Date(task.deadline), 'MMM d, HH:mm', { locale })}
+                            </p>
                           )}
                         </div>
-                        {task.responsible && (
-                          <p className="text-xs text-muted-foreground">
-                            {t('tasks.responsible')}: {task.responsible.full_name || task.responsible.email}
-                          </p>
-                        )}
-                        {task.deadline && (
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(task.deadline), 'MMM d, HH:mm', { locale })}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Events List */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-violet-500" />
+                    {t('events.events', 'Események')} ({filteredEvents.length})
+                  </h3>
+
+                  {isLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">{t('common.loading')}</div>
+                  ) : filteredEvents.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">{t('events.noEvents', 'Nincsenek események')}</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredEvents.map((event: any) => (
+                        <div
+                          key={event.id}
+                          className="border border-violet-200 dark:border-violet-800 rounded-lg p-4 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors cursor-pointer"
+                          onClick={() => handleEventClick(event)}
+                        >
+                          <div className="flex items-start gap-2 mb-2">
+                            <Calendar className="h-4 w-4 text-violet-500 flex-shrink-0 mt-0.5" />
+                            <h4 className="font-medium text-sm flex-1">{event.title}</h4>
+                          </div>
+                          {event.description && (
+                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            <Badge variant="outline" className="text-xs bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-700">
+                              {event.is_all_day ? t('calendar.allDay', 'Egész nap') : format(new Date(event.start_time), 'HH:mm', { locale })}
+                            </Badge>
+                            {(event.project || event.sales) && (
+                              <Badge variant="secondary" className="text-xs">
+                                {event.project?.name || event.sales?.name}
+                              </Badge>
+                            )}
+                          </div>
+                          {event.location && (
+                            <p className="text-xs text-muted-foreground">
+                              📍 {event.location}
+                            </p>
+                          )}
+                          {event.responsible_user && (
+                            <p className="text-xs text-muted-foreground">
+                              {t('tasks.responsible')}: {event.responsible_user.full_name || event.responsible_user.email}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 
+        {/* Task View Dialog */}
         <TaskDialog 
           open={taskViewOpen} 
           onOpenChange={setTaskViewOpen} 
@@ -331,6 +454,7 @@ const CalendarPage = () => {
           salesId={selectedTask?.sales_id}
         />
 
+        {/* Task Create Dialog */}
         <TaskDialog 
           open={taskDialogOpen} 
           onOpenChange={setTaskDialogOpen} 
@@ -339,6 +463,15 @@ const CalendarPage = () => {
           defaultTime={createTime}
         />
 
+        {/* Event View/Edit Dialog */}
+        <EventDialog
+          open={eventViewOpen}
+          onOpenChange={setEventViewOpen}
+          event={selectedEvent}
+          defaultDate={selectedEvent ? new Date(selectedEvent.start_time) : undefined}
+        />
+
+        {/* Event Create Dialog */}
         <EventDialog
           open={eventDialogOpen}
           onOpenChange={setEventDialogOpen}
@@ -369,7 +502,7 @@ const CalendarPage = () => {
                 className="justify-start h-14"
                 onClick={handleSelectCreateEvent}
               >
-                <Calendar className="h-5 w-5 mr-3" />
+                <Calendar className="h-5 w-5 mr-3 text-violet-500" />
                 <div className="text-left">
                   <div className="font-medium">{t('events.event', 'Esemény')}</div>
                   <div className="text-xs text-muted-foreground">{t('events.eventDescription', 'Találkozó, megbeszélés')}</div>
