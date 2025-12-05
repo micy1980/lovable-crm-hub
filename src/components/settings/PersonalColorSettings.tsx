@@ -24,21 +24,29 @@ export const PersonalColorSettings = () => {
   }, [profile]);
 
   const handleSave = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error('No user ID for saving personal colors');
+      return;
+    }
+    
+    console.log('Saving personal colors:', { taskColor, eventColor, userId: user.id });
     
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           personal_task_color: taskColor,
           personal_event_color: eventColor,
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
+
+      console.log('Update result:', { data, error });
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       toast.success('Személyes színek mentve');
     } catch (error: any) {
       console.error('Error saving personal colors:', error);
