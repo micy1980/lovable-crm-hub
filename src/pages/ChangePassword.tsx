@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Shield } from 'lucide-react';
+import { Shield, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { validatePasswordStrength } from '@/lib/passwordValidation';
+import { useTheme } from 'next-themes';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
@@ -21,6 +23,7 @@ export const ChangePassword = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { theme, setTheme } = useTheme();
 
   // Validate password strength on change
   const handlePasswordChange = (value: string) => {
@@ -167,6 +170,16 @@ export const ChangePassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/10 p-4">
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+        <LanguageSelector variant="outline" />
+      </div>
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
