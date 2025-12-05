@@ -12,6 +12,7 @@ interface Task {
   title: string;
   status: string;
   deadline: string | null;
+  is_all_day?: boolean;
 }
 
 interface CalendarGridProps {
@@ -79,10 +80,14 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
     const dateStr = dropId.replace('day-', '');
     const newDate = new Date(dateStr);
     
-    // Preserve the original time from the task
+    // Preserve the original time from the task (or set to 00:00 for all-day)
     if (task.deadline) {
       const originalDate = new Date(task.deadline);
-      newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), 0, 0);
+      if (task.is_all_day) {
+        newDate.setHours(0, 0, 0, 0);
+      } else {
+        newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), 0, 0);
+      }
     } else {
       // Default to 9:00 if no previous deadline
       newDate.setHours(9, 0, 0, 0);

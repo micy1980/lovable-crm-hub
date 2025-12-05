@@ -12,6 +12,7 @@ interface Task {
   title: string;
   status: string;
   deadline: string | null;
+  is_all_day?: boolean;
 }
 
 interface WeekGridProps {
@@ -35,22 +36,18 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
 
   const getTasksForDateAndHour = (date: Date, hour: number) => {
     return tasks.filter((task) => {
-      if (!task.deadline) return false;
+      if (!task.deadline || task.is_all_day) return false;
       const taskDate = new Date(task.deadline);
       return isSameDay(taskDate, date) && getHours(taskDate) === hour;
     });
   };
 
-  // All-day row should only show tasks without specific time (hour = 0 and minutes = 0)
-  // Since tasks always have specific times when set through the form, don't show them in all-day
+  // All-day row shows tasks marked as is_all_day
   const getAllDayTasks = (date: Date) => {
     return tasks.filter((task) => {
       if (!task.deadline) return false;
       const taskDate = new Date(task.deadline);
-      // Only show in all-day if time is exactly 00:00:00 (meaning no time was set)
-      return isSameDay(taskDate, date) && 
-             taskDate.getHours() === 0 && 
-             taskDate.getMinutes() === 0;
+      return isSameDay(taskDate, date) && task.is_all_day === true;
     });
   };
 

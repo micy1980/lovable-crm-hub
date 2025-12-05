@@ -7,6 +7,7 @@ interface Task {
   title: string;
   status: string;
   deadline: string | null;
+  is_all_day?: boolean;
 }
 
 interface DraggableTaskProps {
