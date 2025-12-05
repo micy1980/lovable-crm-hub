@@ -18,7 +18,8 @@ const ALL_FEATURES = [
   { value: 'sales', labelEn: 'Sales', labelHu: 'Értékesítés' },
   { value: 'documents', labelEn: 'Documents', labelHu: 'Dokumentumok' },
   { value: 'calendar', labelEn: 'Calendar', labelHu: 'Naptár' },
-  { value: 'logs', labelEn: 'Logs', labelHu: 'Naplók' },
+  { value: 'my_items', labelEn: 'My Items', labelHu: 'Saját dolgaim' },
+  { value: 'audit', labelEn: 'Audit', labelHu: 'Audit' },
 ];
 
 interface CompanyLicenseManagementDialogProps {
