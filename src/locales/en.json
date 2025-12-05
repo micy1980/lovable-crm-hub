@@ -114,7 +114,7 @@
     "sales": "Sales",
     "documents": "Documents",
     "calendar": "Calendar",
-    "myItems": "My Items",
+    "myItems": "Tasks & Events",
     "settings": "Settings",
     "logs": "Audit"
   },
@@ -611,7 +611,7 @@
     "deleted": "Event deleted"
   },
   "myItems": {
-    "title": "My Items",
+    "title": "Tasks & Events",
     "description": "Tasks and events assigned to me",
     "tasks": "Tasks",
     "tasksDescription": "List of tasks assigned to you",

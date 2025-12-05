@@ -18,7 +18,7 @@ const ALL_FEATURES = [
   { value: 'sales', labelEn: 'Sales', labelHu: 'Értékesítés' },
   { value: 'documents', labelEn: 'Documents', labelHu: 'Dokumentumok' },
   { value: 'calendar', labelEn: 'Calendar', labelHu: 'Naptár' },
-  { value: 'my_items', labelEn: 'My Items', labelHu: 'Saját dolgaim' },
+  { value: 'my_items', labelEn: 'Tasks & Events', labelHu: 'Feladatok és események' },
   { value: 'audit', labelEn: 'Audit', labelHu: 'Audit' },
 ];
 

@@ -114,7 +114,7 @@
     "sales": "Értékesítés",
     "documents": "Dokumentumok",
     "calendar": "Naptár",
-    "myItems": "Saját dolgaim",
+    "myItems": "Feladatok és események",
     "settings": "Beállítások",
     "logs": "Audit"
   },
@@ -611,7 +611,7 @@
     "deleted": "Esemény törölve"
   },
   "myItems": {
-    "title": "Saját dolgaim",
+    "title": "Feladatok és események",
     "description": "Hozzám rendelt feladatok és események",
     "tasks": "Feladatok",
     "tasksDescription": "A hozzád rendelt feladatok listája",
