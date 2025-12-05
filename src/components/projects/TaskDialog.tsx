@@ -32,6 +32,8 @@ interface TaskFormData {
   deadline_time: string;
   responsible_user_id: string;
   is_all_day: boolean;
+  project_id: string;
+  sales_id: string;
 }
 
 export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defaultDate, defaultTime }: TaskDialogProps) => {
@@ -48,10 +50,14 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       deadline_time: '',
       responsible_user_id: '',
       is_all_day: false,
+      project_id: '',
+      sales_id: '',
     }
   });
 
   const isAllDay = watch('is_all_day');
+  const selectedProjectId = watch('project_id');
+  const selectedSalesId = watch('sales_id');
 
   // Update form when task changes or dialog opens
   useEffect(() => {
@@ -65,6 +71,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         deadline_time: deadlineDate && !task.is_all_day ? format(deadlineDate, 'HH:mm') : '',
         responsible_user_id: task.responsible_user_id || '',
         is_all_day: task.is_all_day || false,
+        project_id: task.project_id || projectId || '',
+        sales_id: task.sales_id || salesId || '',
       });
     } else if (open && !task) {
       reset({
@@ -75,9 +83,11 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         deadline_time: defaultTime || '',
         responsible_user_id: '',
         is_all_day: false,
+        project_id: projectId || '',
+        sales_id: salesId || '',
       });
     }
-  }, [open, task, reset, defaultDate, defaultTime]);
+  }, [open, task, reset, defaultDate, defaultTime, projectId, salesId]);
 
   // Fetch users for responsible dropdown using RPC function
   const { data: users = [] } = useQuery({
@@ -88,6 +98,40 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       const { data, error } = await supabase
         .rpc('get_company_users_for_assignment', { _company_id: activeCompany.id });
       
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany && open,
+  });
+
+  // Fetch projects for dropdown
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects-for-tasks', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany) return [];
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name')
+        .eq('company_id', activeCompany.id)
+        .is('deleted_at', null)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany && open,
+  });
+
+  // Fetch sales for dropdown
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales-for-tasks', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany) return [];
+      const { data, error } = await supabase
+        .from('sales')
+        .select('id, name')
+        .eq('company_id', activeCompany.id)
+        .is('deleted_at', null)
+        .order('name');
       if (error) throw error;
       return data || [];
     },
@@ -121,8 +165,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         description: data.description,
         status: data.status,
         company_id: activeCompany.id,
-        project_id: projectId || task?.project_id || null,
-        sales_id: salesId || task?.sales_id || null,
+        project_id: data.project_id || null,
+        sales_id: data.sales_id || null,
         responsible_user_id: data.responsible_user_id || null,
         deadline: deadlineISO,
         is_all_day: data.is_all_day,
@@ -244,6 +288,44 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
               onCheckedChange={(checked) => setValue('is_all_day', checked)}
             />
             <Label htmlFor="is_all_day">{t('calendar.allDay', 'Egész napos')}</Label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>{t('projects.title', 'Projekt')}</Label>
+              <Select
+                value={selectedProjectId || '_none_'}
+                onValueChange={(v) => setValue('project_id', v === '_none_' ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('tasks.selectProject', 'Válasszon projektet')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none_">{t('common.none', 'Nincs')}</SelectItem>
+                  {projects.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('sales.title', 'Értékesítés')}</Label>
+              <Select
+                value={selectedSalesId || '_none_'}
+                onValueChange={(v) => setValue('sales_id', v === '_none_' ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('tasks.selectSales', 'Válasszon értékesítést')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none_">{t('common.none', 'Nincs')}</SelectItem>
+                  {sales.map((s: any) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
