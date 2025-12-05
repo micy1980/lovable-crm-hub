@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +14,7 @@ import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-
+import { Trash2 } from 'lucide-react';
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -40,6 +41,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<TaskFormData>({
     defaultValues: {
@@ -197,6 +200,34 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       onOpenChange(false);
       reset();
     } catch (error: any) {
+      console.error('Error deleting task:', error);
+      toast.error(t('tasks.deleteError', 'Nincs jogosultságod törölni ezt a feladatot'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!task) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', task.id);
+
+      if (error) throw error;
+      
+      toast.success(t('tasks.deleted', 'Feladat sikeresen törölve'));
+      queryClient.invalidateQueries({ queryKey: ['project-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-items'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+    } catch (error: any) {
       console.error('Error saving task:', error);
       toast.error(t('common.error', 'Hiba történt') + ': ' + error.message);
     }
@@ -348,16 +379,51 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
             </Select>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.cancel', 'Mégse')}
-            </Button>
-            <Button type="submit">
-              {task ? t('common.save', 'Mentés') : t('common.create', 'Létrehozás')}
-            </Button>
+          <DialogFooter className="flex justify-between">
+            <div>
+              {task && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('common.delete', 'Törlés')}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {t('common.cancel', 'Mégse')}
+              </Button>
+              <Button type="submit">
+                {task ? t('common.save', 'Mentés') : t('common.create', 'Létrehozás')}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('tasks.deleteConfirmTitle', 'Feladat törlése')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('tasks.deleteConfirmDescription', 'Biztosan törölni szeretnéd ezt a feladatot? Ez a művelet nem vonható vissza.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel', 'Mégse')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? t('common.deleting', 'Törlés...') : t('common.delete', 'Törlés')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
