@@ -14,7 +14,7 @@ import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { DayGrid } from '@/components/calendar/DayGrid';
 import { useUpdateTaskDeadline } from '@/hooks/useUpdateTaskDeadline';
-import { TaskViewSheet } from '@/components/calendar/TaskViewSheet';
+import { TaskDialog } from '@/components/projects/TaskDialog';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -253,7 +253,13 @@ const CalendarPage = () => {
           </div>
         )}
 
-        <TaskViewSheet open={taskViewOpen} onOpenChange={setTaskViewOpen} task={selectedTask} />
+        <TaskDialog 
+          open={taskViewOpen} 
+          onOpenChange={setTaskViewOpen} 
+          task={selectedTask}
+          projectId={selectedTask?.project_id}
+          salesId={selectedTask?.sales_id}
+        />
       </div>
     </LicenseGuard>
   );
