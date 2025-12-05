@@ -111,11 +111,14 @@ export default function MyItems() {
     if (!itemToDelete) return;
 
     try {
-      const table = itemToDelete.type === 'task' ? 'tasks' : 'events';
-      const { error } = await supabase
-        .from(table)
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', itemToDelete.id);
+      let error;
+      if (itemToDelete.type === 'task') {
+        const result = await supabase.rpc('soft_delete_task', { _task_id: itemToDelete.id });
+        error = result.error;
+      } else {
+        const result = await supabase.rpc('soft_delete_event', { _event_id: itemToDelete.id });
+        error = result.error;
+      }
 
       if (error) throw error;
 
