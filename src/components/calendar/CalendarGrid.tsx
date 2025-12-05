@@ -178,20 +178,26 @@ export const CalendarGrid = ({
 
         {/* Calendar grid */}
         <div className="grid grid-cols-7">
-          {weeks.map((week, weekIndex) =>
+        {weeks.map((week, weekIndex) =>
             week.map((day, dayIndex) => {
               const dayItems = getItemsForDate(day);
               const isToday = isSameDay(day, new Date());
               const isSelected = selectedDate && isSameDay(day, selectedDate);
               const isCurrentMonth = isSameMonth(day, currentDate);
               const dropId = `day-${format(day, 'yyyy-MM-dd')}`;
+              
+              // Count all-day items
+              const allDayTasks = dayItems.filter(item => item.type === 'task' && item.is_all_day);
+              const allDayEvents = dayItems.filter(item => item.type === 'event' && item.is_all_day);
+              const hasAllDayTask = allDayTasks.length > 0;
+              const hasAllDayEvent = allDayEvents.length > 0;
 
               return (
                 <DroppableCell
                   key={`${weekIndex}-${dayIndex}`}
                   id={dropId}
                   className={cn(
-                    "min-h-[120px] border-r border-b last:border-r-0 cursor-pointer transition-colors p-2",
+                    "min-h-[120px] border-r border-b last:border-r-0 cursor-pointer transition-colors p-2 relative",
                     !isCurrentMonth && "bg-muted/20 text-muted-foreground",
                     isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
                     isSelected && !isToday && "ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10",
@@ -204,6 +210,17 @@ export const CalendarGrid = ({
                     }
                   }}
                 >
+                  {/* All-day indicator stripes */}
+                  {(hasAllDayTask || hasAllDayEvent) && (
+                    <div className="absolute left-0 top-0 bottom-0 flex">
+                      {hasAllDayTask && (
+                        <div className="w-1 bg-primary h-full" title={`${allDayTasks.length} egész napos feladat`} />
+                      )}
+                      {hasAllDayEvent && (
+                        <div className="w-1 bg-violet-500 h-full" title={`${allDayEvents.length} egész napos esemény`} />
+                      )}
+                    </div>
+                  )}
                   <div className={cn(
                     "text-sm font-medium mb-1 text-right",
                     isToday && "text-primary font-bold",
