@@ -262,8 +262,9 @@
   "tasks": {
     "status": {
       "pending": "Függőben",
-      "inProgress": "Folyamatban",
-      "completed": "Befejezett"
+      "in_progress": "Folyamatban",
+      "completed": "Befejezett",
+      "cancelled": "Visszavonva"
     },
     "responsible": "Felelős"
   },
