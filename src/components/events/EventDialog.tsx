@@ -351,7 +351,7 @@ export const EventDialog = ({
               <Label>{t('events.project')}</Label>
               <Select
                 value={watch('project_id') || '__none__'}
-                onValueChange={(value) => setValue('project_id', value === '__none__' ? null : value)}
+                onValueChange={(value) => setValue('project_id', value === '__none__' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('events.selectProject')} />
@@ -371,7 +371,7 @@ export const EventDialog = ({
               <Label>{t('events.sales')}</Label>
               <Select
                 value={watch('sales_id') || '__none__'}
-                onValueChange={(value) => setValue('sales_id', value === '__none__' ? null : value)}
+                onValueChange={(value) => setValue('sales_id', value === '__none__' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('events.selectSales')} />
@@ -392,7 +392,7 @@ export const EventDialog = ({
             <Label>{t('events.responsibleUser')}</Label>
             <Select
               value={watch('responsible_user_id') || '__none__'}
-              onValueChange={(value) => setValue('responsible_user_id', value === '__none__' ? null : value)}
+              onValueChange={(value) => setValue('responsible_user_id', value === '__none__' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder={t('events.selectResponsible')} />
