@@ -22,6 +22,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -37,6 +43,7 @@ const CalendarPage = () => {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
   const [createTime, setCreateTime] = useState<string | undefined>(undefined);
+  const [createTypeDialogOpen, setCreateTypeDialogOpen] = useState(false);
   const updateTaskDeadline = useUpdateTaskDeadline();
 
   const handleTaskMove = (taskId: string, newDeadline: Date) => {
@@ -118,8 +125,18 @@ const CalendarPage = () => {
     const time = hour !== undefined ? `${String(hour).padStart(2, '0')}:00` : '09:00';
     setCreateDate(date);
     setCreateTime(time);
-    // Default to task creation
+    setCreateTypeDialogOpen(true);
+  };
+
+  const handleSelectCreateTask = () => {
+    setCreateTypeDialogOpen(false);
+    setSelectedTask(null);
     setTaskDialogOpen(true);
+  };
+
+  const handleSelectCreateEvent = () => {
+    setCreateTypeDialogOpen(false);
+    setEventDialogOpen(true);
   };
 
   const handleCreateTask = () => {
@@ -328,6 +345,39 @@ const CalendarPage = () => {
           defaultDate={createDate}
           defaultTime={createTime}
         />
+
+        {/* Create type selection dialog */}
+        <Dialog open={createTypeDialogOpen} onOpenChange={setCreateTypeDialogOpen}>
+          <DialogContent className="max-w-xs">
+            <DialogHeader>
+              <DialogTitle>{t('calendar.createNew', 'Mit szeretnél létrehozni?')}</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="justify-start h-14"
+                onClick={handleSelectCreateTask}
+              >
+                <ListTodo className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <div className="font-medium">{t('tasks.task', 'Feladat')}</div>
+                  <div className="text-xs text-muted-foreground">{t('tasks.taskDescription', 'Határidős tennivaló')}</div>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                className="justify-start h-14"
+                onClick={handleSelectCreateEvent}
+              >
+                <Calendar className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <div className="font-medium">{t('events.event', 'Esemény')}</div>
+                  <div className="text-xs text-muted-foreground">{t('events.eventDescription', 'Találkozó, megbeszélés')}</div>
+                </div>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </LicenseGuard>
   );
