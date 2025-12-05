@@ -64,49 +64,52 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick }: DayGr
       : '';
 
   return (
-    <div className="w-full border rounded-lg overflow-hidden">
-      {/* Header - only this gets highlighted */}
-      <div 
-        className="grid border-b bg-muted/30"
-        style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
-      >
-        <div className="py-3 text-center text-sm font-medium border-r"></div>
-        <div className={cn(
-          "py-3 text-center text-sm font-medium",
-          headerHighlight
-        )}>
-          {format(currentDate, 'yyyy. MMMM d. EEEE', { locale })}
+    <div className="w-full border rounded-lg overflow-hidden max-h-[calc(100vh-280px)] overflow-y-auto relative">
+      {/* Sticky header container */}
+      <div className="sticky top-0 z-20 bg-background">
+        {/* Header - only this gets highlighted */}
+        <div 
+          className="grid border-b bg-muted/30"
+          style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
+        >
+          <div className="py-3 text-center text-sm font-medium border-r"></div>
+          <div className={cn(
+            "py-3 text-center text-sm font-medium",
+            headerHighlight
+          )}>
+            {format(currentDate, 'yyyy. MMMM d. EEEE', { locale })}
+          </div>
+        </div>
+
+        {/* All-day row - neutral background */}
+        <div 
+          className="grid border-b bg-background"
+          style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
+        >
+          <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
+            {t('calendar.allDay', 'Egész nap')}
+          </div>
+          <div className="min-h-[40px] p-1">
+            {allDayTasks.slice(0, 3).map((task) => (
+              <div
+                key={task.id}
+                className={cn(
+                  "text-xs p-1 rounded truncate mb-1 cursor-pointer border inline-block mr-2",
+                  getStatusColor(task.status)
+                )}
+                onClick={() => onTaskClick(task)}
+              >
+                {task.title}
+              </div>
+            ))}
+            {allDayTasks.length > 3 && (
+              <span className="text-xs text-muted-foreground">+{allDayTasks.length - 3}</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* All-day row - neutral background */}
-      <div 
-        className="grid border-b"
-        style={{ gridTemplateColumns: DAY_GRID_TEMPLATE }}
-      >
-        <div className="py-2 px-1 text-xs text-muted-foreground border-r text-center">
-          {t('calendar.allDay', 'Egész nap')}
-        </div>
-        <div className="min-h-[40px] p-1">
-          {allDayTasks.slice(0, 3).map((task) => (
-            <div
-              key={task.id}
-              className={cn(
-                "text-xs p-1 rounded truncate mb-1 cursor-pointer border inline-block mr-2",
-                getStatusColor(task.status)
-              )}
-              onClick={() => onTaskClick(task)}
-            >
-              {task.title}
-            </div>
-          ))}
-          {allDayTasks.length > 3 && (
-            <span className="text-xs text-muted-foreground">+{allDayTasks.length - 3}</span>
-          )}
-        </div>
-      </div>
-
-      {/* Hourly grid - no inner scroll, uses page scroll */}
+      {/* Hourly grid - scrollable content */}
       <div>
         {HOURS.map((hour) => {
           const hourTasks = getTasksForHour(hour);
