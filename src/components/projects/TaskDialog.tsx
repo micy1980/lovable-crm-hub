@@ -20,6 +20,8 @@ interface TaskDialogProps {
   projectId?: string;
   salesId?: string;
   task?: any;
+  defaultDate?: Date;
+  defaultTime?: string;
 }
 
 interface TaskFormData {
@@ -32,7 +34,7 @@ interface TaskFormData {
   is_all_day: boolean;
 }
 
-export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: TaskDialogProps) => {
+export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defaultDate, defaultTime }: TaskDialogProps) => {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
@@ -69,13 +71,13 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
         title: '',
         description: '',
         status: 'pending',
-        deadline_date: '',
-        deadline_time: '',
+        deadline_date: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : '',
+        deadline_time: defaultTime || '',
         responsible_user_id: '',
         is_all_day: false,
       });
     }
-  }, [open, task, reset]);
+  }, [open, task, reset, defaultDate, defaultTime]);
 
   // Fetch users for responsible dropdown using RPC function
   const { data: users = [] } = useQuery({

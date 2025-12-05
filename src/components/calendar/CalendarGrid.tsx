@@ -22,12 +22,13 @@ interface CalendarGridProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
+  onCellClick?: (date: Date) => void;
 }
 
 const WEEKDAYS_HU = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
 const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTaskClick, onTaskMove }: CalendarGridProps) => {
+export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTaskClick, onTaskMove, onCellClick }: CalendarGridProps) => {
   const { i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
   const weekdays = i18n.language === 'hu' ? WEEKDAYS_HU : WEEKDAYS_EN;
@@ -139,7 +140,13 @@ export const CalendarGrid = ({ currentDate, selectedDate, onSelectDate, tasks, o
                     isSelected && !isToday && "ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10",
                     "hover:bg-accent/50"
                   )}
-                  onClick={() => onSelectDate(day)}
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget && onCellClick) {
+                      onCellClick(day);
+                    } else {
+                      onSelectDate(day);
+                    }
+                  }}
                 >
                   <div className={cn(
                     "text-sm font-medium mb-1 text-right",

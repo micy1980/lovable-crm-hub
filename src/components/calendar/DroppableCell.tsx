@@ -1,18 +1,25 @@
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
+import { ReactNode, MouseEvent } from 'react';
 
 interface DroppableCellProps {
   id: string;
   children: ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent) => void;
 }
 
 export const DroppableCell = ({ id, children, className, onClick }: DroppableCellProps) => {
   const { isOver, setNodeRef } = useDroppable({
     id,
   });
+
+  const handleClick = (e: MouseEvent) => {
+    // Only trigger if clicking directly on the cell, not on children (tasks)
+    if (e.target === e.currentTarget && onClick) {
+      onClick(e);
+    }
+  };
 
   return (
     <div
@@ -21,7 +28,7 @@ export const DroppableCell = ({ id, children, className, onClick }: DroppableCel
         className,
         isOver && "bg-primary/20 ring-2 ring-primary ring-inset"
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       {children}
     </div>

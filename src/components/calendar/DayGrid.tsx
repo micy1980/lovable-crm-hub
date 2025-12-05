@@ -21,12 +21,13 @@ interface DayGridProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
+  onCellClick?: (date: Date, hour?: number) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_GRID_TEMPLATE = '80px minmax(0, 1fr)';
 
-export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick, onTaskMove }: DayGridProps) => {
+export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick, onTaskMove, onCellClick }: DayGridProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -177,7 +178,8 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick, onTaskM
                 </div>
                 <DroppableCell
                   id={dropId}
-                  className="min-h-[44px] p-0.5"
+                  className="min-h-[44px] p-0.5 cursor-pointer"
+                  onClick={() => onCellClick?.(currentDate, hour)}
                 >
                   {hourTasks.map((task) => (
                     <DraggableTask
