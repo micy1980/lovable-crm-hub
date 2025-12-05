@@ -38,10 +38,15 @@ export const DayGrid = ({ currentDate, selectedDate, tasks, onTaskClick, onTaskM
     });
   };
 
+  // All-day row should only show tasks without specific time (hour = 0 and minutes = 0)
   const getAllDayTasks = () => {
     return tasks.filter((task) => {
       if (!task.deadline) return false;
-      return isSameDay(new Date(task.deadline), currentDate);
+      const taskDate = new Date(task.deadline);
+      // Only show in all-day if time is exactly 00:00:00 (meaning no time was set)
+      return isSameDay(taskDate, currentDate) && 
+             taskDate.getHours() === 0 && 
+             taskDate.getMinutes() === 0;
     });
   };
 
