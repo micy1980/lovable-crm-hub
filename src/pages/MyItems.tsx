@@ -208,7 +208,7 @@ export default function MyItems() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>{t('tasks.title')}</TableHead>
-                          <TableHead>{t('tasks.status')}</TableHead>
+                          <TableHead>{t('tasks.statusLabel')}</TableHead>
                           <TableHead>{t('myItems.type')}</TableHead>
                           <TableHead>{t('tasks.deadline')}</TableHead>
                           <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
