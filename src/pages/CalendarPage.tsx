@@ -295,11 +295,11 @@ const CalendarPage = () => {
                 onSelectDate={setSelectedDate}
                 tasks={tasks}
                 events={events}
-                onTaskClick={handleTaskClick}
-                onEventClick={handleEventClick}
+                onTaskDoubleClick={handleTaskClick}
+                onEventDoubleClick={handleEventClick}
                 onTaskMove={handleTaskMove}
                 onEventMove={handleEventMove}
-                onCellClick={(date) => handleCellClick(date)}
+                onCellDoubleClick={(date) => handleCellClick(date)}
               />
             )}
             {viewMode === 'week' && (
@@ -309,11 +309,11 @@ const CalendarPage = () => {
                 onSelectDate={setSelectedDate}
                 tasks={tasks}
                 events={events}
-                onTaskClick={handleTaskClick}
-                onEventClick={handleEventClick}
+                onTaskDoubleClick={handleTaskClick}
+                onEventDoubleClick={handleEventClick}
                 onTaskMove={handleTaskMove}
                 onEventMove={handleEventMove}
-                onCellClick={handleCellClick}
+                onCellDoubleClick={handleCellClick}
               />
             )}
             {viewMode === 'day' && (
@@ -322,11 +322,11 @@ const CalendarPage = () => {
                 selectedDate={selectedDate}
                 tasks={tasks}
                 events={events}
-                onTaskClick={handleTaskClick}
-                onEventClick={handleEventClick}
+                onTaskDoubleClick={handleTaskClick}
+                onEventDoubleClick={handleEventClick}
                 onTaskMove={handleTaskMove}
                 onEventMove={handleEventMove}
-                onCellClick={handleCellClick}
+                onCellDoubleClick={handleCellClick}
               />
             )}
 
