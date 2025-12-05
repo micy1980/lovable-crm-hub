@@ -260,6 +260,8 @@
     "taskDetails": "Feladat részletei"
   },
   "tasks": {
+    "title": "Cím",
+    "deadline": "Határidő",
     "status": {
       "pending": "Függőben",
       "in_progress": "Folyamatban",
@@ -608,7 +610,10 @@
     "title": "Saját dolgaim",
     "description": "Hozzám rendelt feladatok és események",
     "tasks": "Feladatok",
+    "tasksDescription": "A hozzád rendelt feladatok listája",
     "events": "Események",
+    "eventsDescription": "A hozzád rendelt események listája",
+    "type": "Típus",
     "filterAll": "Mind",
     "filterPersonal": "Személyes",
     "filterProject": "Projekthez kötött",

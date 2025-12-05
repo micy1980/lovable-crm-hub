@@ -260,6 +260,8 @@
     "taskDetails": "Task details"
   },
   "tasks": {
+    "title": "Title",
+    "deadline": "Deadline",
     "status": {
       "pending": "Pending",
       "in_progress": "In Progress",
@@ -608,7 +610,10 @@
     "title": "My Items",
     "description": "Tasks and events assigned to me",
     "tasks": "Tasks",
+    "tasksDescription": "List of tasks assigned to you",
     "events": "Events",
+    "eventsDescription": "List of events assigned to you",
+    "type": "Type",
     "filterAll": "All",
     "filterPersonal": "Personal",
     "filterProject": "Project related",
