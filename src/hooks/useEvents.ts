@@ -181,10 +181,9 @@ export const useEvents = (dateRange?: { start: Date; end: Date }) => {
 
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('events')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
+      const { error } = await supabase.rpc('soft_delete_event', {
+        _event_id: id
+      });
 
       if (error) throw error;
     },
