@@ -78,7 +78,7 @@ const LicenseGenerator = () => {
         'sales': 'Értékesítés',
         'documents': 'Dokumentumok',
         'calendar': 'Naptár',
-        'my_items': 'Saját dolgaim',
+        'my_items': 'Feladatok és események',
         'audit': 'Audit'
       };
       
@@ -176,7 +176,7 @@ const LicenseGenerator = () => {
                   { key: 'sales', label: 'Értékesítés' },
                   { key: 'documents', label: 'Dokumentumok' },
                   { key: 'calendar', label: 'Naptár' },
-                  { key: 'my_items', label: 'Saját dolgaim' },
+                  { key: 'my_items', label: 'Feladatok és események' },
                   { key: 'audit', label: 'Audit' },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center space-x-2">
