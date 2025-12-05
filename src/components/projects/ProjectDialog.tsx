@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 
 interface ProjectDialogProps {
   open: boolean;
@@ -34,15 +35,7 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
   const { t } = useTranslation();
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<ProjectFormData>({
-    defaultValues: project ? {
-      name: project.name || '',
-      code: project.code || '',
-      description: project.description || '',
-      status: project.status || 'planning',
-      owner_user_id: project.owner_user_id || '',
-      responsible1_user_id: project.responsible1_user_id || '',
-      responsible2_user_id: project.responsible2_user_id || '',
-    } : {
+    defaultValues: {
       name: '',
       code: '',
       description: '',
@@ -52,6 +45,21 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
       responsible2_user_id: '',
     }
   });
+
+  // Reset form when dialog opens or project changes
+  useEffect(() => {
+    if (open) {
+      reset({
+        name: project?.name || '',
+        code: project?.code || '',
+        description: project?.description || '',
+        status: project?.status || 'planning',
+        owner_user_id: project?.owner_user_id || '',
+        responsible1_user_id: project?.responsible1_user_id || '',
+        responsible2_user_id: project?.responsible2_user_id || '',
+      });
+    }
+  }, [open, project, reset]);
 
   // Fetch users for dropdowns
   const { data: users = [] } = useQuery({
@@ -100,6 +108,7 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
       }
 
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project', project?.id] });
       onOpenChange(false);
       reset();
     } catch (error: any) {
