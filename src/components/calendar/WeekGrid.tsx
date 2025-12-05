@@ -22,12 +22,13 @@ interface WeekGridProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
+  onCellClick?: (date: Date, hour?: number) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const WEEK_GRID_TEMPLATE = '80px repeat(7, minmax(0, 1fr))';
 
-export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTaskClick, onTaskMove }: WeekGridProps) => {
+export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTaskClick, onTaskMove, onCellClick }: WeekGridProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -248,10 +249,11 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
                       key={dayIndex}
                       id={dropId}
                       className={cn(
-                        "min-h-[44px] p-0.5",
+                        "min-h-[44px] p-0.5 cursor-pointer",
                         getColumnHighlight(dayIndex),
                         isLastHour ? getBottomBorder(dayIndex) : getMiddleBorder(dayIndex)
                       )}
+                      onClick={() => onCellClick?.(day, hour)}
                     >
                       {hourTasks.map((task) => (
                         <DraggableTask

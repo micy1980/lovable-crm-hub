@@ -7,7 +7,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertCircle, Plus, ListTodo, Calendar } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, startOfDay, endOfDay } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
@@ -15,6 +15,13 @@ import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { DayGrid } from '@/components/calendar/DayGrid';
 import { useUpdateTaskDeadline } from '@/hooks/useUpdateTaskDeadline';
 import { TaskDialog } from '@/components/projects/TaskDialog';
+import { EventDialog } from '@/components/events/EventDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -26,6 +33,10 @@ const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [taskViewOpen, setTaskViewOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
+  const [createTime, setCreateTime] = useState<string | undefined>(undefined);
   const updateTaskDeadline = useUpdateTaskDeadline();
 
   const handleTaskMove = (taskId: string, newDeadline: Date) => {
@@ -103,6 +114,27 @@ const CalendarPage = () => {
     setSelectedDate(new Date());
   };
 
+  const handleCellClick = (date: Date, hour?: number) => {
+    const time = hour !== undefined ? `${String(hour).padStart(2, '0')}:00` : '09:00';
+    setCreateDate(date);
+    setCreateTime(time);
+    // Default to task creation
+    setTaskDialogOpen(true);
+  };
+
+  const handleCreateTask = () => {
+    setCreateDate(selectedDate || new Date());
+    setCreateTime('09:00');
+    setSelectedTask(null);
+    setTaskDialogOpen(true);
+  };
+
+  const handleCreateEvent = () => {
+    setCreateDate(selectedDate || new Date());
+    setCreateTime('09:00');
+    setEventDialogOpen(true);
+  };
+
   const getViewTitle = () => {
     const locale = i18n.language === 'hu' ? hu : undefined;
     switch (viewMode) {
@@ -148,6 +180,24 @@ const CalendarPage = () => {
                 <Button variant="outline" size="sm" onClick={handleToday}>
                   {t('calendar.today')}
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-1" />
+                      {t('common.create', 'Létrehozás')}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={handleCreateTask}>
+                      <ListTodo className="h-4 w-4 mr-2" />
+                      {t('tasks.create', 'Feladat')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCreateEvent}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {t('events.create', 'Esemény')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <h2 className="text-2xl font-bold text-center flex-1">{getViewTitle()}</h2>
@@ -174,6 +224,7 @@ const CalendarPage = () => {
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
                 onTaskMove={handleTaskMove}
+                onCellClick={(date) => handleCellClick(date)}
               />
             )}
             {viewMode === 'week' && (
@@ -184,6 +235,7 @@ const CalendarPage = () => {
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
                 onTaskMove={handleTaskMove}
+                onCellClick={handleCellClick}
               />
             )}
             {viewMode === 'day' && (
@@ -193,6 +245,7 @@ const CalendarPage = () => {
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
                 onTaskMove={handleTaskMove}
+                onCellClick={handleCellClick}
               />
             )}
 
@@ -259,6 +312,21 @@ const CalendarPage = () => {
           task={selectedTask}
           projectId={selectedTask?.project_id}
           salesId={selectedTask?.sales_id}
+        />
+
+        <TaskDialog 
+          open={taskDialogOpen} 
+          onOpenChange={setTaskDialogOpen} 
+          task={null}
+          defaultDate={createDate}
+          defaultTime={createTime}
+        />
+
+        <EventDialog
+          open={eventDialogOpen}
+          onOpenChange={setEventDialogOpen}
+          defaultDate={createDate}
+          defaultTime={createTime}
         />
       </div>
     </LicenseGuard>
