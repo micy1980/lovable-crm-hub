@@ -227,7 +227,9 @@ export function CompanyList() {
                   <div className="flex items-center justify-center text-sm">
                     {company.user_count} / {company.max_users || '-'}
                   </div>
-                  <div className="flex items-center text-sm">{format(new Date(company.created_at), 'PP')}</div>
+                  <div className="flex items-center text-sm">
+                    {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
+                  </div>
                   <div className="flex items-center justify-end gap-1">
                     <Button
                       variant="ghost"
