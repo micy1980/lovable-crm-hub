@@ -50,7 +50,7 @@ type FilterType = 'all' | 'personal' | 'project';
 
 // Component for managing user's personal tasks and events
 
-const MyItems = () => {
+export default function MyItems() {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const { data, isLoading } = useMyItems();
@@ -352,6 +352,4 @@ const MyItems = () => {
       </div>
     </LicenseGuard>
   );
-};
-
-export default MyItems;
+}
