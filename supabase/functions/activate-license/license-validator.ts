@@ -6,11 +6,12 @@
 
 export type LicenseFeature = 
   | 'partners'
-  | 'sales'
-  | 'calendar'
   | 'projects'
+  | 'sales'
   | 'documents'
-  | 'logs';
+  | 'calendar'
+  | 'my_items'
+  | 'audit';
 
 export interface DecodedLicense {
   version: number;
@@ -24,7 +25,8 @@ const EPOCH = new Date('2000-01-01T00:00:00Z');
 const LICENSE_VERSION = 1;
 const SECRET_KEY = 'ORBIX_LICENSE_SECRET_2025';
 
-const FEATURE_ORDER: LicenseFeature[] = ['partners', 'sales', 'calendar', 'projects', 'documents', 'logs'];
+// Feature bit positions (MSB first) - 8 bits for 7 features
+const FEATURE_ORDER: LicenseFeature[] = ['partners', 'projects', 'sales', 'documents', 'calendar', 'my_items', 'audit'];
 
 function daysToDate(days: number): Date {
   const ms = EPOCH.getTime() + days * 24 * 60 * 60 * 1000;
@@ -34,7 +36,7 @@ function daysToDate(days: number): Date {
 function maskToFeatures(mask: number): LicenseFeature[] {
   const features: LicenseFeature[] = [];
   for (let i = 0; i < FEATURE_ORDER.length; i++) {
-    if (mask & (1 << (5 - i))) {
+    if (mask & (1 << (7 - i))) {
       features.push(FEATURE_ORDER[i]);
     }
   }
@@ -135,11 +137,12 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
     
     const payload = bytesToBigInt(payloadBytes);
     
-    const featuresMask = Number(payload & 0x3Fn);
-    const validUntilDays = Number((payload >> 6n) & 0x7FFFn);
-    const validFromDays = Number((payload >> 21n) & 0x7FFFn);
-    const maxUsers = Number((payload >> 36n) & 0x3FFn);
-    const version = Number((payload >> 46n) & 0xFn);
+    // Extract fields (big-endian, MSB first) - 8-bit features
+    const featuresMask = Number(payload & 0xFFn);                     // 8 bits
+    const validUntilDays = Number((payload >> 8n) & 0x7FFFn);         // 15 bits
+    const validFromDays = Number((payload >> 23n) & 0x7FFFn);         // 15 bits
+    const maxUsers = Number((payload >> 38n) & 0x3FFn);               // 10 bits
+    const version = Number((payload >> 48n) & 0xFn);                  // 4 bits
     
     if (version !== LICENSE_VERSION) {
       return null;
