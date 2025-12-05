@@ -79,7 +79,7 @@ const LicenseGenerator = () => {
         'documents': 'Dokumentumok',
         'calendar': 'Naptár',
         'my_items': 'Saját dolgaim',
-        'audit': 'Audit napló'
+        'audit': 'Audit'
       };
       
       const featureList = selectedFeatures.map(f => featureNames[f] || f).join(', ');
@@ -177,7 +177,7 @@ const LicenseGenerator = () => {
                   { key: 'documents', label: 'Dokumentumok' },
                   { key: 'calendar', label: 'Naptár' },
                   { key: 'my_items', label: 'Saját dolgaim' },
-                  { key: 'audit', label: 'Audit napló' },
+                  { key: 'audit', label: 'Audit' },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
