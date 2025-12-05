@@ -56,25 +56,37 @@ export const DraggableTask = ({ task, onClick, variant = 'compact', showTime }: 
     ? new Date(task.deadline).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })
     : '';
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDragging) {
+      onClick();
+    }
+  };
+
   if (variant === 'compact') {
     return (
       <div
         ref={setNodeRef}
         style={style}
         className={cn(
-          "text-xs p-1 rounded bg-primary/10 truncate flex items-center gap-1 hover:bg-primary/20 cursor-grab active:cursor-grabbing group",
+          "text-xs p-1 rounded bg-primary/10 truncate flex items-center gap-1 hover:bg-primary/20 group",
           isDragging && "opacity-50 z-50 shadow-lg"
         )}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        {...attributes}
-        {...listeners}
       >
-        <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0" />
-        {getStatusIcon(task.status)}
-        <span className="truncate">{task.title}</span>
+        <div 
+          className="cursor-grab active:cursor-grabbing touch-none"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 flex-shrink-0" />
+        </div>
+        <div 
+          className="flex items-center gap-1 flex-1 min-w-0 cursor-pointer"
+          onClick={handleClick}
+        >
+          {getStatusIcon(task.status)}
+          <span className="truncate">{task.title}</span>
+        </div>
       </div>
     );
   }
@@ -84,21 +96,26 @@ export const DraggableTask = ({ task, onClick, variant = 'compact', showTime }: 
       ref={setNodeRef}
       style={style}
       className={cn(
-        "text-xs p-1 rounded truncate cursor-grab active:cursor-grabbing border group flex items-center gap-1",
+        "text-xs p-1 rounded truncate border group flex items-center gap-1",
         getStatusColor(task.status),
         isDragging && "opacity-50 z-50 shadow-lg"
       )}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      {...attributes}
-      {...listeners}
     >
-      <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-100 flex-shrink-0" />
-      {showTime && timeStr && <span className="font-medium">{timeStr}</span>}
-      {showTime && timeStr && <span>-</span>}
-      <span className="truncate">{task.title}</span>
+      <div 
+        className="cursor-grab active:cursor-grabbing touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3 w-3 opacity-0 group-hover:opacity-100 flex-shrink-0" />
+      </div>
+      <div 
+        className="flex items-center gap-1 flex-1 min-w-0 cursor-pointer"
+        onClick={handleClick}
+      >
+        {showTime && timeStr && <span className="font-medium">{timeStr}</span>}
+        {showTime && timeStr && <span>-</span>}
+        <span className="truncate">{task.title}</span>
+      </div>
     </div>
   );
 };
