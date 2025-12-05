@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
@@ -30,10 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TaskDialog } from '@/components/projects/TaskDialog';
+import { EventDialog } from '@/components/events/EventDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Lazy load EventDialog to prevent blocking page load
-const EventDialog = lazy(() => import('@/components/events/EventDialog').then(m => ({ default: m.EventDialog })));
 import {
   AlertDialog,
   AlertDialogAction,
@@ -329,13 +327,11 @@ export default function MyItems() {
           task={selectedTask}
         />
 
-        <Suspense fallback={null}>
-          <EventDialog
-            open={eventDialogOpen}
-            onOpenChange={setEventDialogOpen}
-            event={selectedEvent}
-          />
-        </Suspense>
+        <EventDialog
+          open={eventDialogOpen}
+          onOpenChange={setEventDialogOpen}
+          event={selectedEvent}
+        />
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
