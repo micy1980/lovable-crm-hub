@@ -255,7 +255,8 @@
     "allDay": "All day",
     "taskMoved": "Task moved",
     "taskMovedDescription": "Task deadline updated.",
-    "taskMoveError": "Failed to move task."
+    "taskMoveError": "Failed to move task.",
+    "taskDetails": "Task details"
   },
   "tasks": {
     "status": {
