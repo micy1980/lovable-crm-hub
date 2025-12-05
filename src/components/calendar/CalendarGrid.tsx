@@ -197,7 +197,7 @@ export const CalendarGrid = ({
                   key={`${weekIndex}-${dayIndex}`}
                   id={dropId}
                   className={cn(
-                    "min-h-[120px] border-r border-b last:border-r-0 cursor-pointer transition-colors p-2 relative",
+                    "min-h-[120px] border-r border-b last:border-r-0 cursor-pointer transition-colors p-2",
                     !isCurrentMonth && "bg-muted/20 text-muted-foreground",
                     isToday && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary",
                     isSelected && !isToday && "ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10",
@@ -210,22 +210,24 @@ export const CalendarGrid = ({
                     }
                   }}
                 >
-                  {/* All-day indicator stripes */}
-                  {(hasAllDayTask || hasAllDayEvent) && (
-                    <div className="absolute left-0 top-0 bottom-0 flex">
-                      {hasAllDayTask && (
-                        <div className="w-1 bg-primary h-full" title={`${allDayTasks.length} egész napos feladat`} />
-                      )}
-                      {hasAllDayEvent && (
-                        <div className="w-1 bg-violet-500 h-full" title={`${allDayEvents.length} egész napos esemény`} />
-                      )}
-                    </div>
-                  )}
                   <div className={cn(
-                    "text-sm font-medium mb-1 text-right",
+                    "text-sm font-medium mb-1 flex items-center justify-end gap-1",
                     isToday && "text-primary font-bold",
                     dayIndex === 6 && "text-red-500" // Sunday
                   )}>
+                    {/* All-day indicator dots */}
+                    {hasAllDayTask && (
+                      <span 
+                        className="w-2 h-2 rounded-full bg-primary flex-shrink-0" 
+                        title={`${allDayTasks.length} egész napos feladat`} 
+                      />
+                    )}
+                    {hasAllDayEvent && (
+                      <span 
+                        className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0" 
+                        title={`${allDayEvents.length} egész napos esemény`} 
+                      />
+                    )}
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-1 overflow-hidden">
