@@ -19,6 +19,8 @@ interface CalendarGridProps {
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
   onEventMove?: (eventId: string, newStartTime: Date) => void;
   onCellDoubleClick?: (date: Date) => void;
+  personalTaskColor?: string | null;
+  personalEventColor?: string | null;
 }
 
 const WEEKDAYS_HU = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
@@ -34,7 +36,9 @@ export const CalendarGrid = ({
   onEventDoubleClick,
   onTaskMove, 
   onEventMove,
-  onCellDoubleClick 
+  onCellDoubleClick,
+  personalTaskColor,
+  personalEventColor
 }: CalendarGridProps) => {
   const { i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
@@ -56,7 +60,7 @@ export const CalendarGrid = ({
         status: task.status,
         deadline: task.deadline,
         is_all_day: task.is_all_day,
-        color: task.project?.task_color || null,
+        color: task.project?.task_color || (!task.project_id ? personalTaskColor : null) || null,
       }));
     
     const dayEvents: CalendarItem[] = events
@@ -68,7 +72,7 @@ export const CalendarGrid = ({
         start_time: event.start_time,
         end_time: event.end_time,
         is_all_day: event.is_all_day,
-        color: event.project?.event_color || null,
+        color: event.project?.event_color || (!event.project_id ? personalEventColor : null) || null,
       }));
 
     return [...dayTasks, ...dayEvents];

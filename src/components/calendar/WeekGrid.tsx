@@ -19,6 +19,8 @@ interface WeekGridProps {
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
   onEventMove?: (eventId: string, newStartTime: Date) => void;
   onCellDoubleClick?: (date: Date, hour?: number) => void;
+  personalTaskColor?: string | null;
+  personalEventColor?: string | null;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -34,7 +36,9 @@ export const WeekGrid = ({
   onEventDoubleClick,
   onTaskMove, 
   onEventMove,
-  onCellDoubleClick 
+  onCellDoubleClick,
+  personalTaskColor,
+  personalEventColor
 }: WeekGridProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
@@ -56,7 +60,7 @@ export const WeekGrid = ({
         status: task.status,
         deadline: task.deadline,
         is_all_day: task.is_all_day,
-        color: task.project?.task_color || null,
+        color: task.project?.task_color || (!task.project_id ? personalTaskColor : null) || null,
       }));
 
     const hourEvents: CalendarItem[] = events
@@ -72,7 +76,7 @@ export const WeekGrid = ({
         start_time: event.start_time,
         end_time: event.end_time,
         is_all_day: event.is_all_day,
-        color: event.project?.event_color || null,
+        color: event.project?.event_color || (!event.project_id ? personalEventColor : null) || null,
       }));
 
     return [...hourTasks, ...hourEvents];
@@ -92,7 +96,7 @@ export const WeekGrid = ({
         status: task.status,
         deadline: task.deadline,
         is_all_day: true,
-        color: task.project?.task_color || null,
+        color: task.project?.task_color || (!task.project_id ? personalTaskColor : null) || null,
       }));
 
     const allDayEvents: CalendarItem[] = events
@@ -108,7 +112,7 @@ export const WeekGrid = ({
         start_time: event.start_time,
         end_time: event.end_time,
         is_all_day: true,
-        color: event.project?.event_color || null,
+        color: event.project?.event_color || (!event.project_id ? personalEventColor : null) || null,
       }));
 
     return [...allDayTasks, ...allDayEvents];

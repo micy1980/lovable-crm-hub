@@ -302,6 +302,8 @@ const CalendarPage = () => {
                 onTaskMove={handleTaskMove}
                 onEventMove={handleEventMove}
                 onCellDoubleClick={(date) => handleCellClick(date)}
+                personalTaskColor={userProfile?.personal_task_color}
+                personalEventColor={userProfile?.personal_event_color}
               />
             )}
             {viewMode === 'week' && (
@@ -316,6 +318,8 @@ const CalendarPage = () => {
                 onTaskMove={handleTaskMove}
                 onEventMove={handleEventMove}
                 onCellDoubleClick={handleCellClick}
+                personalTaskColor={userProfile?.personal_task_color}
+                personalEventColor={userProfile?.personal_event_color}
               />
             )}
             {viewMode === 'day' && (
@@ -329,6 +333,8 @@ const CalendarPage = () => {
                 onTaskMove={handleTaskMove}
                 onEventMove={handleEventMove}
                 onCellDoubleClick={handleCellClick}
+                personalTaskColor={userProfile?.personal_task_color}
+                personalEventColor={userProfile?.personal_event_color}
               />
             )}
 
