@@ -23,6 +23,7 @@ const SalesDetail = lazy(() => import("./pages/SalesDetail"));
 const Sales = lazy(() => import("./pages/Sales"));
 const Documents = lazy(() => import("./pages/Documents"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const MyItems = lazy(() => import("./pages/MyItems"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Logs = lazy(() => import("./pages/Logs"));
 const LicenseGenerator = lazy(() => import("./pages/LicenseGenerator"));
@@ -77,6 +78,7 @@ const App = () => {
                     <Route path="/sales/:id" element={<MainLayout><SalesDetail /></MainLayout>} />
                     <Route path="/documents" element={<MainLayout><Documents /></MainLayout>} />
                     <Route path="/calendar" element={<MainLayout><CalendarPage /></MainLayout>} />
+                    <Route path="/my-items" element={<MainLayout><MyItems /></MainLayout>} />
                     <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
                     <Route path="/logs" element={<MainLayout><Logs /></MainLayout>} />
                     <Route path="/account-management" element={<MainLayout><AccountManagement /></MainLayout>} />

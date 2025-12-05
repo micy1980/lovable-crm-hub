@@ -10,6 +10,7 @@ import {
   ScrollText,
   ChevronDown,
   UserCog,
+  ListTodo,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -49,6 +50,7 @@ export function AppSidebar() {
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
     { title: t('nav.documents'), url: '/documents', icon: FileText, feature: 'documents' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
+    { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'calendar' },
   ];
 
   // Add Logs for super_admin
