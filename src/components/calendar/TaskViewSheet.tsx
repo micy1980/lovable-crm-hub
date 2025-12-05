@@ -107,11 +107,6 @@ export const TaskViewSheet = ({ open, onOpenChange, task }: TaskViewSheetProps) 
     enabled: !!task?.sales_id && open,
   });
 
-  if (!task) return null;
-
-  const statusConfig = getStatusConfig(task.status);
-  const StatusIcon = statusConfig.icon;
-
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -124,9 +119,18 @@ export const TaskViewSheet = ({ open, onOpenChange, task }: TaskViewSheetProps) 
     });
   };
 
+  const statusConfig = task ? getStatusConfig(task.status) : getStatusConfig('pending');
+  const StatusIcon = statusConfig.icon;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-lg">
+        {!task ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground">Nincs kiválasztott feladat</p>
+          </div>
+        ) : (
+          <>
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <StatusIcon className="h-5 w-5" />
@@ -196,6 +200,8 @@ export const TaskViewSheet = ({ open, onOpenChange, task }: TaskViewSheetProps) 
             </div>
           )}
         </div>
+        </>
+        )}
       </SheetContent>
     </Sheet>
   );
