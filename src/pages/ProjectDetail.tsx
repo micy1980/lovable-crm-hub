@@ -55,10 +55,9 @@ const ProjectDetail = () => {
     if (!id) return;
 
     try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
+      const { error } = await supabase.rpc('soft_delete_project', {
+        _project_id: id
+      });
 
       if (error) throw error;
       

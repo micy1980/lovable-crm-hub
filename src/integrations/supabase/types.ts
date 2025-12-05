@@ -1643,6 +1643,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      soft_delete_project: { Args: { _project_id: string }; Returns: boolean }
       unlock_account_by_user_id: {
         Args: { _unlocked_by: string; _user_id: string }
         Returns: undefined
