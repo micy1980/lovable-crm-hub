@@ -14,6 +14,7 @@ import { TaskDialog } from '@/components/projects/TaskDialog';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { DayGrid } from '@/components/calendar/DayGrid';
+import { useUpdateTaskDeadline } from '@/hooks/useUpdateTaskDeadline';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -25,6 +26,11 @@ const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const updateTaskDeadline = useUpdateTaskDeadline();
+
+  const handleTaskMove = (taskId: string, newDeadline: Date) => {
+    updateTaskDeadline.mutate({ taskId, newDeadline });
+  };
 
   const getDateRange = () => {
     switch (viewMode) {
@@ -167,6 +173,7 @@ const CalendarPage = () => {
                 onSelectDate={setSelectedDate}
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
+                onTaskMove={handleTaskMove}
               />
             )}
             {viewMode === 'week' && (
@@ -176,6 +183,7 @@ const CalendarPage = () => {
                 onSelectDate={setSelectedDate}
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
+                onTaskMove={handleTaskMove}
               />
             )}
             {viewMode === 'day' && (
@@ -184,6 +192,7 @@ const CalendarPage = () => {
                 selectedDate={selectedDate}
                 tasks={tasks}
                 onTaskClick={handleTaskClick}
+                onTaskMove={handleTaskMove}
               />
             )}
 
