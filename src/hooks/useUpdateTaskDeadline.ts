@@ -19,6 +19,8 @@ export const useUpdateTaskDeadline = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-items'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: t('calendar.taskMoved', 'Feladat áthelyezve'),
         description: t('calendar.taskMovedDescription', 'A feladat határideje frissítve.'),
