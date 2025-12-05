@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { CalendarIcon, X, UserPlus, Mail, Users } from 'lucide-react';
+import { X, UserPlus, Mail, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useEvents } from '@/hooks/useEvents';
@@ -27,9 +27,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
 
 interface EventDialogProps {
   open: boolean;
@@ -49,7 +46,9 @@ interface Participant {
 interface FormData {
   title: string;
   description: string;
+  start_date: string;
   start_time: string;
+  end_date: string;
   end_time: string;
   location: string;
   project_id: string;
@@ -77,8 +76,10 @@ export const EventDialog = ({
     defaultValues: {
       title: '',
       description: '',
-      start_time: '',
-      end_time: '',
+      start_date: '',
+      start_time: '09:00',
+      end_date: '',
+      end_time: '10:00',
       location: '',
       project_id: '',
       sales_id: '',
@@ -88,8 +89,6 @@ export const EventDialog = ({
   });
 
   const isAllDay = watch('is_all_day');
-  const startTime = watch('start_time');
-  const endTime = watch('end_time');
   const projectId = watch('project_id');
   const salesId = watch('sales_id');
   const responsibleUserId = watch('responsible_user_id');
@@ -141,11 +140,16 @@ export const EventDialog = ({
   useEffect(() => {
     if (open) {
       if (event) {
+        const startDate = event.start_time ? new Date(event.start_time) : null;
+        const endDate = event.end_time ? new Date(event.end_time) : null;
+        
         reset({
           title: event.title || '',
           description: event.description || '',
-          start_time: event.start_time || '',
-          end_time: event.end_time || '',
+          start_date: startDate ? format(startDate, 'yyyy-MM-dd') : '',
+          start_time: startDate ? format(startDate, 'HH:mm') : '09:00',
+          end_date: endDate ? format(endDate, 'yyyy-MM-dd') : '',
+          end_time: endDate ? format(endDate, 'HH:mm') : '10:00',
           location: event.location || '',
           project_id: event.project_id || '',
           sales_id: event.sales_id || '',
@@ -155,14 +159,14 @@ export const EventDialog = ({
       } else {
         const startDate = defaultDate || new Date();
         const startTimeStr = defaultTime || '09:00';
-        const [hours, minutes] = startTimeStr.split(':').map(Number);
-        startDate.setHours(hours, minutes, 0, 0);
         
         reset({
           title: '',
           description: '',
-          start_time: startDate.toISOString(),
-          end_time: '',
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          start_time: startTimeStr,
+          end_date: '',
+          end_time: '10:00',
           location: '',
           project_id: '',
           sales_id: '',
@@ -175,11 +179,36 @@ export const EventDialog = ({
   }, [open, event, defaultDate, defaultTime, reset]);
 
   const onSubmit = async (data: FormData) => {
+    // Build ISO datetime strings
+    let startTimeISO = '';
+    let endTimeISO = '';
+
+    if (data.start_date) {
+      if (data.is_all_day) {
+        startTimeISO = new Date(`${data.start_date}T00:00:00`).toISOString();
+      } else {
+        startTimeISO = new Date(`${data.start_date}T${data.start_time || '09:00'}:00`).toISOString();
+      }
+    }
+
+    if (data.end_date) {
+      if (data.is_all_day) {
+        endTimeISO = new Date(`${data.end_date}T23:59:59`).toISOString();
+      } else {
+        endTimeISO = new Date(`${data.end_date}T${data.end_time || '10:00'}:00`).toISOString();
+      }
+    }
+
     const formData = {
-      ...data,
+      title: data.title,
+      description: data.description,
+      start_time: startTimeISO,
+      end_time: endTimeISO || null,
+      location: data.location,
       project_id: data.project_id || null,
       sales_id: data.sales_id || null,
       responsible_user_id: data.responsible_user_id || null,
+      is_all_day: data.is_all_day,
       participants: participants.map(p => ({
         user_id: p.user_id,
         external_email: p.email,
@@ -271,96 +300,41 @@ export const EventDialog = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t('events.startTime')} *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !startTime && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startTime
-                      ? format(new Date(startTime), isAllDay ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm')
-                      : t('events.selectDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startTime ? new Date(startTime) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        const current = startTime ? new Date(startTime) : new Date();
-                        date.setHours(current.getHours(), current.getMinutes());
-                        setValue('start_time', date.toISOString());
-                      }
-                    }}
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  {...register('start_date', { required: true })}
+                  className="flex-1"
+                />
+                {!isAllDay && (
+                  <Input
+                    type="time"
+                    {...register('start_time')}
+                    className="w-28"
                   />
-                  {!isAllDay && (
-                    <div className="p-3 border-t">
-                      <Input
-                        type="time"
-                        value={startTime ? format(new Date(startTime), 'HH:mm') : '09:00'}
-                        onChange={(e) => {
-                          const date = startTime ? new Date(startTime) : new Date();
-                          const [h, m] = e.target.value.split(':').map(Number);
-                          date.setHours(h, m);
-                          setValue('start_time', date.toISOString());
-                        }}
-                      />
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
+                )}
+              </div>
+              {errors.start_date && (
+                <p className="text-sm text-destructive">{t('common.required')}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label>{t('events.endTime')}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !endTime && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endTime
-                      ? format(new Date(endTime), isAllDay ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm')
-                      : t('events.selectDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endTime ? new Date(endTime) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        const current = endTime ? new Date(endTime) : new Date();
-                        date.setHours(current.getHours(), current.getMinutes());
-                        setValue('end_time', date.toISOString());
-                      }
-                    }}
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  {...register('end_date')}
+                  className="flex-1"
+                />
+                {!isAllDay && (
+                  <Input
+                    type="time"
+                    {...register('end_time')}
+                    className="w-28"
                   />
-                  {!isAllDay && (
-                    <div className="p-3 border-t">
-                      <Input
-                        type="time"
-                        value={endTime ? format(new Date(endTime), 'HH:mm') : '10:00'}
-                        onChange={(e) => {
-                          const date = endTime ? new Date(endTime) : new Date();
-                          const [h, m] = e.target.value.split(':').map(Number);
-                          date.setHours(h, m);
-                          setValue('end_time', date.toISOString());
-                        }}
-                      />
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
+                )}
+              </div>
             </div>
           </div>
 
