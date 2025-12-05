@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TaskDialog } from '@/components/projects/TaskDialog';
-import { EventDialog } from '@/components/events/EventDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -327,11 +326,7 @@ const MyItems = () => {
           task={selectedTask}
         />
 
-        <EventDialog
-          open={eventDialogOpen}
-          onOpenChange={setEventDialogOpen}
-          event={selectedEvent}
-        />
+        {/* EventDialog temporarily removed */}
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
