@@ -34,6 +34,8 @@ interface EventDialogProps {
   event?: any;
   defaultDate?: Date;
   defaultTime?: string;
+  defaultProjectId?: string;
+  defaultSalesId?: string;
 }
 
 interface Participant {
@@ -63,6 +65,8 @@ export const EventDialog = ({
   event,
   defaultDate,
   defaultTime,
+  defaultProjectId,
+  defaultSalesId,
 }: EventDialogProps) => {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
@@ -168,15 +172,15 @@ export const EventDialog = ({
           end_date: '',
           end_time: '10:00',
           location: '',
-          project_id: '',
-          sales_id: '',
+          project_id: defaultProjectId || '',
+          sales_id: defaultSalesId || '',
           responsible_user_id: '',
           is_all_day: false,
         });
         setParticipants([]);
       }
     }
-  }, [open, event, defaultDate, defaultTime, reset]);
+  }, [open, event, defaultDate, defaultTime, defaultProjectId, defaultSalesId, reset]);
 
   const onSubmit = async (data: FormData) => {
     // Build ISO datetime strings
