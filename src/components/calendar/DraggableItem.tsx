@@ -17,7 +17,7 @@ export interface CalendarItem {
 
 interface DraggableItemProps {
   item: CalendarItem;
-  onClick: () => void;
+  onDoubleClick: () => void;
   variant?: 'compact' | 'full';
   showTime?: boolean;
 }
@@ -52,7 +52,7 @@ const getEventColor = () => {
   return 'bg-violet-100 border-violet-300 text-violet-800 dark:bg-violet-900/30 dark:border-violet-700 dark:text-violet-300';
 };
 
-export const DraggableItem = ({ item, onClick, variant = 'compact', showTime }: DraggableItemProps) => {
+export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTime }: DraggableItemProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     data: { item },
@@ -74,10 +74,10 @@ export const DraggableItem = ({ item, onClick, variant = 'compact', showTime }: 
 
   const timeStr = getTimeStr();
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isDragging) {
-      onClick();
+      onDoubleClick();
     }
   };
 
@@ -106,7 +106,7 @@ export const DraggableItem = ({ item, onClick, variant = 'compact', showTime }: 
         </div>
         <div 
           className="flex items-center gap-1 flex-1 min-w-0 cursor-pointer"
-          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
         >
           {isEvent ? (
             <Calendar className="h-3 w-3 text-violet-500 flex-shrink-0" />
@@ -138,7 +138,7 @@ export const DraggableItem = ({ item, onClick, variant = 'compact', showTime }: 
       </div>
       <div 
         className="flex items-center gap-1 flex-1 min-w-0 cursor-pointer"
-        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
       >
         {isEvent && <Calendar className="h-3 w-3 flex-shrink-0" />}
         {showTime && timeStr && <span className="font-medium">{timeStr}</span>}

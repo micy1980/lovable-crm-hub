@@ -14,11 +14,11 @@ interface CalendarGridProps {
   onSelectDate: (date: Date) => void;
   tasks: any[];
   events?: any[];
-  onTaskClick: (task: any) => void;
-  onEventClick?: (event: any) => void;
+  onTaskDoubleClick: (task: any) => void;
+  onEventDoubleClick?: (event: any) => void;
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
   onEventMove?: (eventId: string, newStartTime: Date) => void;
-  onCellClick?: (date: Date) => void;
+  onCellDoubleClick?: (date: Date) => void;
 }
 
 const WEEKDAYS_HU = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
@@ -30,11 +30,11 @@ export const CalendarGrid = ({
   onSelectDate, 
   tasks, 
   events = [],
-  onTaskClick, 
-  onEventClick,
+  onTaskDoubleClick, 
+  onEventDoubleClick,
   onTaskMove, 
   onEventMove,
-  onCellClick 
+  onCellDoubleClick 
 }: CalendarGridProps) => {
   const { i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
@@ -147,13 +147,13 @@ export const CalendarGrid = ({
     }
   };
 
-  const handleItemClick = (item: CalendarItem) => {
+  const handleItemDoubleClick = (item: CalendarItem) => {
     if (item.type === 'task') {
       const task = tasks.find(t => t.id === item.id);
-      if (task) onTaskClick(task);
-    } else if (item.type === 'event' && onEventClick) {
+      if (task) onTaskDoubleClick(task);
+    } else if (item.type === 'event' && onEventDoubleClick) {
       const event = events.find(e => e.id === item.id);
-      if (event) onEventClick(event);
+      if (event) onEventDoubleClick(event);
     }
   };
 
@@ -197,11 +197,10 @@ export const CalendarGrid = ({
                     isSelected && !isToday && "ring-2 ring-inset ring-emerald-400 dark:ring-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10",
                     "hover:bg-accent/50"
                   )}
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget && onCellClick) {
-                      onCellClick(day);
-                    } else {
-                      onSelectDate(day);
+                  onClick={() => onSelectDate(day)}
+                  onDoubleClick={(e) => {
+                    if (e.target === e.currentTarget && onCellDoubleClick) {
+                      onCellDoubleClick(day);
                     }
                   }}
                 >
@@ -217,7 +216,7 @@ export const CalendarGrid = ({
                       <DraggableItem
                         key={item.id}
                         item={item}
-                        onClick={() => handleItemClick(item)}
+                        onDoubleClick={() => handleItemDoubleClick(item)}
                         variant="compact"
                       />
                     ))}

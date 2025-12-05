@@ -13,11 +13,11 @@ interface DayGridProps {
   selectedDate?: Date;
   tasks: any[];
   events?: any[];
-  onTaskClick: (task: any) => void;
-  onEventClick?: (event: any) => void;
+  onTaskDoubleClick: (task: any) => void;
+  onEventDoubleClick?: (event: any) => void;
   onTaskMove?: (taskId: string, newDeadline: Date) => void;
   onEventMove?: (eventId: string, newStartTime: Date) => void;
-  onCellClick?: (date: Date, hour?: number) => void;
+  onCellDoubleClick?: (date: Date, hour?: number) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -28,11 +28,11 @@ export const DayGrid = ({
   selectedDate, 
   tasks, 
   events = [],
-  onTaskClick, 
-  onEventClick,
+  onTaskDoubleClick, 
+  onEventDoubleClick,
   onTaskMove, 
   onEventMove,
-  onCellClick 
+  onCellDoubleClick 
 }: DayGridProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'hu' ? hu : undefined;
@@ -167,13 +167,13 @@ export const DayGrid = ({
     }
   };
 
-  const handleItemClick = (item: CalendarItem) => {
+  const handleItemDoubleClick = (item: CalendarItem) => {
     if (item.type === 'task') {
       const task = tasks.find(t => t.id === item.id);
-      if (task) onTaskClick(task);
-    } else if (item.type === 'event' && onEventClick) {
+      if (task) onTaskDoubleClick(task);
+    } else if (item.type === 'event' && onEventDoubleClick) {
       const event = events.find(e => e.id === item.id);
-      if (event) onEventClick(event);
+      if (event) onEventDoubleClick(event);
     }
   };
 
@@ -216,7 +216,7 @@ export const DayGrid = ({
                 <DraggableItem
                   key={item.id}
                   item={item}
-                  onClick={() => handleItemClick(item)}
+                  onDoubleClick={() => handleItemDoubleClick(item)}
                   variant="full"
                 />
               ))}
@@ -244,13 +244,13 @@ export const DayGrid = ({
                 <DroppableCell
                   id={dropId}
                   className="min-h-[44px] p-0.5 cursor-pointer"
-                  onClick={() => onCellClick?.(currentDate, hour)}
+                  onDoubleClick={() => onCellDoubleClick?.(currentDate, hour)}
                 >
                   {hourItems.map((item) => (
                     <DraggableItem
                       key={item.id}
                       item={item}
-                      onClick={() => handleItemClick(item)}
+                      onDoubleClick={() => handleItemDoubleClick(item)}
                       variant="full"
                       showTime
                     />
