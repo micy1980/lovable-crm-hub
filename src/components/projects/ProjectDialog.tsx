@@ -34,7 +34,15 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
   const { t } = useTranslation();
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<ProjectFormData>({
-    defaultValues: project || {
+    defaultValues: project ? {
+      name: project.name || '',
+      code: project.code || '',
+      description: project.description || '',
+      status: project.status || 'planning',
+      owner_user_id: project.owner_user_id || '',
+      responsible1_user_id: project.responsible1_user_id || '',
+      responsible2_user_id: project.responsible2_user_id || '',
+    } : {
       name: '',
       code: '',
       description: '',
