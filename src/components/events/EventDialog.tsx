@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, X, UserPlus, Mail, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useEvents, EventFormData } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/useEvents';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,18 @@ interface Participant {
   name?: string;
 }
 
+interface EventFormData {
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  project_id: string;
+  sales_id: string;
+  responsible_user_id: string;
+  is_all_day: boolean;
+}
+
 export const EventDialog = ({
   open,
   onOpenChange,
@@ -61,12 +73,23 @@ export const EventDialog = ({
   const [externalName, setExternalName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EventFormData>();
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EventFormData>({
+    defaultValues: {
+      title: '',
+      description: '',
+      start_time: '',
+      end_time: '',
+      location: '',
+      project_id: '',
+      sales_id: '',
+      responsible_user_id: '',
+      is_all_day: false,
+    }
+  });
 
   const isAllDay = watch('is_all_day');
   const startTime = watch('start_time');
 
-  // Fetch users for participant selection
   const { data: users } = useQuery({
     queryKey: ['company-users', activeCompany?.id],
     queryFn: async () => {
@@ -81,7 +104,6 @@ export const EventDialog = ({
     enabled: !!activeCompany?.id && open,
   });
 
-  // Fetch projects
   const { data: projects } = useQuery({
     queryKey: ['projects', activeCompany?.id],
     queryFn: async () => {
@@ -97,7 +119,6 @@ export const EventDialog = ({
     enabled: !!activeCompany?.id && open,
   });
 
-  // Fetch sales
   const { data: sales } = useQuery({
     queryKey: ['sales', activeCompany?.id],
     queryFn: async () => {
@@ -199,6 +220,8 @@ export const EventDialog = ({
   const removeParticipant = (index: number) => {
     setParticipants(participants.filter((_, i) => i !== index));
   };
+
+  const availableUsersForSelect = users?.filter(u => !participants.some(p => p.user_id === u.id)) || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -302,17 +325,17 @@ export const EventDialog = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {watch('end_time')
-                      ? format(new Date(watch('end_time')!), isAllDay ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm')
+                      ? format(new Date(watch('end_time')), isAllDay ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm')
                       : t('events.selectDate')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={watch('end_time') ? new Date(watch('end_time')!) : undefined}
+                    selected={watch('end_time') ? new Date(watch('end_time')) : undefined}
                     onSelect={(date) => {
                       if (date) {
-                        const current = watch('end_time') ? new Date(watch('end_time')!) : new Date();
+                        const current = watch('end_time') ? new Date(watch('end_time')) : new Date();
                         date.setHours(current.getHours(), current.getMinutes());
                         setValue('end_time', date.toISOString());
                       }
@@ -322,9 +345,9 @@ export const EventDialog = ({
                     <div className="p-3 border-t">
                       <Input
                         type="time"
-                        value={watch('end_time') ? format(new Date(watch('end_time')!), 'HH:mm') : '10:00'}
+                        value={watch('end_time') ? format(new Date(watch('end_time')), 'HH:mm') : '10:00'}
                         onChange={(e) => {
-                          const date = watch('end_time') ? new Date(watch('end_time')!) : new Date();
+                          const date = watch('end_time') ? new Date(watch('end_time')) : new Date();
                           const [hours, minutes] = e.target.value.split(':').map(Number);
                           date.setHours(hours, minutes);
                           setValue('end_time', date.toISOString());
@@ -408,21 +431,19 @@ export const EventDialog = ({
             </Select>
           </div>
 
-          {/* Participants Section */}
           <div className="space-y-3 border-t pt-4">
             <Label className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               {t('events.participants')}
             </Label>
 
-            {/* Internal User */}
             <div className="flex gap-2">
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder={t('events.selectUser')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {users?.filter(u => !participants.some(p => p.user_id === u.id)).map((user) => (
+                  {availableUsersForSelect.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name || user.email}
                     </SelectItem>
@@ -434,7 +455,6 @@ export const EventDialog = ({
               </Button>
             </div>
 
-            {/* External Email */}
             <div className="flex gap-2">
               <Input
                 type="text"
@@ -455,7 +475,6 @@ export const EventDialog = ({
               </Button>
             </div>
 
-            {/* Participant List */}
             {participants.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {participants.map((p, index) => (
@@ -480,7 +499,7 @@ export const EventDialog = ({
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={createEvent.isPending || updateEvent.isPending}>
-              {event ? t('common.save') : t('common.create')}
+              {event ? t('common.save') : t('events.create')}
             </Button>
           </DialogFooter>
         </form>
