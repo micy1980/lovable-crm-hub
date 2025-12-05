@@ -45,6 +45,8 @@ export const CalendarGrid = ({
   const weekdays = i18n.language === 'hu' ? WEEKDAYS_HU : WEEKDAYS_EN;
   const [activeItem, setActiveItem] = useState<CalendarItem | null>(null);
 
+  console.log('CalendarGrid received personal colors:', { personalTaskColor, personalEventColor });
+
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
