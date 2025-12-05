@@ -137,7 +137,7 @@ export default function MyItems() {
 
   if (!activeCompany) {
     return (
-      <LicenseGuard feature="calendar">
+      <LicenseGuard feature="my_items">
         <div className="container mx-auto p-6">
           <p className="text-muted-foreground">{t('common.selectCompany')}</p>
         </div>
@@ -146,7 +146,7 @@ export default function MyItems() {
   }
 
   return (
-    <LicenseGuard feature="calendar">
+    <LicenseGuard feature="my_items">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
