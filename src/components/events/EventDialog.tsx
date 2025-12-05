@@ -350,14 +350,14 @@ export const EventDialog = ({
             <div className="space-y-2">
               <Label>{t('events.project')}</Label>
               <Select
-                value={watch('project_id') || ''}
-                onValueChange={(value) => setValue('project_id', value || null)}
+                value={watch('project_id') || '__none__'}
+                onValueChange={(value) => setValue('project_id', value === '__none__' ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('events.selectProject')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('events.noProject')}</SelectItem>
+                  <SelectItem value="__none__">{t('events.noProject')}</SelectItem>
                   {projects?.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -370,14 +370,14 @@ export const EventDialog = ({
             <div className="space-y-2">
               <Label>{t('events.sales')}</Label>
               <Select
-                value={watch('sales_id') || ''}
-                onValueChange={(value) => setValue('sales_id', value || null)}
+                value={watch('sales_id') || '__none__'}
+                onValueChange={(value) => setValue('sales_id', value === '__none__' ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('events.selectSales')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('events.noSales')}</SelectItem>
+                  <SelectItem value="__none__">{t('events.noSales')}</SelectItem>
                   {sales?.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -391,14 +391,14 @@ export const EventDialog = ({
           <div className="space-y-2">
             <Label>{t('events.responsibleUser')}</Label>
             <Select
-              value={watch('responsible_user_id') || ''}
-              onValueChange={(value) => setValue('responsible_user_id', value || null)}
+              value={watch('responsible_user_id') || '__none__'}
+              onValueChange={(value) => setValue('responsible_user_id', value === '__none__' ? null : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder={t('events.selectResponsible')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('events.noResponsible')}</SelectItem>
+                <SelectItem value="__none__">{t('events.noResponsible')}</SelectItem>
                 {users?.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.full_name || user.email}
