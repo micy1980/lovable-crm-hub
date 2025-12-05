@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,7 @@ interface TaskFormData {
   deadline_date: string;
   deadline_time: string;
   responsible_user_id: string;
+  is_all_day: boolean;
 }
 
 export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: TaskDialogProps) => {
@@ -43,8 +45,11 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
       deadline_date: '',
       deadline_time: '',
       responsible_user_id: '',
+      is_all_day: false,
     }
   });
+
+  const isAllDay = watch('is_all_day');
 
   // Update form when task changes or dialog opens
   useEffect(() => {
@@ -55,8 +60,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
         description: task.description || '',
         status: task.status || 'pending',
         deadline_date: deadlineDate ? format(deadlineDate, 'yyyy-MM-dd') : '',
-        deadline_time: deadlineDate ? format(deadlineDate, 'HH:mm') : '',
+        deadline_time: deadlineDate && !task.is_all_day ? format(deadlineDate, 'HH:mm') : '',
         responsible_user_id: task.responsible_user_id || '',
+        is_all_day: task.is_all_day || false,
       });
     } else if (open && !task) {
       reset({
@@ -66,6 +72,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
         deadline_date: '',
         deadline_time: '',
         responsible_user_id: '',
+        is_all_day: false,
       });
     }
   }, [open, task, reset]);
@@ -98,8 +105,13 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
       // Combine date and time for deadline
       let deadlineISO: string | null = null;
       if (data.deadline_date) {
-        const timeStr = data.deadline_time || '00:00';
-        deadlineISO = new Date(`${data.deadline_date}T${timeStr}:00`).toISOString();
+        if (data.is_all_day) {
+          // For all-day tasks, set time to 00:00:00
+          deadlineISO = new Date(`${data.deadline_date}T00:00:00`).toISOString();
+        } else {
+          const timeStr = data.deadline_time || '00:00';
+          deadlineISO = new Date(`${data.deadline_date}T${timeStr}:00`).toISOString();
+        }
       }
 
       const taskData = {
@@ -111,6 +123,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
         sales_id: salesId || task?.sales_id || null,
         responsible_user_id: data.responsible_user_id || null,
         deadline: deadlineISO,
+        is_all_day: data.is_all_day,
       };
 
       if (task) {
@@ -216,9 +229,19 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task }: Tas
                   type="time"
                   {...register('deadline_time')}
                   className="w-24"
+                  disabled={isAllDay}
                 />
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_all_day"
+              checked={isAllDay}
+              onCheckedChange={(checked) => setValue('is_all_day', checked)}
+            />
+            <Label htmlFor="is_all_day">{t('calendar.allDay', 'Egész napos')}</Label>
           </div>
 
           <div className="space-y-2">

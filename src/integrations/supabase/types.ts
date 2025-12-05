@@ -1168,6 +1168,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           id: string
+          is_all_day: boolean | null
           project_id: string | null
           responsible_user_id: string | null
           sales_id: string | null
@@ -1183,6 +1184,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          is_all_day?: boolean | null
           project_id?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
@@ -1198,6 +1200,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          is_all_day?: boolean | null
           project_id?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
