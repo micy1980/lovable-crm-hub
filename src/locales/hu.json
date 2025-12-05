@@ -255,7 +255,8 @@
     "allDay": "Egész nap",
     "taskMoved": "Feladat áthelyezve",
     "taskMovedDescription": "A feladat határideje frissítve.",
-    "taskMoveError": "Nem sikerült a feladat áthelyezése."
+    "taskMoveError": "Nem sikerült a feladat áthelyezése.",
+    "taskDetails": "Feladat részletei"
   },
   "tasks": {
     "status": {

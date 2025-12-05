@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, startOfDay, endOfDay } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { TaskDialog } from '@/components/projects/TaskDialog';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
 import { DayGrid } from '@/components/calendar/DayGrid';
 import { useUpdateTaskDeadline } from '@/hooks/useUpdateTaskDeadline';
+import { TaskViewSheet } from '@/components/calendar/TaskViewSheet';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -24,7 +24,7 @@ const CalendarPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [taskViewOpen, setTaskViewOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const updateTaskDeadline = useUpdateTaskDeadline();
 
@@ -79,7 +79,7 @@ const CalendarPage = () => {
 
   const handleTaskClick = (task: any) => {
     setSelectedTask(task);
-    setTaskDialogOpen(true);
+    setTaskViewOpen(true);
   };
 
   const handlePrevious = () => {
@@ -253,7 +253,7 @@ const CalendarPage = () => {
           </div>
         )}
 
-        <TaskDialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen} task={selectedTask} />
+        <TaskViewSheet open={taskViewOpen} onOpenChange={setTaskViewOpen} task={selectedTask} />
       </div>
     </LicenseGuard>
   );
