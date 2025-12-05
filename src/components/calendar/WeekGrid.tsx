@@ -41,11 +41,16 @@ export const WeekGrid = ({ currentDate, selectedDate, onSelectDate, tasks, onTas
     });
   };
 
+  // All-day row should only show tasks without specific time (hour = 0 and minutes = 0)
+  // Since tasks always have specific times when set through the form, don't show them in all-day
   const getAllDayTasks = (date: Date) => {
     return tasks.filter((task) => {
       if (!task.deadline) return false;
       const taskDate = new Date(task.deadline);
-      return isSameDay(taskDate, date);
+      // Only show in all-day if time is exactly 00:00:00 (meaning no time was set)
+      return isSameDay(taskDate, date) && 
+             taskDate.getHours() === 0 && 
+             taskDate.getMinutes() === 0;
     });
   };
 
