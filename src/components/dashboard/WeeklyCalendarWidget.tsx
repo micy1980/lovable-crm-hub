@@ -8,6 +8,7 @@ import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO } from 'da
 import { hu, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface CalendarItem {
   id: string;
@@ -16,14 +17,38 @@ interface CalendarItem {
   date: Date;
   status?: string;
   isAllDay?: boolean;
+  color?: string | null;
 }
 
+// Color map for custom colors - matching DraggableItem
+const colorMap: Record<string, { bg: string; textOnBg: string; border: string }> = {
+  blue: { bg: 'bg-blue-500', textOnBg: 'text-white', border: 'border-blue-600' },
+  green: { bg: 'bg-green-500', textOnBg: 'text-white', border: 'border-green-600' },
+  orange: { bg: 'bg-orange-500', textOnBg: 'text-black', border: 'border-orange-600' },
+  red: { bg: 'bg-red-500', textOnBg: 'text-white', border: 'border-red-600' },
+  purple: { bg: 'bg-purple-500', textOnBg: 'text-white', border: 'border-purple-600' },
+  pink: { bg: 'bg-pink-500', textOnBg: 'text-white', border: 'border-pink-600' },
+  cyan: { bg: 'bg-cyan-500', textOnBg: 'text-black', border: 'border-cyan-600' },
+  yellow: { bg: 'bg-yellow-500', textOnBg: 'text-black', border: 'border-yellow-600' },
+  indigo: { bg: 'bg-indigo-500', textOnBg: 'text-white', border: 'border-indigo-600' },
+  teal: { bg: 'bg-teal-500', textOnBg: 'text-white', border: 'border-teal-600' },
+  violet: { bg: 'bg-violet-500', textOnBg: 'text-white', border: 'border-violet-600' },
+};
+
+const getColorClasses = (color: string | null | undefined, fallbackBg: string, fallbackText: string, fallbackBorder: string) => {
+  if (color && colorMap[color]) {
+    const c = colorMap[color];
+    return `${c.bg} ${c.textOnBg} ${c.border}`;
+  }
+  return `${fallbackBg} ${fallbackText} ${fallbackBorder}`;
+};
 
 export const WeeklyCalendarWidget = () => {
   const { activeCompany } = useCompany();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const locale = i18n.language === 'hu' ? hu : enUS;
+  const { data: userProfile } = useUserProfile();
 
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
@@ -42,7 +67,7 @@ export const WeeklyCalendarWidget = () => {
       const [tasksRes, eventsRes] = await Promise.all([
         supabase
           .from('tasks')
-          .select('id, title, deadline, status, is_all_day')
+          .select('id, title, deadline, status, is_all_day, project:projects(task_color)')
           .eq('company_id', activeCompany.id)
           .is('deleted_at', null)
           .gte('deadline', startStr)
@@ -50,7 +75,7 @@ export const WeeklyCalendarWidget = () => {
           .neq('status', 'completed'),
         supabase
           .from('events')
-          .select('id, title, start_time, is_all_day')
+          .select('id, title, start_time, is_all_day, project:projects(event_color)')
           .eq('company_id', activeCompany.id)
           .is('deleted_at', null)
           .gte('start_time', startStr)
@@ -60,8 +85,10 @@ export const WeeklyCalendarWidget = () => {
       const calendarItems: CalendarItem[] = [];
 
       if (tasksRes.data) {
-        tasksRes.data.forEach((task) => {
+        tasksRes.data.forEach((task: any) => {
           if (task.deadline) {
+            // Project color takes precedence, then personal color
+            const projectColor = task.project?.task_color;
             calendarItems.push({
               id: task.id,
               title: task.title,
@@ -69,19 +96,23 @@ export const WeeklyCalendarWidget = () => {
               date: parseISO(task.deadline),
               status: task.status || 'pending',
               isAllDay: task.is_all_day || false,
+              color: projectColor || null,
             });
           }
         });
       }
 
       if (eventsRes.data) {
-        eventsRes.data.forEach((event) => {
+        eventsRes.data.forEach((event: any) => {
+          // Project color takes precedence, then personal color
+          const projectColor = event.project?.event_color;
           calendarItems.push({
             id: event.id,
             title: event.title,
             type: 'event',
             date: parseISO(event.start_time),
             isAllDay: event.is_all_day || false,
+            color: projectColor || null,
           });
         });
       }
@@ -94,6 +125,10 @@ export const WeeklyCalendarWidget = () => {
   const getItemsForDay = (day: Date) => {
     return items.filter((item) => isSameDay(item.date, day));
   };
+
+  // Get personal colors from profile
+  const personalTaskColor = userProfile?.personal_task_color || null;
+  const personalEventColor = userProfile?.personal_event_color || null;
 
   return (
     <Card>
@@ -138,28 +173,36 @@ export const WeeklyCalendarWidget = () => {
                   </div>
                 </div>
                 <div className="space-y-0.5 overflow-hidden">
-                  {dayItems.slice(0, 3).map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => navigate('/calendar')}
-                      className={cn(
-                        "w-full text-left text-[10px] px-1 py-0.5 rounded truncate shadow-sm border transition-opacity hover:opacity-80",
-                        item.type === 'task'
-                          ? "bg-blue-600 text-white border-blue-700"
-                          : "bg-violet-600 text-white border-violet-700"
-                      )}
-                      title={item.title}
-                    >
-                      <div className="flex items-center gap-0.5">
-                        {item.type === 'task' ? (
-                          <CheckCircle className="h-2.5 w-2.5 flex-shrink-0" />
-                        ) : (
-                          <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
+                  {dayItems.slice(0, 3).map((item) => {
+                    // Use item color, or fall back to personal color, or default
+                    const effectiveColor = item.color || 
+                      (item.type === 'task' ? personalTaskColor : personalEventColor);
+                    
+                    const colorClasses = item.type === 'task'
+                      ? getColorClasses(effectiveColor, 'bg-blue-600', 'text-white', 'border-blue-700')
+                      : getColorClasses(effectiveColor, 'bg-violet-600', 'text-white', 'border-violet-700');
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => navigate('/calendar')}
+                        className={cn(
+                          "w-full text-left text-[10px] px-1 py-0.5 rounded truncate shadow-sm border transition-opacity hover:opacity-80",
+                          colorClasses
                         )}
-                        <span className="truncate">{item.title}</span>
-                      </div>
-                    </button>
-                  ))}
+                        title={item.title}
+                      >
+                        <div className="flex items-center gap-0.5">
+                          {item.type === 'task' ? (
+                            <CheckCircle className="h-2.5 w-2.5 flex-shrink-0" />
+                          ) : (
+                            <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
+                          )}
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                   {dayItems.length > 3 && (
                     <div className="text-[10px] text-muted-foreground text-center">
                       +{dayItems.length - 3} {t('dashboard.more')}
