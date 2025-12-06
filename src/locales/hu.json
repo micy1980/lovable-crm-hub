@@ -242,6 +242,7 @@
     "title": "Értékesítés",
     "description": "Értékesítési lehetőségek kezelése a(z) {{companyName}} vállalatnál",
     "newOpportunity": "Új lehetőség",
+    "create": "Új értékesítés",
     "salesPipeline": "Értékesítési csővezeték",
     "pipelineDescription": "Értékesítési lehetőségek nyomon követése és kezelése",
     "pipelineComingSoon": "Az értékesítési csővezeték nézet hamarosan elérhető lesz. Nyomon követheti majd a lehetőségeket a különböző szakaszokon keresztül.",
@@ -253,6 +254,7 @@
     "title": "Dokumentumok",
     "description": "Központosított dokumentumkezelés és keresés",
     "uploadDocument": "Dokumentum feltöltése",
+    "upload": "Dokumentum feltöltése",
     "documentLibrary": "Dokumentumkönyvtár",
     "libraryDescription": "Keresse meg és kezelje az összes dokumentumot egy helyen",
     "comingSoon": "A dokumentumkezelés hamarosan elérhető lesz. Feltölthet, kereshet és rendszerezhet dokumentumokat láthatósági szabályokkal."
@@ -274,7 +276,8 @@
     "taskDetails": "Feladat részletei"
   },
   "tasks": {
-    "title": "Cím",
+    "title": "Feladatok",
+    "titleField": "Cím",
     "deadline": "Határidő",
     "statusLabel": "Státusz",
     "status": {
@@ -283,7 +286,8 @@
       "completed": "Befejezett",
       "cancelled": "Visszavonva"
     },
-    "responsible": "Felelős"
+    "responsible": "Felelős",
+    "create": "Új feladat"
   },
   "settings": {
     "title": "Beállítások",
@@ -592,7 +596,8 @@
     "expiresAt": "Lejár: {{date}}"
   },
   "events": {
-    "title": "Esemény címe",
+    "title": "Események",
+    "titleField": "Esemény címe",
     "titlePlaceholder": "Add meg az esemény címét",
     "description": "Leírás",
     "descriptionPlaceholder": "Esemény leírása",
