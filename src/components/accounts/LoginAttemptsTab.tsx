@@ -146,17 +146,17 @@ export const LoginAttemptsTab = () => {
               <TableBody>
                 {filteredAttempts.map((attempt: any) => (
                   <TableRow key={attempt.id}>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs text-center">
                       {formatDate(attempt.attempt_time)}
                     </TableCell>
-                    <TableCell>{attempt.email}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="text-center">{attempt.email}</TableCell>
+                    <TableCell className="font-mono text-xs text-center">
                       {attempt.ip_address || 'N/A'}
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground text-center">
                       {attempt.user_agent || 'N/A'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {attempt.success ? (
                         <Badge variant="default" className="bg-green-500">
                           <CheckCircle className="mr-1 h-3 w-3" />

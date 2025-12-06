@@ -61,24 +61,24 @@ export const LockedAccountsTab = () => {
                   <TableHead>Zárolás Vége</TableHead>
                   <TableHead>Indok</TableHead>
                   <TableHead>Státusz</TableHead>
-                  <TableHead className="text-right">Műveletek</TableHead>
+                  <TableHead>Műveletek</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {lockedAccounts.map((lock: any) => (
                   <TableRow key={lock.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-center">
                       {lock.user_full_name || 'N/A'}
                     </TableCell>
-                    <TableCell>{lock.user_email}</TableCell>
-                    <TableCell>{formatDate(lock.locked_at)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">{lock.user_email}</TableCell>
+                    <TableCell className="text-center">{formatDate(lock.locked_at)}</TableCell>
+                    <TableCell className="text-center">
                       {lock.locked_until ? formatDate(lock.locked_until) : 'Végtelen'}
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
+                    <TableCell className="max-w-[200px] truncate text-center">
                       {lock.reason || 'Nincs megadva'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {isExpired(lock.locked_until) ? (
                         <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
                           Lejárt
@@ -89,7 +89,7 @@ export const LockedAccountsTab = () => {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-center">
                       <Button
                         size="sm"
                         variant="outline"

@@ -54,12 +54,12 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
           </div>
         </div>
       )}
-      <div className="px-4 py-3 font-medium flex items-center border-r border-border">{item.label}</div>
-      <div className={cn("px-4 py-3 flex items-center", canEdit ? "border-r border-border" : "")}>
+      <div className="px-4 py-3 font-medium flex items-center justify-center border-r border-border">{item.label}</div>
+      <div className={cn("px-4 py-3 flex items-center justify-center", canEdit ? "border-r border-border" : "")}>
         {item.is_default && <Badge variant="secondary">{t('masterdata.isDefault')}</Badge>}
       </div>
       {canEdit && (
-        <div className="px-4 py-3 flex items-center justify-end gap-1">
+        <div className="px-4 py-3 flex items-center justify-center gap-1">
           <Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="h-8 w-8">
             <Pencil className="h-4 w-4" />
           </Button>
@@ -142,10 +142,10 @@ export function MasterDataItemList({
           "grid bg-background border-b border-border",
           canEdit ? "grid-cols-[40px_200px_120px_100px]" : "grid-cols-[200px_120px]"
         )}>
-          {canEdit && <div className="px-4 py-3 text-sm font-semibold text-muted-foreground border-r border-border"></div>}
-          <div className="px-4 py-3 text-sm font-semibold text-muted-foreground border-r border-border">{t('masterdata.label')}</div>
-          <div className={cn("px-4 py-3 text-sm font-semibold text-muted-foreground", canEdit ? "border-r border-border" : "")}>{t('masterdata.isDefault')}</div>
-          {canEdit && <div className="px-4 py-3 text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>}
+          {canEdit && <div className="px-4 py-3 text-sm font-semibold text-foreground border-r border-border text-center"></div>}
+          <div className="px-4 py-3 text-sm font-semibold text-foreground border-r border-border text-center">{t('masterdata.label')}</div>
+          <div className={cn("px-4 py-3 text-sm font-semibold text-foreground text-center", canEdit ? "border-r border-border" : "")}>{t('masterdata.isDefault')}</div>
+          {canEdit && <div className="px-4 py-3 text-sm font-semibold text-foreground text-center">{t('common.actions')}</div>}
         </div>
 
         {/* Body Rows */}
