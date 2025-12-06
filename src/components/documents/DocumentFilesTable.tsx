@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Download, Trash2, FileText, Upload } from 'lucide-react';
+import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,6 +35,62 @@ interface DocumentFilesTableProps {
   isDeleted: boolean;
 }
 
+type SortField = 'file_name' | 'file_size' | 'mime_type' | 'uploaded_at' | 'uploader';
+type SortDirection = 'asc' | 'desc';
+
+// Map MIME types to simple Windows-like file type names
+const getSimpleFileType = (mimeType: string | null): string => {
+  if (!mimeType) return '-';
+  
+  const mimeMap: Record<string, string> = {
+    // Documents
+    'application/pdf': 'PDF',
+    'application/msword': 'Word',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
+    'application/vnd.ms-excel': 'Excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel',
+    'application/vnd.ms-excel.sheet.macroenabled.12': 'Excel',
+    'application/vnd.ms-powerpoint': 'PowerPoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint',
+    'text/plain': 'Szöveg',
+    'text/csv': 'CSV',
+    'application/rtf': 'RTF',
+    
+    // Images
+    'image/jpeg': 'Kép',
+    'image/jpg': 'Kép',
+    'image/png': 'Kép',
+    'image/gif': 'Kép',
+    'image/webp': 'Kép',
+    'image/svg+xml': 'SVG',
+    'image/bmp': 'Kép',
+    'image/tiff': 'Kép',
+    
+    // Archives
+    'application/zip': 'ZIP',
+    'application/x-rar-compressed': 'RAR',
+    'application/x-7z-compressed': '7Z',
+    'application/x-tar': 'TAR',
+    'application/gzip': 'GZIP',
+    
+    // Audio/Video
+    'audio/mpeg': 'MP3',
+    'audio/wav': 'WAV',
+    'video/mp4': 'MP4',
+    'video/avi': 'AVI',
+    'video/quicktime': 'MOV',
+    
+    // Other
+    'application/json': 'JSON',
+    'application/xml': 'XML',
+    'text/html': 'HTML',
+    'text/css': 'CSS',
+    'application/javascript': 'JS',
+  };
+  
+  return mimeMap[mimeType.toLowerCase()] || mimeType.split('/')[1]?.toUpperCase().slice(0, 10) || '-';
+};
+
 export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTableProps) => {
   const { activeCompany } = useCompany();
   const { data: profile } = useUserProfile();
@@ -46,6 +102,8 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<DocumentFile | null>(null);
+  const [sortField, setSortField] = useState<SortField>('uploaded_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return '-';
@@ -57,6 +115,57 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   const formatDate = (date: string) => {
     return format(parseISO(date), 'yyyy.MM.dd HH:mm', { locale: hu });
   };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-4 w-4 ml-1" />
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
+  const sortedFiles = [...files].sort((a, b) => {
+    let aVal: any, bVal: any;
+    
+    switch (sortField) {
+      case 'file_name':
+        aVal = a.file_name.toLowerCase();
+        bVal = b.file_name.toLowerCase();
+        break;
+      case 'file_size':
+        aVal = a.file_size || 0;
+        bVal = b.file_size || 0;
+        break;
+      case 'mime_type':
+        aVal = getSimpleFileType(a.mime_type);
+        bVal = getSimpleFileType(b.mime_type);
+        break;
+      case 'uploaded_at':
+        aVal = new Date(a.uploaded_at).getTime();
+        bVal = new Date(b.uploaded_at).getTime();
+        break;
+      case 'uploader':
+        aVal = a.uploader?.full_name?.toLowerCase() || '';
+        bVal = b.uploader?.full_name?.toLowerCase() || '';
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -163,16 +272,56 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Fájlnév</TableHead>
-                  <TableHead className="text-center">Méret</TableHead>
-                  <TableHead className="text-center">Típus</TableHead>
-                  <TableHead className="text-center">Feltöltve</TableHead>
-                  <TableHead>Feltöltő</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('file_name')}
+                  >
+                    <div className="flex items-center">
+                      Fájlnév
+                      {getSortIcon('file_name')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('file_size')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Méret
+                      {getSortIcon('file_size')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('mime_type')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Típus
+                      {getSortIcon('mime_type')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('uploaded_at')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Feltöltve
+                      {getSortIcon('uploaded_at')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('uploader')}
+                  >
+                    <div className="flex items-center">
+                      Feltöltő
+                      {getSortIcon('uploader')}
+                    </div>
+                  </TableHead>
                   <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {files.map((file) => (
+                {sortedFiles.map((file) => (
                   <TableRow key={file.id}>
                     <TableCell>
                       <Checkbox
@@ -187,8 +336,8 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                       </div>
                     </TableCell>
                     <TableCell className="text-center">{formatFileSize(file.file_size)}</TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground">
-                      {file.mime_type?.split('/')[1]?.toUpperCase() || '-'}
+                    <TableCell className="text-center text-sm">
+                      {getSimpleFileType(file.mime_type)}
                     </TableCell>
                     <TableCell className="text-center">{formatDate(file.uploaded_at)}</TableCell>
                     <TableCell>{file.uploader?.full_name || '-'}</TableCell>
