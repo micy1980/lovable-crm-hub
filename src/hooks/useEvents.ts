@@ -240,16 +240,16 @@ export const useMyItems = () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return { tasks: [], events: [] };
 
-      // Fetch tasks where user is responsible
+      // Fetch tasks where user is responsible OR created by
       const { data: tasks, error: tasksError } = await supabase
         .from('tasks')
         .select(`
           *,
-          project:projects(id, name),
+          project:projects(id, name, task_color, event_color),
           sales:sales(id, name)
         `)
         .eq('company_id', activeCompany.id)
-        .eq('responsible_user_id', userData.user.id)
+        .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
         .is('deleted_at', null)
         .order('deadline', { ascending: true });
 
@@ -260,7 +260,7 @@ export const useMyItems = () => {
         .from('events')
         .select(`
           *,
-          project:projects(id, name),
+          project:projects(id, name, task_color, event_color),
           sales:sales(id, name)
         `)
         .eq('company_id', activeCompany.id)

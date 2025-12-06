@@ -78,16 +78,20 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         sales_id: task.sales_id || salesId || '',
       });
     } else if (open && !task) {
-      reset({
-        title: '',
-        description: '',
-        status: 'pending',
-        deadline_date: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : '',
-        deadline_time: defaultTime || '',
-        responsible_user_id: '',
-        is_all_day: false,
-        project_id: projectId || '',
-        sales_id: salesId || '',
+      // For new tasks, get current user ID to set as default responsible
+      supabase.auth.getUser().then(({ data }) => {
+        const currentUserId = data.user?.id || '';
+        reset({
+          title: '',
+          description: '',
+          status: 'pending',
+          deadline_date: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : '',
+          deadline_time: defaultTime || '',
+          responsible_user_id: currentUserId,
+          is_all_day: false,
+          project_id: projectId || '',
+          sales_id: salesId || '',
+        });
       });
     }
   }, [open, task, reset, defaultDate, defaultTime, projectId, salesId]);

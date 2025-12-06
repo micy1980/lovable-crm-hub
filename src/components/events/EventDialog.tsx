@@ -174,23 +174,27 @@ export const EventDialog = ({
           is_all_day: event.is_all_day || false,
         });
       } else {
-        const startDate = defaultDate || new Date();
-        const startTimeStr = defaultTime || '09:00';
-        
-        reset({
-          title: '',
-          description: '',
-          start_date: format(startDate, 'yyyy-MM-dd'),
-          start_time: startTimeStr,
-          end_date: '',
-          end_time: '10:00',
-          location: '',
-          project_id: defaultProjectId || '',
-          sales_id: defaultSalesId || '',
-          responsible_user_id: '',
-          is_all_day: false,
+        // For new events, get current user ID to set as default responsible
+        supabase.auth.getUser().then(({ data }) => {
+          const currentUserId = data.user?.id || '';
+          const startDate = defaultDate || new Date();
+          const startTimeStr = defaultTime || '09:00';
+          
+          reset({
+            title: '',
+            description: '',
+            start_date: format(startDate, 'yyyy-MM-dd'),
+            start_time: startTimeStr,
+            end_date: '',
+            end_time: '10:00',
+            location: '',
+            project_id: defaultProjectId || '',
+            sales_id: defaultSalesId || '',
+            responsible_user_id: currentUserId,
+            is_all_day: false,
+          });
+          setParticipants([]);
         });
-        setParticipants([]);
       }
     }
   }, [open, event, defaultDate, defaultTime, defaultProjectId, defaultSalesId, reset]);
