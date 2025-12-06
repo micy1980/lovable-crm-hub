@@ -42,6 +42,7 @@ export interface EventFormData {
   location?: string;
   project_id?: string | null;
   sales_id?: string | null;
+  partner_id?: string | null;
   responsible_user_id?: string | null;
   is_all_day?: boolean;
   participants?: Array<{
@@ -105,6 +106,7 @@ export const useEvents = (dateRange?: { start: Date; end: Date }) => {
           company_id: activeCompany.id,
           project_id: data.project_id || null,
           sales_id: data.sales_id || null,
+          partner_id: data.partner_id || null,
           created_by: userData.user.id,
           responsible_user_id: data.responsible_user_id || null,
           is_all_day: data.is_all_day || false,
@@ -159,6 +161,7 @@ export const useEvents = (dateRange?: { start: Date; end: Date }) => {
           location: data.location,
           project_id: data.project_id,
           sales_id: data.sales_id,
+          partner_id: data.partner_id,
           responsible_user_id: data.responsible_user_id,
           is_all_day: data.is_all_day,
         })

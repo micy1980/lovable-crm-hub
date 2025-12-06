@@ -35,6 +35,7 @@ interface TaskFormData {
   is_all_day: boolean;
   project_id: string;
   sales_id: string;
+  partner_id: string;
 }
 
 export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defaultDate, defaultTime }: TaskDialogProps) => {
@@ -55,6 +56,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
       is_all_day: false,
       project_id: '',
       sales_id: '',
+      partner_id: '',
     }
   });
 
@@ -76,6 +78,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         is_all_day: task.is_all_day || false,
         project_id: task.project_id || projectId || '',
         sales_id: task.sales_id || salesId || '',
+        partner_id: task.partner_id || '',
       });
     } else if (open && !task) {
       // For new tasks, get current user ID to set as default responsible
@@ -91,6 +94,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
           is_all_day: false,
           project_id: projectId || '',
           sales_id: salesId || '',
+          partner_id: '',
         });
       });
     }
@@ -145,6 +149,23 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
     enabled: !!activeCompany && open,
   });
 
+  // Fetch partners for dropdown
+  const { data: partners = [] } = useQuery({
+    queryKey: ['partners-for-tasks', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany) return [];
+      const { data, error } = await supabase
+        .from('partners')
+        .select('id, name')
+        .eq('company_id', activeCompany.id)
+        .is('deleted_at', null)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany && open,
+  });
+
   const formatCreatedAt = (dateString: string | null) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -177,6 +198,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         company_id: activeCompany.id,
         project_id: data.project_id || null,
         sales_id: data.sales_id || null,
+        partner_id: data.partner_id || null,
         responsible_user_id: data.responsible_user_id || null,
         deadline: deadlineISO,
         is_all_day: data.is_all_day,
@@ -363,6 +385,24 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t('partners.title', 'Partner')}</Label>
+            <Select
+              value={watch('partner_id') || '_none_'}
+              onValueChange={(v) => setValue('partner_id', v === '_none_' ? '' : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('tasks.selectPartner', 'Válasszon partnert')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none_">{t('common.none', 'Nincs')}</SelectItem>
+                {partners.map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
