@@ -30,7 +30,10 @@ const Projects = () => {
 
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          partner:partners(id, name)
+        `)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
@@ -116,6 +119,9 @@ const Projects = () => {
                     <h3 className="font-semibold">{project.name}</h3>
                     {project.code && (
                       <p className="text-sm text-muted-foreground">{t('projects.code')}: {project.code}</p>
+                    )}
+                    {project.partner && (
+                      <p className="text-sm text-muted-foreground">Partner: {project.partner.name}</p>
                     )}
                     {project.description && (
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{project.description}</p>

@@ -166,40 +166,24 @@ export default function PartnerDetail() {
     enabled: !!id,
   });
 
-  // Fetch related projects (via sales)
+  // Fetch related projects (directly linked via partner_id)
   const { data: projects = [] } = useQuery({
     queryKey: ['partner-projects', id],
     queryFn: async () => {
-      // Get projects that have sales linked to this partner
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales')
-        .select('id')
-        .eq('partner_id', id!)
-        .is('deleted_at', null);
-      
-      if (salesError) throw salesError;
-      
-      if (!salesData || salesData.length === 0) {
-        return [];
-      }
-      
-      const salesIds = salesData.map(s => s.id);
-      
-      // Get projects that have tasks linked to this partner or sales
-      const { data: projectData, error: projectError } = await supabase
+      const { data, error } = await supabase
         .from('projects')
         .select(`
           *,
           owner:profiles!projects_owner_user_id_fkey(id, full_name, email)
         `)
-        .eq('company_id', activeCompany?.id!)
+        .eq('partner_id', id!)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
       
-      if (projectError) throw projectError;
-      return projectData || [];
+      if (error) throw error;
+      return data || [];
     },
-    enabled: !!id && !!activeCompany?.id,
+    enabled: !!id,
   });
 
   if (partnerLoading) {
