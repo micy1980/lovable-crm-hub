@@ -36,7 +36,7 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  const { register, handleSubmit, setValue, watch, reset } = useForm<ProjectFormData>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<ProjectFormData>({
     defaultValues: {
       name: '',
       code: '',
@@ -164,9 +164,11 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
               <Label htmlFor="name">Név *</Label>
               <Input
                 id="name"
-                {...register('name', { required: true })}
+                {...register('name', { required: 'Kötelező mező' })}
                 placeholder="Projekt neve"
+                className={errors.name ? 'border-destructive' : ''}
               />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-2">

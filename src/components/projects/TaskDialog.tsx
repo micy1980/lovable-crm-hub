@@ -46,7 +46,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const { register, handleSubmit, setValue, watch, reset } = useForm<TaskFormData>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<TaskFormData>({
     defaultValues: {
       title: '',
       description: '',
@@ -290,9 +290,11 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
             <Label htmlFor="title">{t('common.title', 'Cím')} *</Label>
             <Input
               id="title"
-              {...register('title', { required: true })}
+              {...register('title', { required: 'Kötelező mező' })}
               placeholder={t('tasks.titlePlaceholder', 'Feladat címe')}
+              className={errors.title ? 'border-destructive' : ''}
             />
+            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -328,8 +330,8 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
               <div className="flex gap-2">
                 <Input
                   type="date"
-                  {...register('deadline_date', { required: true })}
-                  className="flex-1"
+                  {...register('deadline_date', { required: 'Kötelező mező' })}
+                  className={`flex-1 ${errors.deadline_date ? 'border-destructive' : ''}`}
                 />
                 <Input
                   type="time"
@@ -338,6 +340,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
                   disabled={isAllDay}
                 />
               </div>
+              {errors.deadline_date && <p className="text-sm text-destructive">{errors.deadline_date.message}</p>}
             </div>
           </div>
 

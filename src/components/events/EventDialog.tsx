@@ -352,11 +352,12 @@ export const EventDialog = ({
             <Label htmlFor="title">{t('events.title')} *</Label>
             <Input
               id="title"
-              {...register('title', { required: true })}
+              {...register('title', { required: 'Kötelező mező' })}
               placeholder={t('events.titlePlaceholder')}
+              className={errors.title ? 'border-destructive' : ''}
             />
             {errors.title && (
-              <p className="text-sm text-destructive">{t('common.required')}</p>
+              <p className="text-sm text-destructive">{errors.title.message}</p>
             )}
           </div>
 
@@ -385,8 +386,8 @@ export const EventDialog = ({
               <div className="flex gap-2">
                 <Input
                   type="date"
-                  {...register('start_date', { required: true })}
-                  className="flex-1"
+                  {...register('start_date', { required: 'Kötelező mező' })}
+                  className={`flex-1 ${errors.start_date ? 'border-destructive' : ''}`}
                 />
                 {!isAllDay && (
                   <Input
@@ -397,7 +398,7 @@ export const EventDialog = ({
                 )}
               </div>
               {errors.start_date && (
-                <p className="text-sm text-destructive">{t('common.required')}</p>
+                <p className="text-sm text-destructive">{errors.start_date.message}</p>
               )}
             </div>
 
@@ -406,8 +407,8 @@ export const EventDialog = ({
               <div className="flex gap-2">
                 <Input
                   type="date"
-                  {...register('end_date', { required: true })}
-                  className="flex-1"
+                  {...register('end_date', { required: 'Kötelező mező' })}
+                  className={`flex-1 ${errors.end_date ? 'border-destructive' : ''}`}
                 />
                 {!isAllDay && (
                   <Input
@@ -418,7 +419,7 @@ export const EventDialog = ({
                 )}
               </div>
               {errors.end_date && (
-                <p className="text-sm text-destructive">{t('common.required')}</p>
+                <p className="text-sm text-destructive">{errors.end_date.message}</p>
               )}
             </div>
           </div>
