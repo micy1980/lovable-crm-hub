@@ -16,6 +16,8 @@ import ContractDialog from '@/components/contracts/ContractDialog';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 
 const STORAGE_KEY = 'contracts-column-settings';
 
@@ -27,6 +29,8 @@ const Contracts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const { settings: systemSettings } = useSystemSettings();
+  const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
@@ -36,6 +40,8 @@ const Contracts = () => {
     { key: 'value', label: 'Érték', defaultVisible: true, defaultWidth: 140 },
     { key: 'status', label: 'Státusz', defaultVisible: true, defaultWidth: 100 },
   ], []);
+
+  const rightAlignedColumns = ['value'];
 
   const {
     columnStates,
@@ -95,14 +101,6 @@ const Contracts = () => {
     setSelectedContract(null);
   };
 
-  const formatCurrency = (value: number | null, currency: string | null) => {
-    if (value === null) return '-';
-    return new Intl.NumberFormat('hu-HU', {
-      style: 'currency',
-      currency: currency || 'HUF',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   const getCellValue = (contract: any, key: string) => {
     switch (key) {
@@ -141,7 +139,7 @@ const Contracts = () => {
           </div>
         );
       case 'value':
-        return formatCurrency(contract.total_value, contract.currency);
+        return <span className="font-mono">{formatCurrency(contract.total_value, contract.currency, numberFormatSettings)} {contract.currency || 'HUF'}</span>;
       case 'status':
         return getStatusBadge(contract.status);
       default:
@@ -218,7 +216,11 @@ const Contracts = () => {
                   onClick={() => navigate(`/contracts/${contract.id}`)}
                 >
                   {columns.map((col) => (
-                    <ResizableTableCell key={col.key} width={col.width}>
+                    <ResizableTableCell 
+                      key={col.key} 
+                      width={col.width}
+                      className={rightAlignedColumns.includes(col.key) ? 'text-right' : ''}
+                    >
                       {getCellValue(contract, col.key)}
                     </ResizableTableCell>
                   ))}

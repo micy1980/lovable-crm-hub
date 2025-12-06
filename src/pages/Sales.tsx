@@ -115,7 +115,7 @@ const Sales = () => {
       case 'partner':
         return sale.partnerName || '-';
       case 'expected_value':
-        return formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings);
+        return <span className="font-mono">{formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings)}</span>;
       case 'currency':
         return sale.currency || 'HUF';
       case 'expected_close_date':

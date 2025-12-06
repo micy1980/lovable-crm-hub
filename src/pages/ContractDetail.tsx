@@ -37,6 +37,8 @@ import { useContracts, useContractVersions, Contract } from '@/hooks/useContract
 import ContractDialog from '@/components/contracts/ContractDialog';
 import ContractVersionDialog from '@/components/contracts/ContractVersionDialog';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 
 const ContractDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +48,8 @@ const ContractDetail = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
+  const { settings: systemSettings } = useSystemSettings();
+  const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
   const { data: contract, isLoading } = useQuery({
     queryKey: ['contract', id],
@@ -86,14 +90,6 @@ const ContractDetail = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const formatCurrency = (value: number | null, currency: string | null) => {
-    if (value === null) return '-';
-    return new Intl.NumberFormat('hu-HU', {
-      style: 'currency',
-      currency: currency || 'HUF',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   const formatDate = (date: string | null) => {
     if (!date) return '-';
@@ -275,7 +271,7 @@ const ContractDetail = () => {
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Összérték</span>
-                      <span className="font-medium">{formatCurrency(contract.total_value, contract.currency)}</span>
+                      <span className="font-medium font-mono">{formatCurrency(contract.total_value, contract.currency, numberFormatSettings)} {contract.currency || 'HUF'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Fizetési gyakoriság</span>

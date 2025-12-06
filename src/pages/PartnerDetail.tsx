@@ -37,6 +37,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -62,6 +64,8 @@ export default function PartnerDetail() {
   const queryClient = useQueryClient();
   const { updatePartner } = usePartners();
   const { canEdit, checkReadOnly } = useReadOnlyMode();
+  const { settings: systemSettings } = useSystemSettings();
+  const numberFormatSettings = getNumberFormatSettings(systemSettings);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -462,9 +466,9 @@ export default function PartnerDetail() {
                           <TableCell className="text-center">
                             <Badge variant="outline">{sale.status || '-'}</Badge>
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-right font-mono">
                             {sale.expected_value 
-                              ? `${sale.expected_value.toLocaleString()} ${sale.currency || 'HUF'}`
+                              ? `${formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings)} ${sale.currency || 'HUF'}`
                               : '-'
                             }
                           </TableCell>

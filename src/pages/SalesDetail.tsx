@@ -10,12 +10,16 @@ import { SalesDialog } from '@/components/sales/SalesDialog';
 import { ProjectTasks } from '@/components/projects/ProjectTasks';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 
 const SalesDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { canEdit } = useReadOnlyMode();
+  const { settings: systemSettings } = useSystemSettings();
+  const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
   const { data: sale, isLoading } = useQuery({
     queryKey: ['sale', id],
@@ -110,9 +114,9 @@ const SalesDetail = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Várható érték</p>
-                <p className="mt-1">
+                <p className="mt-1 text-right font-mono">
                   {sale.expected_value 
-                    ? `${sale.expected_value.toLocaleString()} ${sale.currency || 'HUF'}`
+                    ? `${formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings)} ${sale.currency || 'HUF'}`
                     : 'Nincs megadva'}
                 </p>
               </div>
