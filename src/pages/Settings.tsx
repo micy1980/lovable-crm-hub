@@ -2,7 +2,6 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useUserCompanies } from '@/hooks/useUserCompanies';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CompanyList } from '@/components/companies/CompanyList';
 import { MasterDataManager } from '@/components/masterdata/MasterDataManager';
 import { SystemSettings } from '@/components/settings/SystemSettings';
 import { TwoFactorAuth } from '@/components/settings/TwoFactorAuth';
@@ -66,7 +65,6 @@ const Settings = () => {
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
           <TabsTrigger value="profile">{t('settings.profile')}</TabsTrigger>
-          {isSuperAdmin && <TabsTrigger value="companies">{t('settings.companies')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="masterdata">{t('settings.masterdata')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="system">{t('settings.system')}</TabsTrigger>}
           {isSuperAdmin && <TabsTrigger value="email">Email</TabsTrigger>}
@@ -163,10 +161,6 @@ const Settings = () => {
 
         {isSuperAdmin && (
           <>
-            <TabsContent value="companies">
-              <CompanyList />
-            </TabsContent>
-
             <TabsContent value="masterdata">
               <MasterDataManager />
             </TabsContent>
