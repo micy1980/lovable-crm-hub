@@ -37,6 +37,9 @@ const Sales = () => {
     { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false },
   ], []);
 
+  // Columns that should be centered
+  const centeredColumns = ['currency', 'expected_close_date', 'status'];
+
   const {
     columnStates,
     visibleColumns,
@@ -192,7 +195,11 @@ const Sales = () => {
                     onClick={() => navigate(`/sales/${sale.id}`)}
                   >
                     {visibleColumns.map((col) => (
-                      <TableCell key={col.key} style={{ width: col.width }}>
+                      <TableCell 
+                        key={col.key} 
+                        style={{ width: col.width }}
+                        className={centeredColumns.includes(col.key) ? 'text-center' : ''}
+                      >
                         {renderCellContent(sale, col.key)}
                       </TableCell>
                     ))}

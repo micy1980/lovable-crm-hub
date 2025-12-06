@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePartners } from '@/hooks/usePartners';
@@ -49,7 +50,11 @@ const Partners = () => {
     { key: 'taxId', label: t('partners.taxId'), defaultVisible: true, defaultWidth: 150 },
     { key: 'euVatNumber', label: t('partners.euVatNumber'), defaultVisible: false, defaultWidth: 150 },
     { key: 'currency', label: t('partners.defaultCurrency'), defaultVisible: false, defaultWidth: 100 },
+    { key: 'status', label: t('partners.statusLabel') || 'Státusz', defaultVisible: true, defaultWidth: 100 },
   ], [t]);
+
+  // Columns that should be centered
+  const centeredColumns = ['category', 'currency', 'status'];
 
   const {
     columnStates,
@@ -179,6 +184,12 @@ const Partners = () => {
         return partner.eu_vat_number || '-';
       case 'currency':
         return partner.default_currency || '-';
+      case 'status':
+        return partner.is_active !== false ? (
+          <Badge variant="secondary">Aktív</Badge>
+        ) : (
+          <Badge variant="outline">Inaktív</Badge>
+        );
       default:
         return '-';
     }
@@ -242,7 +253,11 @@ const Partners = () => {
                     onClick={() => navigate(`/partners/${partner.id}`)}
                   >
                     {columns.map((col) => (
-                      <ResizableTableCell key={col.key} width={col.width}>
+                      <ResizableTableCell 
+                        key={col.key} 
+                        width={col.width}
+                        className={centeredColumns.includes(col.key) ? 'text-center' : ''}
+                      >
                         {getCellValue(partner, col.key)}
                       </ResizableTableCell>
                     ))}

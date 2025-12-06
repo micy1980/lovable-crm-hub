@@ -36,6 +36,9 @@ const Projects = () => {
     { key: 'created_at', label: 'Létrehozva', defaultWidth: 150 },
   ], []);
 
+  // Columns that should be centered
+  const centeredColumns = ['status', 'created_at'];
+
   const {
     columnStates,
     visibleColumns,
@@ -189,7 +192,11 @@ const Projects = () => {
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     {visibleColumns.map((col) => (
-                      <TableCell key={col.key} style={{ width: col.width }}>
+                      <TableCell 
+                        key={col.key} 
+                        style={{ width: col.width }}
+                        className={centeredColumns.includes(col.key) ? 'text-center' : ''}
+                      >
                         {renderCellContent(project, col.key)}
                       </TableCell>
                     ))}
