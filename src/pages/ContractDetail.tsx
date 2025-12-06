@@ -423,7 +423,7 @@ const ContractDetail = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Biztosan törölni szeretné?</AlertDialogTitle>
               <AlertDialogDescription>
-                Ez a művelet nem visszavonható. A szerződés véglegesen törlésre kerül.
+                A szerződés törlésre kerül jelölve. Super Admin később véglegesen törölheti.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -432,6 +432,14 @@ const ContractDetail = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <PasswordConfirmDialog
+          open={hardDeleteOpen}
+          onOpenChange={setHardDeleteOpen}
+          onConfirm={handleHardDelete}
+          title="Szerződés végleges törlése"
+          description="A szerződés és minden hozzá tartozó verzió véglegesen törlésre kerül. Ez a művelet nem visszavonható. Kérjük, adja meg jelszavát a megerősítéshez."
+        />
     </LicenseGuard>
   );
 };
