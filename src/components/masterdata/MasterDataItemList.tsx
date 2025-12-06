@@ -41,25 +41,25 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
       ref={setNodeRef}
       style={style}
       className={cn(
-        "grid gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+        "grid border-b hover:bg-muted/20 transition-colors",
         canEdit ? "grid-cols-[40px_200px_120px_100px]" : "grid-cols-[200px_120px]",
         index % 2 === 1 ? 'bg-muted/10' : '',
         isDefault ? 'border-b-2 border-border' : 'border-border'
       )}
     >
       {canEdit && (
-        <div className="flex items-center">
+        <div className="px-4 py-3 flex items-center border-r border-border">
           <div {...attributes} {...listeners} className="cursor-move">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
       )}
-      <div className="font-medium flex items-center">{item.label}</div>
-      <div className="flex items-center">
+      <div className="px-4 py-3 font-medium flex items-center border-r border-border">{item.label}</div>
+      <div className={cn("px-4 py-3 flex items-center", canEdit ? "border-r border-border" : "")}>
         {item.is_default && <Badge variant="secondary">{t('masterdata.isDefault')}</Badge>}
       </div>
       {canEdit && (
-        <div className="flex items-center justify-end gap-1">
+        <div className="px-4 py-3 flex items-center justify-end gap-1">
           <Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="h-8 w-8">
             <Pencil className="h-4 w-4" />
           </Button>
@@ -139,13 +139,13 @@ export function MasterDataItemList({
       <div className="border rounded-lg overflow-hidden">
         {/* Header Row */}
         <div className={cn(
-          "grid gap-4 px-4 py-3 bg-background border-b border-border",
+          "grid bg-background border-b border-border",
           canEdit ? "grid-cols-[40px_200px_120px_100px]" : "grid-cols-[200px_120px]"
         )}>
-          {canEdit && <div className="text-sm font-semibold text-muted-foreground"></div>}
-          <div className="text-sm font-semibold text-muted-foreground">{t('masterdata.label')}</div>
-          <div className="text-sm font-semibold text-muted-foreground">{t('masterdata.isDefault')}</div>
-          {canEdit && <div className="text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>}
+          {canEdit && <div className="px-4 py-3 text-sm font-semibold text-muted-foreground border-r border-border"></div>}
+          <div className="px-4 py-3 text-sm font-semibold text-muted-foreground border-r border-border">{t('masterdata.label')}</div>
+          <div className={cn("px-4 py-3 text-sm font-semibold text-muted-foreground", canEdit ? "border-r border-border" : "")}>{t('masterdata.isDefault')}</div>
+          {canEdit && <div className="px-4 py-3 text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>}
         </div>
 
         {/* Body Rows */}
