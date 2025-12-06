@@ -35,7 +35,7 @@ export const SalesDialog = ({ open, onOpenChange, sale, partnerId }: SalesDialog
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
-  const { register, handleSubmit, setValue, watch, reset } = useForm<SalesFormData>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<SalesFormData>({
     defaultValues: {
       name: '',
       description: '',
@@ -152,9 +152,11 @@ export const SalesDialog = ({ open, onOpenChange, sale, partnerId }: SalesDialog
             <Label htmlFor="name">Név *</Label>
             <Input
               id="name"
-              {...register('name', { required: true })}
+              {...register('name', { required: 'Kötelező mező' })}
               placeholder="Értékesítési lehetőség neve"
+              className={errors.name ? 'border-destructive' : ''}
             />
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
