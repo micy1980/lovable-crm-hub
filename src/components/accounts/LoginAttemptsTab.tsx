@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'time', label: 'Időpont', defaultWidth: 180 },
@@ -50,6 +51,18 @@ export const LoginAttemptsTab = () => {
       return matchesEmail && matchesIp;
     });
   }, [loginAttempts, emailFilter, ipFilter]);
+
+  const { sortedData, sortState, handleSort } = useSortableData({
+    data: filteredAttempts,
+    defaultSort: { key: 'time', direction: 'desc' },
+    sortFunctions: {
+      time: (a, b) => new Date(a.attempt_time || 0).getTime() - new Date(b.attempt_time || 0).getTime(),
+      email: (a, b) => (a.email || '').localeCompare(b.email || '', 'hu'),
+      ip: (a, b) => (a.ip_address || '').localeCompare(b.ip_address || ''),
+      user_agent: (a, b) => (a.user_agent || '').localeCompare(b.user_agent || ''),
+      status: (a, b) => (a.success ? 1 : 0) - (b.success ? 1 : 0),
+    },
+  });
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'yyyy-MM-dd HH:mm:ss');
@@ -190,7 +203,7 @@ export const LoginAttemptsTab = () => {
 
           {isLoading ? (
             <div className="text-center py-8">Betöltés...</div>
-          ) : filteredAttempts.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nincs találat
             </div>
@@ -200,9 +213,11 @@ export const LoginAttemptsTab = () => {
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
               getColumnConfig={getColumnConfig}
+              sortState={sortState}
+              onSort={handleSort}
             >
               <TableBody>
-                {filteredAttempts.map((attempt: any) => (
+                {sortedData.map((attempt: any) => (
                   <TableRow key={attempt.id}>
                     {visibleColumns.map((col) => (
                       <ResizableTableCell 
