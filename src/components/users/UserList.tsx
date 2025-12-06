@@ -565,7 +565,8 @@ export function UserList() {
                             </div>
 
                             {/* Actions Column */}
-                            <div className="px-4 py-3 flex items-center justify-center gap-1 w-full">
+                            <div className="px-4 py-3 text-center">
+                              <div className="inline-flex items-center justify-center gap-1">
                               {userIsLocked && currentUserIsSA && (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -636,6 +637,7 @@ export function UserList() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              </div>
                             </div>
                           </div>
                         </div>
