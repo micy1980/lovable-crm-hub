@@ -215,16 +215,16 @@ export function CompanyList() {
                   const sortField_ = getSortField();
                   const isSortable = sortField_ !== null;
                   
-                  return (
-                    <div
-                      key={col.key}
-                      className={`text-sm font-semibold text-foreground flex items-center justify-center gap-1 px-4 py-3 ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
-                      onClick={isSortable ? () => handleSort(sortField_!) : undefined}
-                    >
-                      {config?.label}
-                      {isSortable && getSortIcon(sortField_!)}
-                    </div>
-                  );
+                    return (
+                      <div
+                        key={col.key}
+                        className={`text-sm font-semibold text-foreground flex items-center gap-1 px-4 py-3 min-w-0 ${col.key === 'name' ? 'justify-start' : 'justify-center'} ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                        onClick={isSortable ? () => handleSort(sortField_!) : undefined}
+                      >
+                        <span className="truncate">{config?.label}</span>
+                        {isSortable && getSortIcon(sortField_!)}
+                      </div>
+                    );
                 })}
               </div>
 
