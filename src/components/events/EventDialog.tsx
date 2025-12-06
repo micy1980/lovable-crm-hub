@@ -379,11 +379,11 @@ export const EventDialog = ({
             </div>
 
             <div className="space-y-2">
-              <Label>{t('events.endTime')}</Label>
+              <Label>{t('events.endTime')} *</Label>
               <div className="flex gap-2">
                 <Input
                   type="date"
-                  {...register('end_date')}
+                  {...register('end_date', { required: true })}
                   className="flex-1"
                 />
                 {!isAllDay && (
@@ -394,6 +394,9 @@ export const EventDialog = ({
                   />
                 )}
               </div>
+              {errors.end_date && (
+                <p className="text-sm text-destructive">{t('common.required')}</p>
+              )}
             </div>
           </div>
 

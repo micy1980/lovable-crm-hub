@@ -301,11 +301,11 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
             </div>
 
             <div className="space-y-2">
-              <Label>{t('common.deadline', 'Határidő')}</Label>
+              <Label>{t('common.deadline', 'Határidő')} *</Label>
               <div className="flex gap-2">
                 <Input
                   type="date"
-                  {...register('deadline_date')}
+                  {...register('deadline_date', { required: true })}
                   className="flex-1"
                 />
                 <Input
