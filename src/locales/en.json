@@ -162,7 +162,10 @@
     "partnersDescription": "Clients, suppliers, partners",
     "upcomingTasksTitle": "Upcoming Tasks",
     "tasksDescription": "Tasks due in the next 7 days",
-    "noDeadline": "No deadline"
+    "noDeadline": "No deadline",
+    "weeklyOverview": "Weekly Overview",
+    "viewCalendar": "View Calendar",
+    "more": "more"
   },
   "partners": {
     "title": "Partners",
