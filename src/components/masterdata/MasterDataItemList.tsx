@@ -139,7 +139,7 @@ export function MasterDataItemList({
       <div className="border rounded-lg overflow-hidden">
         {/* Header Row */}
         <div className={cn(
-          "grid gap-4 px-4 py-3 bg-muted/30 border-b border-border",
+          "grid gap-4 px-4 py-3 bg-background border-b border-border",
           canEdit ? "grid-cols-[40px_200px_120px_100px]" : "grid-cols-[200px_120px]"
         )}>
           {canEdit && <div className="text-sm font-semibold text-muted-foreground"></div>}
