@@ -190,9 +190,9 @@ export function CompanyList() {
             />
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-x-auto">
             {/* Header Row */}
-            <div className="grid grid-cols-[2fr_1.5fr_2fr_1fr_1fr_1fr_1.5fr] bg-background border-b border-border">
+            <div className="grid grid-cols-[2fr_1.5fr_2fr_1fr_1fr_1fr_1.5fr] bg-background border-b border-border min-w-[800px]">
               <div 
                 className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
                 onClick={() => handleSort('name')}
@@ -243,7 +243,7 @@ export function CompanyList() {
               filteredCompanies.map((company: any, index: number) => (
                 <div
                   key={company.id}
-                  className="grid grid-cols-[2fr_1.5fr_2fr_1fr_1fr_1fr_1.5fr] border-b border-border hover:bg-muted/20 transition-colors"
+                  className="grid grid-cols-[2fr_1.5fr_2fr_1fr_1fr_1fr_1.5fr] border-b border-border hover:bg-muted/20 transition-colors min-w-[800px]"
                 >
                   <div className="font-medium flex items-center truncate px-4 py-3 border-r border-border">{company.name}</div>
                   <div className="flex items-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
