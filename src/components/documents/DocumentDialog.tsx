@@ -16,6 +16,9 @@ interface DocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   document?: any;
+  defaultPartnerId?: string;
+  defaultProjectId?: string;
+  defaultSalesId?: string;
 }
 
 interface DocumentFormData {
@@ -27,7 +30,7 @@ interface DocumentFormData {
   partner_id: string;
 }
 
-export const DocumentDialog = ({ open, onOpenChange, document: doc }: DocumentDialogProps) => {
+export const DocumentDialog = ({ open, onOpenChange, document: doc, defaultPartnerId, defaultProjectId, defaultSalesId }: DocumentDialogProps) => {
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
@@ -38,9 +41,9 @@ export const DocumentDialog = ({ open, onOpenChange, document: doc }: DocumentDi
       title: '',
       description: '',
       visibility: 'COMPANY_ONLY',
-      project_id: '',
-      sales_id: '',
-      partner_id: '',
+      project_id: defaultProjectId || '',
+      sales_id: defaultSalesId || '',
+      partner_id: defaultPartnerId || '',
     }
   });
 

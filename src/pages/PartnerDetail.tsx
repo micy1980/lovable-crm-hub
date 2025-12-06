@@ -16,6 +16,9 @@ import {
   Pencil,
   Loader2,
   Lock,
+  Plus,
+  Calendar,
+  CheckSquare,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -23,6 +26,9 @@ import { usePartners } from '@/hooks/usePartners';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { PartnerDialog } from '@/components/partners/PartnerDialog';
+import { TaskDialog } from '@/components/projects/TaskDialog';
+import { EventDialog } from '@/components/events/EventDialog';
+import { DocumentDialog } from '@/components/documents/DocumentDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +61,9 @@ export default function PartnerDetail() {
   const { updatePartner } = usePartners();
   const { canEdit, checkReadOnly } = useReadOnlyMode();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
 
   // Fetch partner details
   const { data: partner, isLoading: partnerLoading } = useQuery({
@@ -380,9 +389,19 @@ export default function PartnerDetail() {
           {/* Tasks Tab */}
           <TabsContent value="tasks">
             <Card>
-              <CardHeader>
-                <CardTitle>{t('tasks.title')}</CardTitle>
-                <CardDescription>{t('partners.relatedTasks')}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('tasks.title')}</CardTitle>
+                  <CardDescription>{t('partners.relatedTasks')}</CardDescription>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => checkReadOnly(() => setIsTaskDialogOpen(true))}
+                  disabled={!canEdit}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('tasks.create')}
+                </Button>
               </CardHeader>
               <CardContent>
                 {tasks.length === 0 ? (
@@ -432,9 +451,19 @@ export default function PartnerDetail() {
           {/* Events Tab */}
           <TabsContent value="events">
             <Card>
-              <CardHeader>
-                <CardTitle>{t('events.title')}</CardTitle>
-                <CardDescription>{t('partners.relatedEvents')}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('events.title')}</CardTitle>
+                  <CardDescription>{t('partners.relatedEvents')}</CardDescription>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => checkReadOnly(() => setIsEventDialogOpen(true))}
+                  disabled={!canEdit}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('events.create')}
+                </Button>
               </CardHeader>
               <CardContent>
                 {events.length === 0 ? (
@@ -479,9 +508,19 @@ export default function PartnerDetail() {
           {/* Documents Tab */}
           <TabsContent value="documents">
             <Card>
-              <CardHeader>
-                <CardTitle>{t('documents.title')}</CardTitle>
-                <CardDescription>{t('partners.relatedDocuments')}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('documents.title')}</CardTitle>
+                  <CardDescription>{t('partners.relatedDocuments')}</CardDescription>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => checkReadOnly(() => setIsDocumentDialogOpen(true))}
+                  disabled={!canEdit}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('documents.upload')}
+                </Button>
               </CardHeader>
               <CardContent>
                 {documents.length === 0 ? (
@@ -531,6 +570,39 @@ export default function PartnerDetail() {
           }}
           isSubmitting={updatePartner.isPending}
           initialData={partner}
+        />
+
+        <TaskDialog
+          open={isTaskDialogOpen}
+          onOpenChange={(open) => {
+            setIsTaskDialogOpen(open);
+            if (!open) {
+              queryClient.invalidateQueries({ queryKey: ['partner-tasks', id] });
+            }
+          }}
+          partnerId={id}
+        />
+
+        <EventDialog
+          open={isEventDialogOpen}
+          onOpenChange={(open) => {
+            setIsEventDialogOpen(open);
+            if (!open) {
+              queryClient.invalidateQueries({ queryKey: ['partner-events', id] });
+            }
+          }}
+          defaultPartnerId={id}
+        />
+
+        <DocumentDialog
+          open={isDocumentDialogOpen}
+          onOpenChange={(open) => {
+            setIsDocumentDialogOpen(open);
+            if (!open) {
+              queryClient.invalidateQueries({ queryKey: ['partner-documents', id] });
+            }
+          }}
+          defaultPartnerId={id}
         />
       </div>
     </LicenseGuard>
