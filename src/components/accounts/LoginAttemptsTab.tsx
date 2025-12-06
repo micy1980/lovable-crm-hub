@@ -149,11 +149,11 @@ export const LoginAttemptsTab = () => {
                     <TableCell className="font-mono text-xs text-center">
                       {formatDate(attempt.attempt_time)}
                     </TableCell>
-                    <TableCell className="text-center">{attempt.email}</TableCell>
-                    <TableCell className="font-mono text-xs text-center">
+                    <TableCell>{attempt.email}</TableCell>
+                    <TableCell className="font-mono text-xs">
                       {attempt.ip_address || 'N/A'}
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground text-center">
+                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
                       {attempt.user_agent || 'N/A'}
                     </TableCell>
                     <TableCell className="text-center">

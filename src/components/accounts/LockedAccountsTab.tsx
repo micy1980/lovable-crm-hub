@@ -67,15 +67,15 @@ export const LockedAccountsTab = () => {
               <TableBody>
                 {lockedAccounts.map((lock: any) => (
                   <TableRow key={lock.id}>
-                    <TableCell className="font-medium text-center">
+                    <TableCell className="font-medium">
                       {lock.user_full_name || 'N/A'}
                     </TableCell>
-                    <TableCell className="text-center">{lock.user_email}</TableCell>
+                    <TableCell>{lock.user_email}</TableCell>
                     <TableCell className="text-center">{formatDate(lock.locked_at)}</TableCell>
                     <TableCell className="text-center">
                       {lock.locked_until ? formatDate(lock.locked_until) : 'Végtelen'}
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-center">
+                    <TableCell className="max-w-[200px] truncate">
                       {lock.reason || 'Nincs megadva'}
                     </TableCell>
                     <TableCell className="text-center">

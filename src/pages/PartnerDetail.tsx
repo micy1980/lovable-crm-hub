@@ -405,7 +405,7 @@ export default function PartnerDetail() {
                         >
                           <TableCell className="font-medium">{project.name}</TableCell>
                           <TableCell>{project.code || '-'}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge variant="outline">{project.status || '-'}</Badge>
                           </TableCell>
                           <TableCell>{project.owner?.full_name || project.owner?.email || '-'}</TableCell>
@@ -459,16 +459,16 @@ export default function PartnerDetail() {
                           }}
                         >
                           <TableCell className="font-medium">{sale.name}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge variant="outline">{sale.status || '-'}</Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {sale.expected_value 
                               ? `${sale.expected_value.toLocaleString()} ${sale.currency || 'HUF'}`
                               : '-'
                             }
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {sale.expected_close_date 
                               ? format(new Date(sale.expected_close_date), 'yyyy.MM.dd', { locale: hu })
                               : '-'
@@ -524,7 +524,7 @@ export default function PartnerDetail() {
                           }}
                         >
                           <TableCell className="font-medium">{task.title}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge variant="outline">{t(`tasks.status.${task.status}`)}</Badge>
                           </TableCell>
                           <TableCell>
@@ -540,7 +540,7 @@ export default function PartnerDetail() {
                               </button>
                             ) : '-'}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {task.deadline 
                               ? format(new Date(task.deadline), 'yyyy.MM.dd HH:mm', { locale: hu })
                               : '-'
@@ -609,7 +609,7 @@ export default function PartnerDetail() {
                               </button>
                             ) : '-'}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {format(new Date(event.start_time), event.is_all_day ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm', { locale: hu })}
                           </TableCell>
                           <TableCell>{event.location || '-'}</TableCell>
@@ -662,10 +662,10 @@ export default function PartnerDetail() {
                           }}
                         >
                           <TableCell className="font-medium">{doc.title}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge variant="outline">{doc.visibility}</Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {doc.uploaded_at 
                               ? format(new Date(doc.uploaded_at), 'yyyy.MM.dd HH:mm', { locale: hu })
                               : '-'

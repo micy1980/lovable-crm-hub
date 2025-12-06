@@ -54,7 +54,7 @@ function SortableRow({ item, canEdit, onEdit, onDelete, index }: { item: any; ca
           </div>
         </div>
       )}
-      <div className="px-4 py-3 font-medium flex items-center justify-center border-r border-border">{item.label}</div>
+      <div className="px-4 py-3 font-medium flex items-center border-r border-border">{item.label}</div>
       <div className={cn("px-4 py-3 flex items-center justify-center", canEdit ? "border-r border-border" : "")}>
         {item.is_default && <Badge variant="secondary">{t('masterdata.isDefault')}</Badge>}
       </div>
