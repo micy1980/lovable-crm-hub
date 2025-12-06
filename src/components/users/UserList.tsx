@@ -351,14 +351,20 @@ export function UserList() {
                     
                     const sortField = getSortField();
                     const isSortable = sortField !== null;
+                    const isLeftAlign = col.key === 'user';
                     
                     return (
                       <div
                         key={col.key}
-                        className={`px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center gap-1 ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                        className={cn(
+                          "px-4 py-3 text-sm font-semibold text-foreground flex items-center gap-1 min-w-0",
+                          isLeftAlign ? "justify-start" : "justify-center",
+                          !isLast && "border-r border-border",
+                          isSortable && "cursor-pointer hover:text-primary transition-colors"
+                        )}
                         onClick={isSortable ? () => handleSort(sortField) : undefined}
                       >
-                        {config?.label}
+                        <span className="truncate">{config?.label}</span>
                         {isSortable && getSortIcon(sortField)}
                       </div>
                     );
