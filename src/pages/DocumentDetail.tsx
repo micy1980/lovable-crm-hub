@@ -7,7 +7,6 @@ import {
   ArrowLeft, 
   Edit, 
   Trash2, 
-  Download, 
   FileText, 
   AlertTriangle,
   Eye,
@@ -33,6 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useDocuments } from '@/hooks/useDocuments';
 import { DocumentDialog } from '@/components/documents/DocumentDialog';
+import { DocumentFilesTable } from '@/components/documents/DocumentFilesTable';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
@@ -41,7 +41,7 @@ import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog
 const DocumentDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { deleteDocument, hardDeleteDocument, downloadDocument } = useDocuments();
+  const { deleteDocument, hardDeleteDocument } = useDocuments();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
@@ -104,13 +104,6 @@ const DocumentDetail = () => {
     return format(parseISO(date), 'yyyy.MM.dd HH:mm', { locale: hu });
   };
 
-  const formatFileSize = (bytes: number | null) => {
-    if (!bytes) return '-';
-    const mb = bytes / 1024 / 1024;
-    if (mb >= 1) return `${mb.toFixed(2)} MB`;
-    return `${(bytes / 1024).toFixed(2)} KB`;
-  };
-
   if (isLoading) {
     return (
       <MainLayout>
@@ -161,15 +154,6 @@ const DocumentDetail = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            {document.file_path && (
-              <Button 
-                variant="outline" 
-                onClick={() => downloadDocument(document.file_path, document.title)}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Letöltés
-              </Button>
-            )}
             <Button variant="outline" onClick={() => setEditOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
               Szerkesztés
@@ -194,42 +178,17 @@ const DocumentDetail = () => {
           {getVisibilityBadge(document.visibility)}
         </div>
 
+        {/* Files Table */}
+        <DocumentFilesTable documentId={id!} isDeleted={isDeleted} />
+
         {/* Details */}
         <div className="grid md:grid-cols-2 gap-6">
-          {/* File info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Fájl adatok
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Fájltípus</span>
-                <span>{document.mime_type || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Méret</span>
-                <span>{formatFileSize(document.file_size)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Feltöltve</span>
-                <span>{formatDate(document.uploaded_at || document.created_at)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Módosítva</span>
-                <span>{formatDate(document.updated_at)}</span>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Visibility */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                Láthatóság és kapcsolatok
+                Láthatóság és metaadatok
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -237,12 +196,14 @@ const DocumentDetail = () => {
                 <span className="text-muted-foreground">Láthatóság</span>
                 {getVisibilityBadge(document.visibility)}
               </div>
-              {document.uploader && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Feltöltő</span>
-                  <span>{document.uploader.full_name}</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Létrehozva</span>
+                <span>{formatDate(document.created_at)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Módosítva</span>
+                <span>{formatDate(document.updated_at)}</span>
+              </div>
             </CardContent>
           </Card>
 
@@ -337,7 +298,7 @@ const DocumentDetail = () => {
         onOpenChange={setHardDeleteOpen}
         onConfirm={handleHardDelete}
         title="Dokumentum végleges törlése"
-        description="A dokumentum és a hozzá tartozó fájl véglegesen törlésre kerül. Ez a művelet nem visszavonható. Kérjük, adja meg jelszavát a megerősítéshez."
+        description="A dokumentum és a hozzá tartozó fájlok véglegesen törlésre kerülnek. Ez a művelet nem visszavonható. Kérjük, adja meg jelszavát a megerősítéshez."
       />
     </LicenseGuard>
   );
