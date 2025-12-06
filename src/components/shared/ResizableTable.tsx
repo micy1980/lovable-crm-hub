@@ -16,6 +16,7 @@ interface ResizableTableWithRenderProps extends ResizableTableBaseProps {
   renderRow: (item: any, columns: ColumnState[]) => React.ReactNode;
   data: any[];
   actionColumnWidth?: number;
+  actionColumnHeader?: string;
   getColumnConfig?: never;
   children?: never;
 }
@@ -156,8 +157,7 @@ export function ResizableTable(props: ResizableTableProps) {
     );
   }
 
-  // Render props version (legacy)
-  const { renderHeader, renderRow, data, actionColumnWidth = 80 } = props as ResizableTableWithRenderProps;
+  const { renderHeader, renderRow, data, actionColumnWidth = 80, actionColumnHeader = '' } = props as ResizableTableWithRenderProps;
 
   return (
     <div className={cn('overflow-x-auto', className)}>
@@ -195,8 +195,8 @@ export function ResizableTable(props: ResizableTableProps) {
                 />
               </TableHead>
             ))}
-            <TableHead style={{ width: actionColumnWidth }}>
-              {/* Actions column - no resize */}
+            <TableHead style={{ width: actionColumnWidth }} className="text-center">
+              {actionColumnHeader}
             </TableHead>
           </TableRow>
         </TableHeader>
