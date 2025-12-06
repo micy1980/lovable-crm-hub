@@ -26,7 +26,7 @@ const SalesDetail = () => {
         .from('sales')
         .select(`
           *,
-          partner:partners!sales_partner_id_fkey (
+          partner:partners (
             id,
             name
           )
