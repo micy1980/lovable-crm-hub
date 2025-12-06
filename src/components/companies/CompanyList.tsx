@@ -159,46 +159,46 @@ export function CompanyList() {
 
           <div className="border rounded-lg overflow-hidden">
             {/* Header Row */}
-            <div className="grid grid-cols-[200px_120px_1fr_120px_120px_120px_140px] gap-4 px-4 py-3 bg-background border-b border-border">
+            <div className="grid grid-cols-[200px_120px_1fr_120px_120px_120px_140px] bg-background border-b border-border">
               <div 
-                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-1 px-4 py-3 border-r border-border"
                 onClick={() => handleSort('name')}
               >
                 {t('companies.name')}
                 {getSortIcon('name')}
               </div>
               <div 
-                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-1 px-4 py-3 border-r border-border"
                 onClick={() => handleSort('tax_id')}
               >
                 {t('companies.taxId')}
                 {getSortIcon('tax_id')}
               </div>
               <div 
-                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-1 px-4 py-3 border-r border-border"
                 onClick={() => handleSort('address')}
               >
                 {t('companies.address')}
                 {getSortIcon('address')}
               </div>
-              <div className="text-sm font-semibold text-muted-foreground text-center">
+              <div className="text-sm font-semibold text-foreground text-center px-4 py-3 border-r border-border">
                 {t('companies.license')}
               </div>
               <div 
-                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
                 onClick={() => handleSort('user_count')}
               >
                 {t('companies.userCount')}
                 {getSortIcon('user_count')}
               </div>
               <div 
-                className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-1 px-4 py-3 border-r border-border"
                 onClick={() => handleSort('created_at')}
               >
                 {t('companies.createdAt')}
                 {getSortIcon('created_at')}
               </div>
-              <div className="text-sm font-semibold text-muted-foreground text-right">{t('common.actions')}</div>
+              <div className="text-sm font-semibold text-foreground text-right px-4 py-3">{t('common.actions')}</div>
             </div>
 
             {/* Body Rows */}
@@ -210,27 +210,25 @@ export function CompanyList() {
               filteredCompanies.map((company: any, index: number) => (
                 <div
                   key={company.id}
-                  className={`grid grid-cols-[200px_120px_1fr_120px_120px_120px_140px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors ${
-                    index % 2 === 1 ? 'bg-muted/10' : ''
-                  }`}
+                  className="grid grid-cols-[200px_120px_1fr_120px_120px_120px_140px] border-b border-border hover:bg-muted/20 transition-colors"
                 >
-                  <div className="font-medium flex items-center truncate">{company.name}</div>
-                  <div className="flex items-center text-sm">{company.tax_id || '-'}</div>
-                  <div className="flex items-center text-sm truncate">{company.address || '-'}</div>
-                  <div className="flex items-center justify-center">
+                  <div className="font-medium flex items-center truncate px-4 py-3 border-r border-border">{company.name}</div>
+                  <div className="flex items-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
+                  <div className="flex items-center text-sm truncate px-4 py-3 border-r border-border">{company.address || '-'}</div>
+                  <div className="flex items-center justify-center px-4 py-3 border-r border-border">
                     <CompanyLicenseInfo 
                       companyId={company.id} 
                       companyName={company.name}
                       isSuperAdmin={userIsSuperAdmin}
                     />
                   </div>
-                  <div className="flex items-center justify-center text-sm">
+                  <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
                     {company.user_count} / {company.max_users || '-'}
                   </div>
-                  <div className="flex items-center text-sm">
+                  <div className="flex items-center text-sm px-4 py-3 border-r border-border">
                     {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
                   </div>
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1 px-4 py-3">
                     <Button
                       variant="ghost"
                       size="icon"
