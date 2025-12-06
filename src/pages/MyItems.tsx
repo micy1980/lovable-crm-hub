@@ -250,6 +250,7 @@ export default function MyItems() {
                           <TableHead>{t('tasks.title')}</TableHead>
                           <TableHead>{t('tasks.statusLabel')}</TableHead>
                           <TableHead>{t('myItems.type')}</TableHead>
+                          <TableHead>{t('partners.title')}</TableHead>
                           <TableHead>{t('tasks.deadline')}</TableHead>
                           <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
                         </TableRow>
@@ -283,6 +284,9 @@ export default function MyItems() {
                                   <typeInfo.icon className="h-4 w-4" />
                                   {typeInfo.label}
                                 </span>
+                              </TableCell>
+                              <TableCell>
+                                {task.partner?.name || <span className="text-muted-foreground">-</span>}
                               </TableCell>
                               <TableCell>
                                 {task.deadline ? (
@@ -348,6 +352,7 @@ export default function MyItems() {
                         <TableRow>
                           <TableHead>{t('events.title')}</TableHead>
                           <TableHead>{t('myItems.type')}</TableHead>
+                          <TableHead>{t('partners.title')}</TableHead>
                           <TableHead>{t('events.startTime')}</TableHead>
                           <TableHead>{t('events.location')}</TableHead>
                           <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
@@ -376,6 +381,9 @@ export default function MyItems() {
                                   <typeInfo.icon className="h-4 w-4" />
                                   {typeInfo.label}
                                 </span>
+                              </TableCell>
+                              <TableCell>
+                                {event.partner?.name || <span className="text-muted-foreground">-</span>}
                               </TableCell>
                               <TableCell>
                                 <span className="flex items-center gap-1 text-sm">
