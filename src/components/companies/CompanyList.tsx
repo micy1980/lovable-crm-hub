@@ -191,108 +191,112 @@ export function CompanyList() {
           </div>
 
           <div className="border rounded-lg overflow-x-auto">
-            {/* Header Row */}
-            <div className="grid grid-cols-[2fr_1.5fr_2fr_1fr_1fr_1fr_1.5fr] bg-background border-b border-border min-w-[800px]">
-              <div 
-                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                onClick={() => handleSort('name')}
-              >
-                {t('companies.name')}
-                {getSortIcon('name')}
-              </div>
-              <div 
-                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                onClick={() => handleSort('tax_id')}
-              >
-                {t('companies.taxId')}
-                {getSortIcon('tax_id')}
-              </div>
-              <div 
-                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                onClick={() => handleSort('address')}
-              >
-                {t('companies.address')}
-                {getSortIcon('address')}
-              </div>
-              <div className="text-sm font-semibold text-foreground text-center flex items-center justify-center px-4 py-3 border-r border-border">
-                {t('companies.license')}
-              </div>
-              <div 
-                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                onClick={() => handleSort('user_count')}
-              >
-                {t('companies.userCount')}
-                {getSortIcon('user_count')}
-              </div>
-              <div 
-                className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                onClick={() => handleSort('created_at')}
-              >
-                {t('companies.createdAt')}
-                {getSortIcon('created_at')}
-              </div>
-              <div className="text-sm font-semibold text-foreground text-center flex items-center justify-center px-4 py-3">{t('common.actions')}</div>
-            </div>
-
-            {/* Body Rows */}
-            {filteredCompanies.length === 0 ? (
-              <div className="px-4 py-8 text-center text-muted-foreground">
-                {t('companies.empty')}
-              </div>
-            ) : (
-              filteredCompanies.map((company: any, index: number) => (
-                <div
-                  key={company.id}
-                  className="grid grid-cols-[2fr_1.5fr_2fr_1fr_1fr_1fr_1.5fr] border-b border-border hover:bg-muted/20 transition-colors min-w-[800px]"
+            <div className="min-w-[800px]">
+              {/* Header Row */}
+              <div className="grid grid-cols-[20%_12%_22%_10%_10%_12%_14%] bg-background border-b border-border">
+                <div 
+                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
+                  onClick={() => handleSort('name')}
                 >
-                  <div className="font-medium flex items-center truncate px-4 py-3 border-r border-border">{company.name}</div>
-                  <div className="flex items-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
-                  <div className="flex items-center text-sm truncate px-4 py-3 border-r border-border">{company.address || '-'}</div>
-                  <div className="flex items-center justify-center px-4 py-3 border-r border-border">
-                    <CompanyLicenseInfo 
-                      companyId={company.id} 
-                      companyName={company.name}
-                      isSuperAdmin={userIsSuperAdmin}
-                    />
-                  </div>
-                  <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
-                    {company.user_count} / {company.max_users || '-'}
-                  </div>
-                  <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
-                    {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
-                  </div>
-                  <div className="flex items-center justify-center gap-1 px-4 py-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(company)}
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    {userIsSuperAdmin && (
+                  {t('companies.name')}
+                  {getSortIcon('name')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
+                  onClick={() => handleSort('tax_id')}
+                >
+                  {t('companies.taxId')}
+                  {getSortIcon('tax_id')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
+                  onClick={() => handleSort('address')}
+                >
+                  {t('companies.address')}
+                  {getSortIcon('address')}
+                </div>
+                <div className="text-sm font-semibold text-foreground text-center flex items-center justify-center px-4 py-3 border-r border-border">
+                  {t('companies.license')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
+                  onClick={() => handleSort('user_count')}
+                >
+                  {t('companies.userCount')}
+                  {getSortIcon('user_count')}
+                </div>
+                <div 
+                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
+                  onClick={() => handleSort('created_at')}
+                >
+                  {t('companies.createdAt')}
+                  {getSortIcon('created_at')}
+                </div>
+                <div className="text-sm font-semibold text-foreground text-center flex items-center justify-center px-4 py-3">
+                  {t('common.actions')}
+                </div>
+              </div>
+
+              {/* Body Rows */}
+              {filteredCompanies.length === 0 ? (
+                <div className="px-4 py-8 text-center text-muted-foreground">
+                  {t('companies.empty')}
+                </div>
+              ) : (
+                filteredCompanies.map((company: any, index: number) => (
+                  <div
+                    key={company.id}
+                    className="grid grid-cols-[20%_12%_22%_10%_10%_12%_14%] border-b border-border hover:bg-muted/20 transition-colors"
+                  >
+                    <div className="font-medium flex items-center truncate px-4 py-3 border-r border-border">{company.name}</div>
+                    <div className="flex items-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
+                    <div className="flex items-center text-sm truncate px-4 py-3 border-r border-border">{company.address || '-'}</div>
+                    <div className="flex items-center justify-center px-4 py-3 border-r border-border">
+                      <CompanyLicenseInfo 
+                        companyId={company.id} 
+                        companyName={company.name}
+                        isSuperAdmin={userIsSuperAdmin}
+                      />
+                    </div>
+                    <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
+                      {company.user_count} / {company.max_users || '-'}
+                    </div>
+                    <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
+                      {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
+                    </div>
+                    <div className="flex items-center justify-center gap-1 px-4 py-3">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setManagingLicenseCompany(company)}
+                        onClick={() => handleEdit(company)}
                         className="h-8 w-8"
-                        title="Licensz kezelés"
                       >
-                        <Key className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeletingCompany(company)}
-                      className="h-8 w-8"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      {userIsSuperAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setManagingLicenseCompany(company)}
+                          className="h-8 w-8"
+                          title="Licensz kezelés"
+                        >
+                          <Key className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeletingCompany(company)}
+                        className="h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

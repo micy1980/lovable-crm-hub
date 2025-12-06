@@ -330,71 +330,71 @@ export function UserList() {
             </div>
 
             <div className="border rounded-lg overflow-x-auto">
+              <div className="min-w-[900px]">
                 {/* Header Row */}
-                <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1fr] bg-background border-b border-border min-w-[900px]">
-                <div 
-                  className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
-                  onClick={() => handleSort('fullName')}
-                >
-                  {t('users.user')}
-                  {getSortIcon('fullName')}
+                <div className="grid grid-cols-[25%_8%_10%_10%_8%_12%_12%_15%] bg-background border-b border-border">
+                  <div 
+                    className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
+                    onClick={() => handleSort('fullName')}
+                  >
+                    {t('users.user')}
+                    {getSortIcon('fullName')}
+                  </div>
+                  <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
+                    {t('users.saStatus')}
+                  </div>
+                  <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
+                    {t('users.status')}
+                  </div>
+                  <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
+                    Regisztráció
+                  </div>
+                  <div 
+                    className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
+                    onClick={() => handleSort('isActive')}
+                  >
+                    {t('users.active')}
+                    {getSortIcon('isActive')}
+                  </div>
+                  <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
+                    {t('users.permissions')}
+                  </div>
+                  <div 
+                    className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    {t('users.createdAt')}
+                    {getSortIcon('createdAt')}
+                  </div>
+                  <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center">
+                    {t('common.actions')}
+                  </div>
                 </div>
-                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
-                  {t('users.saStatus')}
-                </div>
-                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
-                  {t('users.status')}
-                </div>
-                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
-                  Regisztráció
-                </div>
-                <div 
-                  className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
-                  onClick={() => handleSort('isActive')}
-                >
-                  {t('users.active')}
-                  {getSortIcon('isActive')}
-                </div>
-                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
-                  {t('users.permissions')}
-                </div>
-                <div 
-                  className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
-                  onClick={() => handleSort('createdAt')}
-                >
-                  {t('users.createdAt')}
-                  {getSortIcon('createdAt')}
-                </div>
-                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center">
-                  {t('common.actions')}
-                </div>
-              </div>
 
-              {/* Body Rows */}
-              <div>
+                {/* Body Rows */}
                 {filteredUsers.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
                     {t('users.noUsers')}
                   </div>
                 ) : (
                   filteredUsers.map((user: any, index: number) => {
-                      const isSelf = user.id === currentUser?.id;
-                      const canToggleActive = canEdit && !(isSelf && user.is_active);
-                      const isSA = user.role === 'super_admin';
-                      const nextUser = filteredUsers[index + 1];
-                      const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
-                      const userIsLocked = isUserLocked(user.id);
-                      const lockDetails = getLockedAccountDetails(user.id);
-                      
-                      return (
-                        <div key={user.id}>
-                          <div
-                            className={cn(
-                              "grid grid-cols-[3fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1fr] border-b hover:bg-muted/20 transition-colors min-w-[900px]",
-                              index % 2 === 1 ? 'bg-muted/10' : '',
-                              isLastSA ? 'border-b-2 border-border' : 'border-border'
-                            )}
-                          >
+                    const isSelf = user.id === currentUser?.id;
+                    const canToggleActive = canEdit && !(isSelf && user.is_active);
+                    const isSA = user.role === 'super_admin';
+                    const nextUser = filteredUsers[index + 1];
+                    const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
+                    const userIsLocked = isUserLocked(user.id);
+                    const lockDetails = getLockedAccountDetails(user.id);
+                    
+                    return (
+                      <div
+                        key={user.id}
+                        className={cn(
+                          "grid grid-cols-[25%_8%_10%_10%_8%_12%_12%_15%] border-b hover:bg-muted/20 transition-colors",
+                          index % 2 === 1 ? 'bg-muted/10' : '',
+                          isLastSA ? 'border-b-2 border-border' : 'border-border'
+                        )}
+                      >
                             {/* User Column */}
                             <div className="px-4 py-3 flex flex-col justify-center min-w-0 border-r border-border">
                               <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
@@ -637,11 +637,9 @@ export function UserList() {
                               </TooltipProvider>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
-                  )
-                }
+                        );
+                      })
+                    )}
               </div>
             </div>
           </div>
