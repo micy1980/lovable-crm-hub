@@ -9,6 +9,9 @@
       "COST_CATEGORY": "Költség Kategóriák",
       "BUSINESS_UNIT": "Üzleti Egységek",
       "TASK_STATUS": "Feladat Státuszok",
+      "CONTRACT_TYPE": "Szerződés Típusok",
+      "CONTRACT_STATUS": "Szerződés Státuszok",
+      "PAYMENT_FREQUENCY": "Fizetési Gyakoriság",
       "COUNTRY": "Országok",
       "COUNTY": "Vármegyék",
       "STREET_TYPE": "Közterület típusok"
