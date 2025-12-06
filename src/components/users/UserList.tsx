@@ -1,6 +1,6 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, LockKeyhole, Unlock, Mail, UserCheck, Clock, GripVertical, Settings2 } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2, Power, LockKeyhole, Unlock, Mail, UserCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TableBody, TableRow } from '@/components/ui/table';
 import { useUsers } from '@/hooks/useUsers';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -26,16 +27,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
-  { key: 'user', label: 'Felhasználó', defaultWidth: 280, required: true },
-  { key: 'sa', label: 'SA státusz', defaultWidth: 100 },
-  { key: 'status', label: 'Állapot', defaultWidth: 80 },
+  { key: 'user', label: 'Felhasználó', defaultWidth: 250, required: true },
+  { key: 'sa', label: 'SA státusz', defaultWidth: 90 },
+  { key: 'status', label: 'Állapot', defaultWidth: 90 },
   { key: 'registration', label: 'Regisztráció', defaultWidth: 100 },
-  { key: 'active', label: 'Aktív', defaultWidth: 120 },
-  { key: 'permissions', label: 'Jogosultságok', defaultWidth: 120 },
-  { key: 'createdAt', label: 'Létrehozva', defaultWidth: 150 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 90 },
+  { key: 'active', label: 'Aktív', defaultWidth: 100 },
+  { key: 'permissions', label: 'Jogosultságok', defaultWidth: 100 },
+  { key: 'createdAt', label: 'Létrehozva', defaultWidth: 140 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 120 },
 ];
 
 export function UserList() {
@@ -55,8 +57,6 @@ export function UserList() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const {
     visibleColumns,
@@ -65,31 +65,16 @@ export function UserList() {
     setColumnWidth,
     reorderColumns,
     resetToDefaults,
+    getColumnConfig,
   } = useColumnSettings({
-    storageKey: 'users-columns-v2',
+    storageKey: 'users-columns-v3',
     columns: COLUMN_CONFIGS,
   });
 
   const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
   const currentUserIsSA = isSuperAdmin(currentProfile);
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'super_admin':
-        return 'bg-blue-600 text-white hover:bg-blue-700';
-      case 'admin':
-        return 'bg-purple-600 text-white hover:bg-purple-700';
-      case 'normal':
-        return 'bg-gray-500 text-white hover:bg-gray-600';
-      case 'viewer':
-        return 'bg-green-600 text-white hover:bg-green-700';
-      default:
-        return 'bg-gray-500 text-white hover:bg-gray-600';
-    }
-  };
-
   const handleToggleFlag = (userId: string, field: 'is_active' | 'can_delete' | 'can_view_logs', currentValue: boolean) => {
-    // Prevent users from deactivating themselves
     if (userId === currentUser?.id && field === 'is_active' && currentValue) {
       return;
     }
@@ -105,14 +90,12 @@ export function UserList() {
     try {
       const result = await createUser.mutateAsync({ ...data, sendInvite: false });
       
-      // If sendInvite is true and user was created successfully, send registration invite
       if (sendInvite && result?.id) {
         try {
           const { data: inviteData, error } = await supabase.functions.invoke('send-registration-invite', {
             body: { userId: result.id }
           });
           
-          // Force refresh of users list to update badge
           queryClient.invalidateQueries({ queryKey: ['users'] });
           
           if (error) {
@@ -123,7 +106,6 @@ export function UserList() {
               variant: 'destructive',
             });
           } else if (inviteData?.success === false && inviteData?.userCode) {
-            // Email failed but we have the code - show it to admin
             toast({
               title: t('invitation.emailFailed'),
               description: (
@@ -156,12 +138,9 @@ export function UserList() {
       
       setIsCreateOpen(false);
     } catch (error: any) {
-      // Email duplicate and weak password errors should be re-thrown
-      // so the form component can handle them
       if (error?.errorCode === 'EMAIL_ALREADY_REGISTERED' || error?.isWeakPassword) {
         throw error;
       }
-      // Other errors will bubble up naturally
     }
   };
 
@@ -171,24 +150,6 @@ export function UserList() {
       targetUserId: deletingUser.id,
       password,
     });
-  };
-
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (column: string) => {
-    if (sortColumn !== column) {
-      return <ArrowUpDown className="ml-2 h-4 w-4 inline" />;
-    }
-    return sortDirection === 'asc' 
-      ? <ArrowUp className="ml-2 h-4 w-4 inline" />
-      : <ArrowDown className="ml-2 h-4 w-4 inline" />;
   };
 
   const filteredUsers = useMemo(() => {
@@ -214,39 +175,250 @@ export function UserList() {
     return [...filtered].sort((a, b) => {
       const aIsSA = a.role === 'super_admin';
       const bIsSA = b.role === 'super_admin';
-      
-      // SA users always come first
       if (aIsSA && !bIsSA) return -1;
       if (!aIsSA && bIsSA) return 1;
-      
-      // Within SA or non-SA groups, apply the selected sort
-      if (!sortColumn) return 0;
-      
-      let aValue: any;
-      let bValue: any;
-
-      switch (sortColumn) {
-        case 'fullName':
-          aValue = (a.full_name || '').toLowerCase();
-          bValue = (b.full_name || '').toLowerCase();
-          break;
-        case 'isActive':
-          aValue = a.is_active ? 1 : 0;
-          bValue = b.is_active ? 1 : 0;
-          break;
-        case 'createdAt':
-          aValue = new Date(a.created_at).getTime();
-          bValue = new Date(b.created_at).getTime();
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [users, searchQuery, roleFilter, statusFilter, companyFilter, sortColumn, sortDirection]);
+  }, [users, searchQuery, roleFilter, statusFilter, companyFilter]);
+
+  const renderCellContent = (user: any, columnKey: string, index: number) => {
+    const isSelf = user.id === currentUser?.id;
+    const canToggleActive = canEdit && !(isSelf && user.is_active);
+    const isSA = user.role === 'super_admin';
+    const userIsLocked = isUserLocked(user.id);
+    const lockDetails = getLockedAccountDetails(user.id);
+
+    switch (columnKey) {
+      case 'user':
+        return (
+          <div className="flex flex-col min-w-0">
+            <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
+            <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+          </div>
+        );
+      case 'sa':
+        return isSA ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
+                  SA
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t('users.saBadgeTooltip')}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      case 'status':
+        return userIsLocked && lockDetails ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="destructive" className="text-xs font-medium cursor-help gap-1">
+                  <LockKeyhole className="h-3 w-3" />
+                  {t('users.locked')}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <div className="space-y-1 text-xs">
+                  <p className="font-semibold">{t('users.accountLockedDetails')}</p>
+                  <p><span className="font-medium">{t('users.reason')}:</span> {lockDetails.reason || '-'}</p>
+                  <p><span className="font-medium">{t('users.lockedAt')}:</span> {lockDetails.locked_at ? format(new Date(lockDetails.locked_at), 'yyyy-MM-dd HH:mm') : '-'}</p>
+                  {lockDetails.locked_until && (
+                    <p><span className="font-medium">{t('users.lockedUntil')}:</span> {format(new Date(lockDetails.locked_until), 'yyyy-MM-dd HH:mm')}</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : userIsLocked ? (
+          <Badge variant="destructive" className="text-xs font-medium gap-1">
+            <LockKeyhole className="h-3 w-3" />
+            {t('users.locked')}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      case 'registration':
+        if (user.registered_at) {
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="text-xs font-medium bg-green-600 text-white hover:bg-green-700 cursor-help gap-1">
+                    <UserCheck className="h-3 w-3" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('invitation.status.registered')} - {format(new Date(user.registered_at), 'yyyy-MM-dd HH:mm')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        } else if (user.invitation_sent_at) {
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="text-xs font-medium bg-yellow-600 text-white hover:bg-yellow-700 cursor-help gap-1">
+                    <Mail className="h-3 w-3" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="text-xs">
+                    <p>{t('invitation.status.invited')}</p>
+                    <p>{format(new Date(user.invitation_sent_at), 'yyyy-MM-dd HH:mm')}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        } else {
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-xs font-medium cursor-help gap-1">
+                    <Clock className="h-3 w-3" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('invitation.status.notInvited')}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        }
+      case 'active':
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center justify-center">
+                  <Switch
+                    checked={user.is_active}
+                    onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
+                    disabled={!canToggleActive}
+                    aria-label={t('users.isActive')}
+                    className="scale-90 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
+                  />
+                  <Power className="h-4 w-4 ml-1.5 text-muted-foreground" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t('users.isActive')}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      case 'permissions':
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setCompanyAssignmentUser(user)}
+                >
+                  <Building2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t('users.assignCompanies')}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      case 'createdAt':
+        return (
+          <span className="text-xs text-muted-foreground">
+            {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
+          </span>
+        );
+      case 'actions':
+        return (
+          <div className="flex items-center justify-center gap-1">
+            {userIsLocked && currentUserIsSA && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      onClick={() => unlockAccount.mutate(user.id)}
+                    >
+                      <Unlock className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('users.unlockAccount')}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!(currentProfile?.role === 'admin' && isSA) && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setEditingUser(user)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('users.editTitle')}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8",
+                      (isSA && (isSelf || !currentUserIsSA)) && "opacity-50 cursor-not-allowed"
+                    )}
+                    onClick={() => {
+                      if (!canEdit) return;
+                      if (isSA && isSelf) return;
+                      if (isSA && !currentUserIsSA) return;
+                      setDeletingUser(user);
+                    }}
+                    disabled={!canEdit || (isSA && (isSelf || !currentUserIsSA))}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isSA && isSelf 
+                    ? t('users.saCannotDeleteSelf')
+                    : isSA && !currentUserIsSA
+                    ? t('users.onlySaCanDeleteSa')
+                    : t('users.deleteUser')
+                  }
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   if (isLoading) {
     return <div>{t('common.loading')}</div>;
@@ -329,336 +501,46 @@ export function UserList() {
               />
             </div>
 
-            <div className="border rounded-lg overflow-x-auto">
-              <div className="min-w-[900px]">
-                {/* Header Row */}
-                <div 
-                  className="grid bg-background border-b border-border"
-                  style={{ gridTemplateColumns: visibleColumns.map(() => '1fr').join(' ') }}
-                >
-                  {visibleColumns.map((col, idx) => {
-                    const isLast = idx === visibleColumns.length - 1;
-                    const config = COLUMN_CONFIGS.find(c => c.key === col.key);
-                    
-                    const getSortField = () => {
-                      switch (col.key) {
-                        case 'user': return 'fullName';
-                        case 'active': return 'isActive';
-                        case 'createdAt': return 'createdAt';
-                        default: return null;
-                      }
-                    };
-                    
-                    const sortField = getSortField();
-                    const isSortable = sortField !== null;
-                    const isLeftAlign = col.key === 'user';
-                    
-                    return (
-                      <div
-                        key={col.key}
-                        className={cn(
-                          "px-4 py-3 text-sm font-semibold text-foreground flex items-center gap-1 min-w-0",
-                          isLeftAlign ? "justify-start" : "justify-center",
-                          !isLast && "border-r border-border",
-                          isSortable && "cursor-pointer hover:text-primary transition-colors"
-                        )}
-                        onClick={isSortable ? () => handleSort(sortField) : undefined}
-                      >
-                        <span className="truncate">{config?.label}</span>
-                        {isSortable && getSortIcon(sortField)}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Body Rows */}
-                {filteredUsers.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    {t('users.noUsers')}
-                  </div>
-                ) : (
-                  filteredUsers.map((user: any, index: number) => {
-                    const isSelf = user.id === currentUser?.id;
-                    const canToggleActive = canEdit && !(isSelf && user.is_active);
+            {filteredUsers.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8 border rounded-lg">
+                {t('users.noUsers')}
+              </div>
+            ) : (
+              <ResizableTable
+                visibleColumns={visibleColumns}
+                onColumnResize={setColumnWidth}
+                onColumnReorder={reorderColumns}
+                getColumnConfig={getColumnConfig}
+              >
+                <TableBody>
+                  {filteredUsers.map((user: any, index: number) => {
                     const isSA = user.role === 'super_admin';
                     const nextUser = filteredUsers[index + 1];
                     const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
-                    const userIsLocked = isUserLocked(user.id);
-                    const lockDetails = getLockedAccountDetails(user.id);
                     
                     return (
-                      <div
+                      <TableRow 
                         key={user.id}
                         className={cn(
-                          "grid border-b hover:bg-muted/20 transition-colors",
                           index % 2 === 1 ? 'bg-muted/10' : '',
-                          isLastSA ? 'border-b-2 border-border' : 'border-border'
+                          isLastSA ? 'border-b-2' : ''
                         )}
-                        style={{ gridTemplateColumns: visibleColumns.map(() => '1fr').join(' ') }}
                       >
-                        {visibleColumns.map((col, idx) => {
-                          const isLast = idx === visibleColumns.length - 1;
-                          
-                          switch (col.key) {
-                            case 'user':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex flex-col justify-center min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                                  <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
-                                  <span className="text-xs text-muted-foreground truncate">{user.email}</span>
-                                </div>
-                              );
-                            case 'sa':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center ${!isLast ? 'border-r border-border' : ''}`}>
-                                  {isSA ? (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Badge className="text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-help">
-                                            SA
-                                          </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t('users.saBadgeTooltip')}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ) : (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </div>
-                              );
-                            case 'status':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center ${!isLast ? 'border-r border-border' : ''}`}>
-                                  {userIsLocked && lockDetails ? (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Badge variant="destructive" className="text-xs font-medium cursor-help gap-1">
-                                            <LockKeyhole className="h-3 w-3" />
-                                            {t('users.locked')}
-                                          </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-xs">
-                                          <div className="space-y-1 text-xs">
-                                            <p className="font-semibold">{t('users.accountLockedDetails')}</p>
-                                            <p><span className="font-medium">{t('users.reason')}:</span> {lockDetails.reason || '-'}</p>
-                                            <p><span className="font-medium">{t('users.lockedAt')}:</span> {lockDetails.locked_at ? format(new Date(lockDetails.locked_at), 'yyyy-MM-dd HH:mm') : '-'}</p>
-                                            {lockDetails.locked_until && (
-                                              <p><span className="font-medium">{t('users.lockedUntil')}:</span> {format(new Date(lockDetails.locked_until), 'yyyy-MM-dd HH:mm')}</p>
-                                            )}
-                                            {lockDetails.ip_address && (
-                                              <p><span className="font-medium">{t('users.ipAddress')}:</span> {lockDetails.ip_address}</p>
-                                            )}
-                                            {lockDetails.locked_by_system && (
-                                              <p className="text-yellow-500">{t('users.lockedBySystem')}</p>
-                                            )}
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ) : userIsLocked ? (
-                                    <Badge variant="destructive" className="text-xs font-medium gap-1">
-                                      <LockKeyhole className="h-3 w-3" />
-                                      {t('users.locked')}
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </div>
-                              );
-                            case 'registration':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center ${!isLast ? 'border-r border-border' : ''}`}>
-                                  {user.registered_at ? (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Badge className="text-xs font-medium bg-green-600 text-white hover:bg-green-700 cursor-help gap-1">
-                                            <UserCheck className="h-3 w-3" />
-                                          </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t('invitation.status.registered')} - {format(new Date(user.registered_at), 'yyyy-MM-dd HH:mm')}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ) : user.invitation_sent_at ? (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Badge className="text-xs font-medium bg-yellow-600 text-white hover:bg-yellow-700 cursor-help gap-1">
-                                            <Mail className="h-3 w-3" />
-                                          </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <div className="text-xs">
-                                            <p>{t('invitation.status.invited')}</p>
-                                            <p>{format(new Date(user.invitation_sent_at), 'yyyy-MM-dd HH:mm')}</p>
-                                            {user.invitation_expires_at && (
-                                              <p className="text-yellow-300">
-                                                {new Date(user.invitation_expires_at) < new Date() ? 'Lejárt' : t('invitation.expiresAt', { date: format(new Date(user.invitation_expires_at), 'yyyy-MM-dd HH:mm') })}
-                                              </p>
-                                            )}
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ) : (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Badge variant="outline" className="text-xs font-medium cursor-help gap-1">
-                                            <Clock className="h-3 w-3" />
-                                          </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t('invitation.status.notInvited')}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </div>
-                              );
-                            case 'active':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center ${!isLast ? 'border-r border-border' : ''}`}>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center">
-                                          <Switch
-                                            checked={user.is_active}
-                                            onCheckedChange={() => handleToggleFlag(user.id, 'is_active', user.is_active)}
-                                            disabled={!canToggleActive}
-                                            aria-label={t('users.isActive')}
-                                            className="scale-90 data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-600"
-                                          />
-                                          <Power className="h-4 w-4 ml-1.5 text-muted-foreground" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {t('users.isActive')}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              );
-                            case 'permissions':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center ${!isLast ? 'border-r border-border' : ''}`}>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-8 w-8"
-                                          onClick={() => setCompanyAssignmentUser(user)}
-                                        >
-                                          <Building2 className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {t('users.assignCompanies')}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              );
-                            case 'createdAt':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center ${!isLast ? 'border-r border-border' : ''}`}>
-                                  <span className="text-xs text-muted-foreground">
-                                    {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
-                                  </span>
-                                </div>
-                              );
-                            case 'actions':
-                              return (
-                                <div key={col.key} className={`px-4 py-3 flex items-center justify-center gap-1 ${!isLast ? 'border-r border-border' : ''}`}>
-                                  {userIsLocked && currentUserIsSA && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                                            onClick={() => unlockAccount.mutate(user.id)}
-                                          >
-                                            <Unlock className="h-4 w-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t('users.unlockAccount')}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                  {!(currentProfile?.role === 'admin' && isSA) && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8"
-                                            onClick={() => setEditingUser(user)}
-                                          >
-                                            <Pencil className="h-4 w-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {t('users.editTitle')}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className={cn(
-                                            "h-8 w-8",
-                                            (isSA && (isSelf || !currentUserIsSA)) && "opacity-50 cursor-not-allowed"
-                                          )}
-                                          onClick={() => {
-                                            if (!canEdit) return;
-                                            if (isSA && isSelf) return;
-                                            if (isSA && !currentUserIsSA) return;
-                                            setDeletingUser(user);
-                                          }}
-                                          disabled={!canEdit || (isSA && (isSelf || !currentUserIsSA))}
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        {isSA && isSelf 
-                                          ? t('users.saCannotDeleteSelf')
-                                          : isSA && !currentUserIsSA
-                                          ? t('users.onlySaCanDeleteSa')
-                                          : t('users.deleteUser')
-                                        }
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              );
-                            default:
-                              return null;
-                          }
-                        })}
-                      </div>
+                        {visibleColumns.map((col) => (
+                          <ResizableTableCell 
+                            key={col.key} 
+                            width={col.width}
+                            className={col.key !== 'user' ? 'text-center' : ''}
+                          >
+                            {renderCellContent(user, col.key, index)}
+                          </ResizableTableCell>
+                        ))}
+                      </TableRow>
                     );
-                  })
-                )}
-              </div>
-            </div>
+                  })}
+                </TableBody>
+              </ResizableTable>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -688,11 +570,11 @@ export function UserList() {
         </DialogContent>
       </Dialog>
 
-        <UserCompanyPermissionsDialog
-          user={companyAssignmentUser}
-          open={!!companyAssignmentUser}
-          onClose={() => setCompanyAssignmentUser(null)}
-        />
+      <UserCompanyPermissionsDialog
+        user={companyAssignmentUser}
+        open={!!companyAssignmentUser}
+        onClose={() => setCompanyAssignmentUser(null)}
+      />
 
       <UserDeleteDialog
         user={deletingUser}

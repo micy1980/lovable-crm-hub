@@ -1,15 +1,15 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Pencil, Trash2, Plus, Search, ArrowUpDown, ArrowUp, ArrowDown, Key } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Pencil, Trash2, Plus, Search, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { TableBody, TableRow } from '@/components/ui/table';
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanyForm } from './CompanyForm';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 import { CompanyLicenseInfo } from './CompanyLicenseInfo';
 import { CompanyLicenseManagementDialog } from './CompanyLicenseManagementDialog';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -17,13 +17,14 @@ import { isSuperAdmin } from '@/lib/roleUtils';
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'name', label: 'Név', defaultWidth: 200, required: true },
-  { key: 'taxId', label: 'Adószám', defaultWidth: 120 },
+  { key: 'taxId', label: 'Adószám', defaultWidth: 140 },
   { key: 'address', label: 'Cím', defaultWidth: 200 },
-  { key: 'license', label: 'Licensz', defaultWidth: 120 },
-  { key: 'userCount', label: 'Felhasználók', defaultWidth: 120 },
+  { key: 'license', label: 'Licensz', defaultWidth: 100 },
+  { key: 'userCount', label: 'Felhasználók', defaultWidth: 100 },
   { key: 'createdAt', label: 'Létrehozva', defaultWidth: 120 },
   { key: 'actions', label: 'Műveletek', defaultWidth: 140 },
 ];
@@ -38,8 +39,6 @@ export function CompanyList() {
   const [managingLicenseCompany, setManagingLicenseCompany] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [companiesWithUserCount, setCompaniesWithUserCount] = useState<any[]>([]);
-  const [sortField, setSortField] = useState<string>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const userIsSuperAdmin = isSuperAdmin(profile);
   const { getUsedSeats, getLicenseForCompany } = useCompanyLicenses();
@@ -51,6 +50,7 @@ export function CompanyList() {
     setColumnWidth,
     reorderColumns,
     resetToDefaults,
+    getColumnConfig,
   } = useColumnSettings({
     storageKey: 'companies-columns',
     columns: COLUMN_CONFIGS,
@@ -77,55 +77,15 @@ export function CompanyList() {
     }
   }, [companies, getUsedSeats, getLicenseForCompany]);
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const getSortIcon = (field: string) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="h-3 w-3" />;
-    }
-    return sortDirection === 'asc' ? (
-      <ArrowUp className="h-3 w-3" />
-    ) : (
-      <ArrowDown className="h-3 w-3" />
-    );
-  };
-
   const filteredCompanies = useMemo(() => {
-    const filtered = companiesWithUserCount.filter((company: any) => {
+    return companiesWithUserCount.filter((company: any) => {
       const matchesSearch =
         company.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         company.tax_id?.toLowerCase().includes(searchQuery.toLowerCase());
       
       return matchesSearch;
     });
-
-    return filtered.sort((a: any, b: any) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
-
-      if (sortField === 'created_at') {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      } else if (sortField === 'user_count') {
-        aValue = Number(aValue) || 0;
-        bValue = Number(bValue) || 0;
-      } else if (typeof aValue === 'string') {
-        aValue = aValue?.toLowerCase() || '';
-        bValue = bValue?.toLowerCase() || '';
-      }
-
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [companiesWithUserCount, searchQuery, sortField, sortDirection]);
+  }, [companiesWithUserCount, searchQuery]);
 
   const handleEdit = (company: any) => {
     setEditingCompany(company);
@@ -148,6 +108,63 @@ export function CompanyList() {
       deleteCompany.mutate(deletingCompany.id, {
         onSuccess: () => setDeletingCompany(null),
       });
+    }
+  };
+
+  const renderCellContent = (company: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'name':
+        return <span className="font-medium">{company.name}</span>;
+      case 'taxId':
+        return company.tax_id || '-';
+      case 'address':
+        return <span className="truncate block">{company.address || '-'}</span>;
+      case 'license':
+        return (
+          <CompanyLicenseInfo 
+            companyId={company.id} 
+            companyName={company.name}
+            isSuperAdmin={userIsSuperAdmin}
+          />
+        );
+      case 'userCount':
+        return `${company.user_count} / ${company.max_users || '-'}`;
+      case 'createdAt':
+        return company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-';
+      case 'actions':
+        return (
+          <div className="flex items-center justify-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEdit(company)}
+              className="h-8 w-8"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            {userIsSuperAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setManagingLicenseCompany(company)}
+                className="h-8 w-8"
+                title="Licensz kezelés"
+              >
+                <Key className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDeletingCompany(company)}
+              className="h-8 w-8"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -190,143 +207,34 @@ export function CompanyList() {
             />
           </div>
 
-          <div className="border rounded-lg overflow-x-auto">
-            <div className="min-w-[800px]">
-              {/* Header Row */}
-              <div 
-                className="grid bg-background border-b border-border"
-                style={{ gridTemplateColumns: visibleColumns.map(() => '1fr').join(' ') }}
-              >
-                {visibleColumns.map((col, idx) => {
-                  const isLast = idx === visibleColumns.length - 1;
-                  const config = COLUMN_CONFIGS.find(c => c.key === col.key);
-                  
-                  const getSortField = () => {
-                    switch (col.key) {
-                      case 'name': return 'name';
-                      case 'taxId': return 'tax_id';
-                      case 'address': return 'address';
-                      case 'userCount': return 'user_count';
-                      case 'createdAt': return 'created_at';
-                      default: return null;
-                    }
-                  };
-                  
-                  const sortField_ = getSortField();
-                  const isSortable = sortField_ !== null;
-                  
-                    const isLeftAlign = ['name', 'taxId', 'address'].includes(col.key);
-                    
-                    return (
-                      <div
-                        key={col.key}
-                        className={`text-sm font-semibold text-foreground flex items-center gap-1 px-4 py-3 min-w-0 ${isLeftAlign ? 'justify-start' : 'justify-center'} ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
-                        onClick={isSortable ? () => handleSort(sortField_!) : undefined}
-                      >
-                        <span className="truncate">{config?.label}</span>
-                        {isSortable && getSortIcon(sortField_!)}
-                      </div>
-                    );
-                })}
-              </div>
-
-              {/* Body Rows */}
-              {filteredCompanies.length === 0 ? (
-                <div className="px-4 py-8 text-center text-muted-foreground">
-                  {t('companies.empty')}
-                </div>
-              ) : (
-                filteredCompanies.map((company: any) => (
-                  <div
-                    key={company.id}
-                    className="grid border-b border-border hover:bg-muted/20 transition-colors"
-                    style={{ gridTemplateColumns: visibleColumns.map(() => '1fr').join(' ') }}
-                  >
-                    {visibleColumns.map((col, idx) => {
-                      const isLast = idx === visibleColumns.length - 1;
-                      
-                      switch (col.key) {
-                        case 'name':
-                          return (
-                            <div key={col.key} className={`font-medium flex items-center truncate px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              {company.name}
-                            </div>
-                          );
-                        case 'taxId':
-                          return (
-                            <div key={col.key} className={`flex items-center text-sm px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              {company.tax_id || '-'}
-                            </div>
-                          );
-                        case 'address':
-                          return (
-                            <div key={col.key} className={`flex items-center text-sm truncate px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              {company.address || '-'}
-                            </div>
-                          );
-                        case 'license':
-                          return (
-                            <div key={col.key} className={`flex items-center justify-center px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              <CompanyLicenseInfo 
-                                companyId={company.id} 
-                                companyName={company.name}
-                                isSuperAdmin={userIsSuperAdmin}
-                              />
-                            </div>
-                          );
-                        case 'userCount':
-                          return (
-                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              {company.user_count} / {company.max_users || '-'}
-                            </div>
-                          );
-                        case 'createdAt':
-                          return (
-                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
-                            </div>
-                          );
-                        case 'actions':
-                          return (
-                            <div key={col.key} className={`flex items-center justify-center gap-1 px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(company)}
-                                className="h-8 w-8"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              {userIsSuperAdmin && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setManagingLicenseCompany(company)}
-                                  className="h-8 w-8"
-                                  title="Licensz kezelés"
-                                >
-                                  <Key className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeletingCompany(company)}
-                                className="h-8 w-8"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          );
-                        default:
-                          return null;
-                      }
-                    })}
-                  </div>
-                ))
-              )}
+          {filteredCompanies.length === 0 ? (
+            <div className="px-4 py-8 text-center text-muted-foreground border rounded-lg">
+              {t('companies.empty')}
             </div>
-          </div>
+          ) : (
+            <ResizableTable
+              visibleColumns={visibleColumns}
+              onColumnResize={setColumnWidth}
+              onColumnReorder={reorderColumns}
+              getColumnConfig={getColumnConfig}
+            >
+              <TableBody>
+                {filteredCompanies.map((company: any) => (
+                  <TableRow key={company.id}>
+                    {visibleColumns.map((col) => (
+                      <ResizableTableCell 
+                        key={col.key} 
+                        width={col.width}
+                        className={['license', 'userCount', 'createdAt', 'actions'].includes(col.key) ? 'text-center' : ''}
+                      >
+                        {renderCellContent(company, col.key)}
+                      </ResizableTableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </ResizableTable>
+          )}
         </div>
       </CardContent>
 
