@@ -75,7 +75,14 @@ export const CalendarGrid = ({
         color: event.project?.event_color || (!event.project_id ? personalEventColor : null) || null,
       }));
 
-    return [...dayTasks, ...dayEvents];
+    // Combine and sort: all-day items first, then by time
+    const allItems = [...dayTasks, ...dayEvents];
+    return allItems.sort((a, b) => {
+      // All-day items come first
+      if (a.is_all_day && !b.is_all_day) return -1;
+      if (!a.is_all_day && b.is_all_day) return 1;
+      return 0;
+    });
   };
 
   // Build weeks array
