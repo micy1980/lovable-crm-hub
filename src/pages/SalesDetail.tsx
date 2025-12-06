@@ -26,7 +26,7 @@ const SalesDetail = () => {
         .from('sales')
         .select(`
           *,
-          partners (
+          partner:partners (
             id,
             name
           )
@@ -71,9 +71,9 @@ const SalesDetail = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">{sale.name}</h1>
-            {sale.partners && (
-              <p className="text-muted-foreground">Partner: {sale.partners.name}</p>
-            )}
+          {sale.partner && (
+            <p className="text-muted-foreground">Partner: {sale.partner.name}</p>
+          )}
           </div>
           <Button onClick={() => setEditDialogOpen(true)} disabled={!canEdit}>
             <Edit className="mr-2 h-4 w-4" />
