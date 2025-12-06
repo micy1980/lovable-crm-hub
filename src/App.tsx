@@ -17,6 +17,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Register = lazy(() => import("./pages/Register"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 const Partners = lazy(() => import("./pages/Partners"));
+const PartnerDetail = lazy(() => import("./pages/PartnerDetail"));
 const Projects = lazy(() => import("./pages/Projects"));
 const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const SalesDetail = lazy(() => import("./pages/SalesDetail"));
@@ -72,6 +73,7 @@ const App = () => {
                     <Route path="/change-password" element={<ChangePassword />} />
                     <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
                     <Route path="/partners" element={<MainLayout><Partners /></MainLayout>} />
+                    <Route path="/partners/:id" element={<MainLayout><PartnerDetail /></MainLayout>} />
                     <Route path="/projects" element={<MainLayout><Projects /></MainLayout>} />
                     <Route path="/projects/:id" element={<MainLayout><ProjectDetail /></MainLayout>} />
                     <Route path="/sales" element={<MainLayout><Sales /></MainLayout>} />

@@ -290,7 +290,7 @@ export default function MyItems() {
                               <TableCell>
                                 {task.partner ? (
                                   <button
-                                    onClick={() => navigate('/partners')}
+                                    onClick={() => navigate(`/partners/${task.partner.id}`)}
                                     className="text-primary hover:underline"
                                   >
                                     {task.partner.name}
@@ -396,7 +396,7 @@ export default function MyItems() {
                               <TableCell>
                                 {event.partner ? (
                                   <button
-                                    onClick={() => navigate('/partners')}
+                                    onClick={() => navigate(`/partners/${event.partner.id}`)}
                                     className="text-primary hover:underline"
                                   >
                                     {event.partner.name}
