@@ -76,7 +76,7 @@ const LicenseGenerator = () => {
         'partners': 'Partnerek',
         'projects': 'Projektek',
         'sales': 'Értékesítés',
-        'documents': 'Dokumentumok',
+        'documents': 'Dokumentumtár',
         'calendar': 'Naptár',
         'my_items': 'Feladatok és események',
         'audit': 'Audit'
@@ -174,7 +174,7 @@ const LicenseGenerator = () => {
                   { key: 'partners', label: 'Partnerek' },
                   { key: 'projects', label: 'Projektek' },
                   { key: 'sales', label: 'Értékesítés' },
-                  { key: 'documents', label: 'Dokumentumok' },
+                  { key: 'documents', label: 'Dokumentumtár' },
                   { key: 'calendar', label: 'Naptár' },
                   { key: 'my_items', label: 'Feladatok és események' },
                   { key: 'audit', label: 'Audit' },
