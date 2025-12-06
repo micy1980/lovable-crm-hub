@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -58,6 +59,7 @@ const loadColumnSettings = (): Record<ColumnKey, boolean> => {
 
 const Partners = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { partners, isLoading, createPartner, updatePartner } = usePartners();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any>(null);
@@ -262,7 +264,11 @@ const Partners = () => {
                         (a: any) => a.address_type === 'mailing'
                       );
                       return (
-                        <TableRow key={partner.id}>
+                        <TableRow 
+                          key={partner.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate(`/partners/${partner.id}`)}
+                        >
                           {visibleColumns.name && (
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
@@ -319,7 +325,7 @@ const Partners = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleOpenEdit(partner)}
+                              onClick={(e) => { e.stopPropagation(); handleOpenEdit(partner); }}
                               disabled={!canEdit}
                             >
                               <Pencil className="h-4 w-4" />
