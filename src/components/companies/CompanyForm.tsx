@@ -38,7 +38,8 @@ export function CompanyForm({ initialData, onSubmit, onCancel, isSubmitting }: C
         <Label htmlFor="name">{t('companies.name')} *</Label>
         <Input
           id="name"
-          {...register('name', { required: t('companies.nameRequired') })}
+          {...register('name', { required: 'Kötelező mező' })}
+          className={errors.name ? 'border-destructive' : ''}
         />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message as string}</p>
