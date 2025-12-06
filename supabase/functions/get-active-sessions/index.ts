@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
     // Verify the caller is authenticated and is super_admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.log('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -27,14 +28,26 @@ Deno.serve(async (req) => {
     }
     
     const token = authHeader.replace('Bearer ', '');
+    console.log('Attempting to validate token...');
     const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
-    if (authError || !caller) {
+    if (authError) {
+      console.error('Auth error:', authError.message);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: authError.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    if (!caller) {
+      console.log('No user found for token');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: 'No user found' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('User authenticated:', caller.email);
 
     // Check if caller is super_admin
     const { data: callerProfile, error: profileError } = await supabaseAdmin
