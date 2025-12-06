@@ -12,6 +12,7 @@ import {
   ChevronDown,
   UserCog,
   ListTodo,
+  FolderOpen,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -49,8 +50,6 @@ export function AppSidebar() {
     { title: t('nav.partners'), url: '/partners', icon: Users, feature: 'partners' },
     { title: t('nav.projects'), url: '/projects', icon: FolderKanban, feature: 'projects' },
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
-    { title: t('nav.documents'), url: '/documents', icon: FileText, feature: 'documents' },
-    { title: 'Szerződések', url: '/contracts', icon: FileSignature, feature: 'documents' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
     { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'my_items' },
   ];
@@ -65,8 +64,14 @@ export function AppSidebar() {
     item.feature === null || hasFeatureAccess(item.feature)
   );
 
-  // Check if we're in the settings or account management area (Admin can also access account-management now)
+  // Check if we're in the settings or account management area
   const isSettingsActive = location.pathname === '/settings' || location.pathname === '/account-management';
+  
+  // Check if we're in the document storage area
+  const isDocumentStorageActive = location.pathname === '/documents' || location.pathname === '/contracts' || location.pathname.startsWith('/contracts/');
+  
+  // Check if documents feature is available
+  const hasDocumentsAccess = hasFeatureAccess('documents');
 
   return (
     <Sidebar>
@@ -105,6 +110,52 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Dokumentumtár (Document Storage) with collapsible submenu */}
+              {hasDocumentsAccess && (
+                <Collapsible defaultOpen={isDocumentStorageActive}>
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="w-full justify-between">
+                        <div className="flex items-center gap-3">
+                          <FolderOpen className="h-4 w-4" />
+                          <span>{t('nav.documentStorage')}</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink
+                              to="/contracts"
+                              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                              activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                            >
+                              <FileSignature className="h-4 w-4" />
+                              <span>{t('nav.contracts')}</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink
+                              to="/documents"
+                              end
+                              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                              activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                            >
+                              <FileText className="h-4 w-4" />
+                              <span>{t('nav.documents')}</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )}
 
               {/* Settings with collapsible submenu for Super Admin */}
               <Collapsible defaultOpen={isSettingsActive}>
