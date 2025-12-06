@@ -1,13 +1,20 @@
 import React, { useRef, useCallback, useState } from 'react';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import type { ColumnState, ColumnConfig } from '@/hooks/useColumnSettings';
+
+export interface SortState {
+  key: string;
+  direction: 'asc' | 'desc';
+}
 
 interface ResizableTableBaseProps {
   visibleColumns: ColumnState[];
   onColumnResize: (key: string, width: number) => void;
   onColumnReorder?: (fromIndex: number, toIndex: number) => void;
+  sortState?: SortState | null;
+  onSort?: (key: string) => void;
   className?: string;
 }
 
@@ -32,11 +39,22 @@ interface ResizableTableWithChildrenProps extends ResizableTableBaseProps {
 
 type ResizableTableProps = ResizableTableWithRenderProps | ResizableTableWithChildrenProps;
 
+function SortIndicator({ columnKey, sortState }: { columnKey: string; sortState?: SortState | null }) {
+  if (!sortState || sortState.key !== columnKey) {
+    return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
+  }
+  return sortState.direction === 'asc' 
+    ? <ArrowUp className="h-3 w-3 text-primary" />
+    : <ArrowDown className="h-3 w-3 text-primary" />;
+}
+
 export function ResizableTable(props: ResizableTableProps) {
   const {
     visibleColumns,
     onColumnResize,
     onColumnReorder,
+    sortState,
+    onSort,
     className,
   } = props;
 
@@ -109,6 +127,12 @@ export function ResizableTable(props: ResizableTableProps) {
     setDragOverIndex(null);
   };
 
+  const handleHeaderClick = (key: string, sortable: boolean | undefined) => {
+    if (sortable !== false && onSort) {
+      onSort(key);
+    }
+  };
+
   // Children-based version (new)
   if ('children' in props && props.children) {
     const { getColumnConfig, children } = props;
@@ -118,37 +142,48 @@ export function ResizableTable(props: ResizableTableProps) {
         <Table style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
           <TableHeader>
             <TableRow>
-              {visibleColumns.map((col, index) => (
-                <TableHead
-                  key={col.key}
-                  style={{ width: col.width, minWidth: col.width, maxWidth: col.width }}
-                  className={cn(
-                    'relative select-none',
-                    dragOverIndex === index && 'bg-accent',
-                    draggedIndex === index && 'opacity-50'
-                  )}
-                  draggable={!!onColumnReorder}
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
-                >
-                <div className="flex items-center justify-center gap-1 w-full">
-                    {onColumnReorder && (
-                      <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
-                    )}
-                    <span className="truncate">{getColumnConfig(col.key)?.label || col.key}</span>
-                  </div>
-                  <div
+              {visibleColumns.map((col, index) => {
+                const config = getColumnConfig(col.key);
+                const isSortable = config?.sortable !== false && onSort;
+                
+                return (
+                  <TableHead
+                    key={col.key}
+                    style={{ width: col.width, minWidth: col.width, maxWidth: col.width }}
                     className={cn(
-                      'absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 transition-colors',
-                      resizing === col.key && 'bg-primary'
+                      'relative select-none',
+                      dragOverIndex === index && 'bg-accent',
+                      draggedIndex === index && 'opacity-50',
+                      isSortable && 'cursor-pointer hover:bg-muted/50'
                     )}
-                    onMouseDown={(e) => handleMouseDown(e, col.key, col.width)}
-                  />
-                </TableHead>
-              ))}
+                    draggable={!!onColumnReorder}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => handleHeaderClick(col.key, config?.sortable)}
+                  >
+                    <div className="flex items-center justify-center gap-1 w-full">
+                      {onColumnReorder && (
+                        <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
+                      )}
+                      <span className="truncate">{config?.label || col.key}</span>
+                      {isSortable && (
+                        <SortIndicator columnKey={col.key} sortState={sortState} />
+                      )}
+                    </div>
+                    <div
+                      className={cn(
+                        'absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 transition-colors',
+                        resizing === col.key && 'bg-primary'
+                      )}
+                      onMouseDown={(e) => handleMouseDown(e, col.key, col.width)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
           {children}
@@ -171,7 +206,8 @@ export function ResizableTable(props: ResizableTableProps) {
                 className={cn(
                   'relative select-none',
                   dragOverIndex === index && 'bg-accent',
-                  draggedIndex === index && 'opacity-50'
+                  draggedIndex === index && 'opacity-50',
+                  onSort && 'cursor-pointer hover:bg-muted/50'
                 )}
                 draggable={!!onColumnReorder}
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -179,12 +215,16 @@ export function ResizableTable(props: ResizableTableProps) {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
+                onClick={() => onSort && onSort(col.key)}
               >
-              <div className="flex items-center justify-center gap-1 w-full">
+                <div className="flex items-center justify-center gap-1 w-full">
                   {onColumnReorder && (
                     <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
                   )}
                   <span className="truncate">{renderHeader(col)}</span>
+                  {onSort && (
+                    <SortIndicator columnKey={col.key} sortState={sortState} />
+                  )}
                 </div>
                 <div
                   className={cn(
@@ -192,6 +232,7 @@ export function ResizableTable(props: ResizableTableProps) {
                     resizing === col.key && 'bg-primary'
                   )}
                   onMouseDown={(e) => handleMouseDown(e, col.key, col.width)}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </TableHead>
             ))}

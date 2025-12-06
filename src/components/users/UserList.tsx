@@ -28,16 +28,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'user', label: 'Felhasználó', defaultWidth: 250, required: true },
-  { key: 'sa', label: 'SA státusz', defaultWidth: 90 },
-  { key: 'status', label: 'Állapot', defaultWidth: 90 },
-  { key: 'registration', label: 'Regisztráció', defaultWidth: 100 },
+  { key: 'sa', label: 'SA státusz', defaultWidth: 90, sortable: false },
+  { key: 'status', label: 'Állapot', defaultWidth: 90, sortable: false },
+  { key: 'registration', label: 'Regisztráció', defaultWidth: 100, sortable: false },
   { key: 'active', label: 'Aktív', defaultWidth: 100 },
-  { key: 'permissions', label: 'Jogosultságok', defaultWidth: 100 },
+  { key: 'permissions', label: 'Jogosultságok', defaultWidth: 100, sortable: false },
   { key: 'createdAt', label: 'Létrehozva', defaultWidth: 140 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 120 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 120, sortable: false },
 ];
 
 export function UserList() {
@@ -153,7 +154,7 @@ export function UserList() {
   };
 
   const filteredUsers = useMemo(() => {
-    const filtered = users.filter((user: any) => {
+    return users.filter((user: any) => {
       const matchesSearch =
         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -170,16 +171,23 @@ export function UserList() {
 
       return matchesSearch && matchesRole && matchesStatus && matchesCompany;
     });
-
-    // Sort with SA users always first
-    return [...filtered].sort((a, b) => {
-      const aIsSA = a.role === 'super_admin';
-      const bIsSA = b.role === 'super_admin';
-      if (aIsSA && !bIsSA) return -1;
-      if (!aIsSA && bIsSA) return 1;
-      return 0;
-    });
   }, [users, searchQuery, roleFilter, statusFilter, companyFilter]);
+
+  const { sortedData: preSortedUsers, sortState, handleSort } = useSortableData({
+    data: filteredUsers,
+    sortFunctions: {
+      user: (a, b) => (a.full_name || a.email || '').localeCompare(b.full_name || b.email || '', 'hu'),
+      active: (a, b) => (a.is_active ? 1 : 0) - (b.is_active ? 1 : 0),
+      createdAt: (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime(),
+    },
+  });
+
+  // Always keep SA users at top, then apply sorting within groups
+  const sortedUsers = useMemo(() => {
+    const saUsers = preSortedUsers.filter((u: any) => u.role === 'super_admin');
+    const otherUsers = preSortedUsers.filter((u: any) => u.role !== 'super_admin');
+    return [...saUsers, ...otherUsers];
+  }, [preSortedUsers]);
 
   const renderCellContent = (user: any, columnKey: string, index: number) => {
     const isSelf = user.id === currentUser?.id;
@@ -501,7 +509,7 @@ export function UserList() {
               />
             </div>
 
-            {filteredUsers.length === 0 ? (
+            {sortedUsers.length === 0 ? (
               <div className="text-center text-muted-foreground py-8 border rounded-lg">
                 {t('users.noUsers')}
               </div>
@@ -511,11 +519,13 @@ export function UserList() {
                 onColumnResize={setColumnWidth}
                 onColumnReorder={reorderColumns}
                 getColumnConfig={getColumnConfig}
+                sortState={sortState}
+                onSort={handleSort}
               >
                 <TableBody>
-                  {filteredUsers.map((user: any, index: number) => {
+                  {sortedUsers.map((user: any, index: number) => {
                     const isSA = user.role === 'super_admin';
-                    const nextUser = filteredUsers[index + 1];
+                    const nextUser = sortedUsers[index + 1];
                     const isLastSA = isSA && (!nextUser || nextUser.role !== 'super_admin');
                     
                     return (
