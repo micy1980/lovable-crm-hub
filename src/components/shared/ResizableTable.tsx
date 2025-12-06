@@ -24,7 +24,7 @@ interface ResizableTableWithRenderProps extends ResizableTableBaseProps {
   data: any[];
   actionColumnWidth?: number;
   actionColumnHeader?: string;
-  getColumnConfig?: never;
+  columnConfigs?: ColumnConfig[];
   children?: never;
 }
 
@@ -134,8 +134,8 @@ export function ResizableTable(props: ResizableTableProps) {
   };
 
   // Children-based version (new)
-  if ('children' in props && props.children) {
-    const { getColumnConfig, children } = props;
+  if ('children' in props && props.children && 'getColumnConfig' in props) {
+    const { getColumnConfig, children } = props as ResizableTableWithChildrenProps;
     
     return (
       <div className={cn('overflow-x-auto rounded-md border', className)}>
@@ -192,14 +192,23 @@ export function ResizableTable(props: ResizableTableProps) {
     );
   }
 
-  const { renderHeader, renderRow, data, actionColumnWidth = 80, actionColumnHeader = '' } = props as ResizableTableWithRenderProps;
+  const { renderHeader, renderRow, data, actionColumnWidth = 80, actionColumnHeader = '', columnConfigs } = props as ResizableTableWithRenderProps;
+
+  const isColumnSortable = (key: string): boolean => {
+    if (!onSort) return false;
+    if (!columnConfigs) return true;
+    const config = columnConfigs.find(c => c.key === key);
+    return config?.sortable !== false;
+  };
 
   return (
     <div className={cn('overflow-x-auto', className)}>
       <Table style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
         <TableHeader>
           <TableRow>
-            {visibleColumns.map((col, index) => (
+            {visibleColumns.map((col, index) => {
+              const sortable = isColumnSortable(col.key);
+              return (
               <TableHead
                 key={col.key}
                 style={{ width: col.width, minWidth: col.width, maxWidth: col.width }}
@@ -207,7 +216,7 @@ export function ResizableTable(props: ResizableTableProps) {
                   'relative select-none',
                   dragOverIndex === index && 'bg-accent',
                   draggedIndex === index && 'opacity-50',
-                  onSort && 'cursor-pointer hover:bg-muted/50'
+                  sortable && 'cursor-pointer hover:bg-muted/50'
                 )}
                 draggable={!!onColumnReorder}
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -215,14 +224,14 @@ export function ResizableTable(props: ResizableTableProps) {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
-                onClick={() => onSort && onSort(col.key)}
+                onClick={() => sortable && onSort && onSort(col.key)}
               >
                 <div className="flex items-center justify-center gap-1 w-full">
                   {onColumnReorder && (
                     <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
                   )}
                   <span className="truncate">{renderHeader(col)}</span>
-                  {onSort && (
+                  {sortable && (
                     <SortIndicator columnKey={col.key} sortState={sortState} />
                   )}
                 </div>
@@ -235,7 +244,8 @@ export function ResizableTable(props: ResizableTableProps) {
                   onClick={(e) => e.stopPropagation()}
                 />
               </TableHead>
-            ))}
+              );
+            })}
             <TableHead style={{ width: actionColumnWidth }} className="text-center">
               {actionColumnHeader}
             </TableHead>

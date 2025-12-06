@@ -51,6 +51,7 @@ import { toast } from '@/hooks/use-toast';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const colorMap: Record<string, { bg: string; textOnBg: string }> = {
   red: { bg: 'bg-red-500', textOnBg: 'text-white' },
@@ -107,36 +108,75 @@ export default function MyItems() {
 
   // Task column settings
   const taskColumnConfigs: ColumnConfig[] = useMemo(() => [
-    { key: 'title', label: t('tasks.title'), defaultVisible: true, defaultWidth: 200, required: true },
-    { key: 'status', label: t('tasks.statusLabel'), defaultVisible: true, defaultWidth: 120 },
-    { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150 },
-    { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150 },
-    { key: 'deadline', label: t('tasks.deadline'), defaultVisible: true, defaultWidth: 160 },
+    { key: 'title', label: t('tasks.title'), defaultVisible: true, defaultWidth: 200, required: true, sortable: true },
+    { key: 'status', label: t('tasks.statusLabel'), defaultVisible: true, defaultWidth: 120, sortable: true },
+    { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150, sortable: true },
+    { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150, sortable: true },
+    { key: 'deadline', label: t('tasks.deadline'), defaultVisible: true, defaultWidth: 160, sortable: true },
   ], [t]);
 
   const taskColumns = useColumnSettings({ storageKey: TASKS_STORAGE_KEY, columns: taskColumnConfigs });
 
   // Event column settings
   const eventColumnConfigs: ColumnConfig[] = useMemo(() => [
-    { key: 'title', label: t('events.title'), defaultVisible: true, defaultWidth: 200, required: true },
-    { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150 },
-    { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150 },
-    { key: 'startTime', label: t('events.startTime'), defaultVisible: true, defaultWidth: 180 },
-    { key: 'location', label: t('events.location'), defaultVisible: true, defaultWidth: 150 },
+    { key: 'title', label: t('events.title'), defaultVisible: true, defaultWidth: 200, required: true, sortable: true },
+    { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150, sortable: true },
+    { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150, sortable: true },
+    { key: 'startTime', label: t('events.startTime'), defaultVisible: true, defaultWidth: 180, sortable: true },
+    { key: 'location', label: t('events.location'), defaultVisible: true, defaultWidth: 150, sortable: true },
   ], [t]);
 
   const eventColumns = useColumnSettings({ storageKey: EVENTS_STORAGE_KEY, columns: eventColumnConfigs });
 
-  const filteredTasks = (data?.tasks || []).filter((task: any) => {
+  const preFilteredTasks = (data?.tasks || []).filter((task: any) => {
     if (filter === 'personal') return !task.project_id && !task.sales_id;
     if (filter === 'project') return task.project_id || task.sales_id;
     return true;
   });
 
-  const filteredEvents = (data?.events || []).filter((event: any) => {
+  const preFilteredEvents = (data?.events || []).filter((event: any) => {
     if (filter === 'personal') return !event.project_id && !event.sales_id;
     if (filter === 'project') return event.project_id || event.sales_id;
     return true;
+  });
+
+  // Sort functions for tasks
+  const taskSortFunctions = useMemo(() => ({
+    title: (a: any, b: any) => (a.title || '').localeCompare(b.title || '', 'hu'),
+    status: (a: any, b: any) => (a.status || '').localeCompare(b.status || '', 'hu'),
+    type: (a: any, b: any) => {
+      const getType = (item: any) => item.project_id ? 'project' : item.sales_id ? 'sales' : 'personal';
+      return getType(a).localeCompare(getType(b), 'hu');
+    },
+    partner: (a: any, b: any) => (a.partner?.name || '').localeCompare(b.partner?.name || '', 'hu'),
+    deadline: (a: any, b: any) => {
+      if (!a.deadline && !b.deadline) return 0;
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    },
+  }), []);
+
+  const { sortedData: filteredTasks, sortState: taskSortState, handleSort: handleTaskSort } = useSortableData({
+    data: preFilteredTasks,
+    sortFunctions: taskSortFunctions,
+  });
+
+  // Sort functions for events
+  const eventSortFunctions = useMemo(() => ({
+    title: (a: any, b: any) => (a.title || '').localeCompare(b.title || '', 'hu'),
+    type: (a: any, b: any) => {
+      const getType = (item: any) => item.project_id ? 'project' : item.sales_id ? 'sales' : 'personal';
+      return getType(a).localeCompare(getType(b), 'hu');
+    },
+    partner: (a: any, b: any) => (a.partner?.name || '').localeCompare(b.partner?.name || '', 'hu'),
+    startTime: (a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+    location: (a: any, b: any) => (a.location || '').localeCompare(b.location || '', 'hu'),
+  }), []);
+
+  const { sortedData: filteredEvents, sortState: eventSortState, handleSort: handleEventSort } = useSortableData({
+    data: preFilteredEvents,
+    sortFunctions: eventSortFunctions,
   });
 
   const getStatusBadge = (status: string) => {
@@ -391,6 +431,9 @@ export default function MyItems() {
                       onColumnReorder={taskColumns.reorderColumns}
                       data={filteredTasks}
                       actionColumnWidth={100}
+                      sortState={taskSortState}
+                      onSort={handleTaskSort}
+                      columnConfigs={taskColumnConfigs}
                       renderHeader={(col) => taskColumns.getColumnConfig(col.key)?.label || col.key}
                       renderRow={(task, columns) => (
                         <TableRow key={task.id}>
@@ -461,6 +504,9 @@ export default function MyItems() {
                       onColumnReorder={eventColumns.reorderColumns}
                       data={filteredEvents}
                       actionColumnWidth={100}
+                      sortState={eventSortState}
+                      onSort={handleEventSort}
+                      columnConfigs={eventColumnConfigs}
                       renderHeader={(col) => eventColumns.getColumnConfig(col.key)?.label || col.key}
                       renderRow={(event, columns) => (
                         <TableRow key={event.id}>
