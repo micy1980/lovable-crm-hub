@@ -39,17 +39,24 @@ import ContractVersionDialog from '@/components/contracts/ContractVersionDialog'
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
+import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog';
 
 const ContractDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { deleteContract } = useContracts();
+  const { deleteContract, hardDeleteContract } = useContracts();
   const { versions, downloadVersion } = useContractVersions(id);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
+  const { data: profile } = useUserProfile();
+  const isSuper = isSuperAdmin(profile);
+  const isAdmin = isAdminOrAbove(profile);
 
   const { data: contract, isLoading } = useQuery({
     queryKey: ['contract', id],
@@ -77,6 +84,14 @@ const ContractDetail = () => {
     await deleteContract.mutateAsync(id);
     navigate('/contracts');
   };
+
+  const handleHardDelete = async () => {
+    if (!id) return;
+    await hardDeleteContract.mutateAsync(id);
+    navigate('/contracts');
+  };
+
+  const isDeleted = !!contract?.deleted_at;
 
   const getStatusBadge = (status: string | null) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
@@ -144,6 +159,12 @@ const ContractDetail = () => {
                 <div className="flex items-center gap-2">
                   <h1 className="text-3xl font-bold">{contract.title}</h1>
                   {contract.restrict_access && <Lock className="h-5 w-5 text-muted-foreground" />}
+                  {isDeleted && (
+                    <Badge variant="destructive" className="gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Törölt
+                    </Badge>
+                  )}
                 </div>
                 {contract.contract_number && (
                   <p className="text-muted-foreground">{contract.contract_number}</p>
@@ -155,10 +176,18 @@ const ContractDetail = () => {
                 <Edit className="mr-2 h-4 w-4" />
                 Szerkesztés
               </Button>
-              <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Törlés
-              </Button>
+              {isAdmin && !isDeleted && (
+                <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Törlés
+                </Button>
+              )}
+              {isSuper && isDeleted && (
+                <Button variant="destructive" onClick={() => setHardDeleteOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Végleges törlés
+                </Button>
+              )}
             </div>
           </div>
 

@@ -2,18 +2,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin } from '@/lib/roleUtils';
 
-export const useDocuments = () => {
+export const useDocuments = (includeDeleted = false) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { activeCompany } = useCompany();
+  const { data: profile } = useUserProfile();
+  const isSuper = isSuperAdmin(profile);
 
   const { data: documents = [], isLoading } = useQuery({
-    queryKey: ['documents', activeCompany?.id],
+    queryKey: ['documents', activeCompany?.id, includeDeleted],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('documents')
         .select(`
           *,
@@ -23,8 +27,14 @@ export const useDocuments = () => {
           uploader:profiles!documents_uploaded_by_fkey(id, full_name)
         `)
         .eq('owner_company_id', activeCompany.id)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false });
+
+      // SA can see all including deleted, others only non-deleted
+      if (!isSuper) {
+        query = query.is('deleted_at', null);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data || [];
@@ -170,6 +180,36 @@ export const useDocuments = () => {
     },
   });
 
+  const hardDeleteDocument = useMutation({
+    mutationFn: async ({ id, filePath }: { id: string; filePath?: string }) => {
+      // Hard delete document record via RPC
+      const { error } = await supabase.rpc('hard_delete_document', {
+        _document_id: id
+      });
+
+      if (error) throw error;
+
+      // Delete file from storage if exists
+      if (filePath) {
+        await supabase.storage.from('documents').remove([filePath]);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      toast({
+        title: 'Dokumentum véglegesen törölve',
+        description: 'A dokumentum és a fájl véglegesen törölve lett.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Hiba',
+        description: error instanceof Error ? error.message : 'Nem sikerült véglegesen törölni a dokumentumot',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const downloadDocument = async (filePath: string, fileName: string) => {
     try {
       const { data, error } = await supabase.storage
@@ -202,6 +242,7 @@ export const useDocuments = () => {
     uploadDocument,
     updateDocument,
     deleteDocument,
+    hardDeleteDocument,
     downloadDocument,
   };
 };

@@ -62,6 +62,7 @@ export const useContracts = () => {
     queryFn: async () => {
       if (!activeCompany?.id) return [];
 
+      // SA sees all including deleted (RLS handles this), others only non-deleted
       const { data, error } = await supabase
         .from('contracts')
         .select(`
@@ -71,7 +72,6 @@ export const useContracts = () => {
           sales:sales(id, name)
         `)
         .eq('owner_company_id', activeCompany.id)
-        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -157,6 +157,7 @@ export const useContracts = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contract'] });
       toast({
         title: 'Szerződés törölve',
         description: 'A szerződés sikeresen törölve lett.',
@@ -171,12 +172,37 @@ export const useContracts = () => {
     },
   });
 
+  const hardDeleteContract = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc('hard_delete_contract', {
+        _contract_id: id
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      toast({
+        title: 'Szerződés véglegesen törölve',
+        description: 'A szerződés és minden kapcsolódó adat véglegesen törölve lett.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Hiba',
+        description: error instanceof Error ? error.message : 'Nem sikerült véglegesen törölni a szerződést',
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     contracts,
     isLoading,
     createContract,
     updateContract,
     deleteContract,
+    hardDeleteContract,
   };
 };
 

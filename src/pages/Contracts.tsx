@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, FileText, Lock, AlertTriangle, Calendar } from 'lucide-react';
+import { Plus, Search, FileText, Lock, AlertTriangle, Calendar, Trash2 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,19 @@ import { ResizableTable, ResizableTableCell } from '@/components/shared/Resizabl
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 import { useSortableData } from '@/hooks/useSortableData';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
+import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const STORAGE_KEY = 'contracts-column-settings';
 
@@ -26,10 +39,17 @@ const Contracts = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeCompany } = useCompany();
-  const { contracts, isLoading } = useContracts();
+  const { data: profile } = useUserProfile();
+  const isSuper = isSuperAdmin(profile);
+  const isAdmin = isAdminOrAbove(profile);
+  const { contracts, isLoading, deleteContract, hardDeleteContract } = useContracts();
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contractToDelete, setContractToDelete] = useState<any>(null);
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
+  const [contractToHardDelete, setContractToHardDelete] = useState<any>(null);
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
@@ -115,6 +135,34 @@ const Contracts = () => {
   };
 
 
+  const handleSoftDeleteClick = (contract: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setContractToDelete(contract);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleHardDeleteClick = (contract: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setContractToHardDelete(contract);
+    setHardDeleteDialogOpen(true);
+  };
+
+  const handleConfirmSoftDelete = async () => {
+    if (contractToDelete) {
+      await deleteContract.mutateAsync(contractToDelete.id);
+      setDeleteDialogOpen(false);
+      setContractToDelete(null);
+    }
+  };
+
+  const handleConfirmHardDelete = async () => {
+    if (contractToHardDelete) {
+      await hardDeleteContract.mutateAsync(contractToHardDelete.id);
+      setHardDeleteDialogOpen(false);
+      setContractToHardDelete(null);
+    }
+  };
+
   const getCellValue = (contract: any, key: string) => {
     switch (key) {
       case 'title':
@@ -124,7 +172,15 @@ const Contracts = () => {
               <Lock className="h-4 w-4 text-muted-foreground" />
             )}
             <div>
-              <div className="font-medium">{contract.title}</div>
+              <div className="font-medium flex items-center gap-2">
+                {contract.title}
+                {contract.deleted_at && (
+                  <Badge variant="destructive" className="gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Törölt
+                  </Badge>
+                )}
+              </div>
               {contract.contract_number && (
                 <div className="text-sm text-muted-foreground">
                   {contract.contract_number}
@@ -227,7 +283,7 @@ const Contracts = () => {
               renderRow={(contract, columns) => (
                 <TableRow 
                   key={contract.id} 
-                  className="cursor-pointer hover:bg-muted/50"
+                  className={`cursor-pointer hover:bg-muted/50 ${contract.deleted_at ? 'opacity-60' : ''}`}
                   onClick={() => navigate(`/contracts/${contract.id}`)}
                 >
                   {columns.map((col) => (
@@ -239,17 +295,39 @@ const Contracts = () => {
                       {getCellValue(contract, col.key)}
                     </ResizableTableCell>
                   ))}
-                  <TableCell className="w-[80px]">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(contract);
-                      }}
-                    >
-                      Szerkesztés
-                    </Button>
+                  <TableCell className="w-[120px]">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(contract);
+                        }}
+                      >
+                        Szerkesztés
+                      </Button>
+                      {isAdmin && !contract.deleted_at && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleSoftDeleteClick(contract, e)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {isSuper && contract.deleted_at && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleHardDeleteClick(contract, e)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -262,6 +340,35 @@ const Contracts = () => {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         contract={selectedContract}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Szerződés törlése</AlertDialogTitle>
+            <AlertDialogDescription>
+              Biztosan törölni szeretné a "{contractToDelete?.title}" szerződést?
+              A szerződés nem lesz látható, de nem törlődik véglegesen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Mégse</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmSoftDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Törlés
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <PasswordConfirmDialog
+        open={hardDeleteDialogOpen}
+        onOpenChange={setHardDeleteDialogOpen}
+        onConfirm={handleConfirmHardDelete}
+        title="Szerződés végleges törlése"
+        description={`A "${contractToHardDelete?.title}" szerződés és minden kapcsolódó adat véglegesen törlődik. Ez a művelet NEM vonható vissza.`}
       />
     </LicenseGuard>
   );
