@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useContracts, Contract } from '@/hooks/useContracts';
-import { useQuery } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
