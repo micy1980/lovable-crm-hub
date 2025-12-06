@@ -984,6 +984,7 @@ export type Database = {
           id: string
           name: string
           owner_user_id: string | null
+          partner_id: string | null
           responsible1_user_id: string | null
           responsible2_user_id: string | null
           status: string | null
@@ -1000,6 +1001,7 @@ export type Database = {
           id?: string
           name: string
           owner_user_id?: string | null
+          partner_id?: string | null
           responsible1_user_id?: string | null
           responsible2_user_id?: string | null
           status?: string | null
@@ -1016,6 +1018,7 @@ export type Database = {
           id?: string
           name?: string
           owner_user_id?: string | null
+          partner_id?: string | null
           responsible1_user_id?: string | null
           responsible2_user_id?: string | null
           status?: string | null
@@ -1042,6 +1045,13 @@ export type Database = {
             columns: ["owner_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {

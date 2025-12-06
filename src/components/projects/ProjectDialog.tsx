@@ -28,6 +28,7 @@ interface ProjectFormData {
   owner_user_id: string;
   responsible1_user_id: string;
   responsible2_user_id: string;
+  partner_id: string;
 }
 
 export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProps) => {
@@ -44,6 +45,7 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
       owner_user_id: '',
       responsible1_user_id: '',
       responsible2_user_id: '',
+      partner_id: '',
     }
   });
 
@@ -61,6 +63,7 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
         owner_user_id: project?.owner_user_id || '',
         responsible1_user_id: project?.responsible1_user_id || '',
         responsible2_user_id: project?.responsible2_user_id || '',
+        partner_id: project?.partner_id || '',
       });
       setTaskColor(project?.task_color || null);
       setEventColor(project?.event_color || null);
@@ -84,6 +87,25 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
     enabled: !!activeCompany && open,
   });
 
+  // Fetch partners for dropdown
+  const { data: partners = [] } = useQuery({
+    queryKey: ['company-partners', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany) return [];
+      
+      const { data, error } = await supabase
+        .from('partners')
+        .select('id, name')
+        .eq('company_id', activeCompany.id)
+        .is('deleted_at', null)
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany && open,
+  });
+
   const onSubmit = async (data: ProjectFormData) => {
     if (!activeCompany) return;
 
@@ -94,6 +116,7 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
         owner_user_id: data.owner_user_id || null,
         responsible1_user_id: data.responsible1_user_id || null,
         responsible2_user_id: data.responsible2_user_id || null,
+        partner_id: data.partner_id || null,
         task_color: taskColor,
         event_color: eventColor,
       };
@@ -181,6 +204,26 @@ export const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProp
                 <SelectItem value="on_hold">Felfüggesztve</SelectItem>
                 <SelectItem value="completed">Befejezett</SelectItem>
                 <SelectItem value="cancelled">Törölve</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="partner_id">Partner</Label>
+            <Select
+              value={watch('partner_id') || 'none'}
+              onValueChange={(value) => setValue('partner_id', value === 'none' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Válasszon partnert" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nincs</SelectItem>
+                {partners.map((partner: any) => (
+                  <SelectItem key={partner.id} value={partner.id}>
+                    {partner.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
