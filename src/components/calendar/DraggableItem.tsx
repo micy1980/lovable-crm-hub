@@ -132,7 +132,7 @@ export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTi
         ref={setNodeRef}
         style={style}
         className={cn(
-          "text-xs p-1 rounded truncate flex items-center gap-1 group",
+          "text-xs p-1 rounded truncate flex items-center gap-1 group shadow-sm border border-black/10 dark:border-white/10",
           compactBgClass,
           isDragging && "opacity-50 z-50 shadow-lg"
         )}
@@ -164,7 +164,7 @@ export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTi
       ref={setNodeRef}
       style={style}
       className={cn(
-        "text-xs p-1 rounded truncate border group flex items-center gap-1",
+        "text-xs p-1 rounded truncate border group flex items-center gap-1 shadow-sm",
         colorClass,
         isDragging && "opacity-50 z-50 shadow-lg"
       )}
