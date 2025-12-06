@@ -119,10 +119,11 @@ export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTi
   if (hasCustomColor && item.color && colorMap[item.color]) {
     const c = colorMap[item.color];
     colorClass = getCustomColorClass(item.color);
-    compactBgClass = `${c.bgLight} ${c.darkBg}`;
+    // Use solid colors directly from palette
+    compactBgClass = `${c.bg} text-white`;
   } else {
     colorClass = isEvent ? getEventColor() : getTaskStatusColor(item.status || 'pending');
-    compactBgClass = isEvent ? "bg-violet-500/20 hover:bg-violet-500/30" : "bg-primary/10 hover:bg-primary/20";
+    compactBgClass = isEvent ? "bg-violet-500 text-white" : "bg-primary text-primary-foreground";
   }
 
   if (variant === 'compact') {
