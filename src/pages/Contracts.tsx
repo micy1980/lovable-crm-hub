@@ -4,10 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, Lock, AlertTriangle, Calendar } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useContracts } from '@/hooks/useContracts';
@@ -83,18 +82,15 @@ const Contracts = () => {
 
   if (!activeCompany) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Válasszon céget a szerződések megtekintéséhez</p>
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Válasszon céget a szerződések megtekintéséhez</p>
+      </div>
     );
   }
 
   return (
     <LicenseGuard feature="documents">
-      <MainLayout>
-        <div className="space-y-6">
+      <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold">Szerződések</h1>
@@ -209,7 +205,6 @@ const Contracts = () => {
           onOpenChange={handleDialogClose}
           contract={selectedContract}
         />
-      </MainLayout>
     </LicenseGuard>
   );
 };
