@@ -166,6 +166,42 @@ export default function PartnerDetail() {
     enabled: !!id,
   });
 
+  // Fetch related projects (via sales)
+  const { data: projects = [] } = useQuery({
+    queryKey: ['partner-projects', id],
+    queryFn: async () => {
+      // Get projects that have sales linked to this partner
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select('id')
+        .eq('partner_id', id!)
+        .is('deleted_at', null);
+      
+      if (salesError) throw salesError;
+      
+      if (!salesData || salesData.length === 0) {
+        return [];
+      }
+      
+      const salesIds = salesData.map(s => s.id);
+      
+      // Get projects that have tasks linked to this partner or sales
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          owner:profiles!projects_owner_user_id_fkey(id, full_name, email)
+        `)
+        .eq('company_id', activeCompany?.id!)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+      
+      if (projectError) throw projectError;
+      return projectData || [];
+    },
+    enabled: !!id && !!activeCompany?.id,
+  });
+
   if (partnerLoading) {
     return (
       <LicenseGuard feature="partners">
@@ -223,23 +259,13 @@ export default function PartnerDetail() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => checkReadOnly(() => setIsProjectDialogOpen(true))} 
-              disabled={!canEdit}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t('projects.create')}
-            </Button>
-            <Button 
-              onClick={() => checkReadOnly(() => setIsDialogOpen(true))} 
-              disabled={!canEdit}
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              {t('common.edit')}
-            </Button>
-          </div>
+          <Button 
+            onClick={() => checkReadOnly(() => setIsDialogOpen(true))} 
+            disabled={!canEdit}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            {t('common.edit')}
+          </Button>
         </div>
 
         {/* Partner Info Cards */}
@@ -332,18 +358,22 @@ export default function PartnerDetail() {
         )}
 
         {/* Related Items Tabs */}
-        <Tabs defaultValue="sales" className="space-y-4">
+        <Tabs defaultValue="projects" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="projects" className="flex items-center gap-2">
+              <FolderOpen className="h-4 w-4" />
+              {t('projects.title')} ({projects.length})
+            </TabsTrigger>
             <TabsTrigger value="sales" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               {t('sales.title')} ({sales.length})
             </TabsTrigger>
             <TabsTrigger value="tasks" className="flex items-center gap-2">
-              <FolderOpen className="h-4 w-4" />
+              <CheckSquare className="h-4 w-4" />
               {t('tasks.title')} ({tasks.length})
             </TabsTrigger>
             <TabsTrigger value="events" className="flex items-center gap-2">
-              <FolderOpen className="h-4 w-4" />
+              <Calendar className="h-4 w-4" />
               {t('events.title')} ({events.length})
             </TabsTrigger>
             <TabsTrigger value="documents" className="flex items-center gap-2">
@@ -351,6 +381,58 @@ export default function PartnerDetail() {
               {t('documents.title')} ({documents.length})
             </TabsTrigger>
           </TabsList>
+
+          {/* Projects Tab */}
+          <TabsContent value="projects">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('projects.title')}</CardTitle>
+                  <CardDescription>{t('partners.relatedProjects')}</CardDescription>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => checkReadOnly(() => setIsProjectDialogOpen(true))}
+                  disabled={!canEdit}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('projects.create')}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {projects.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">{t('partners.noProjects')}</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('projects.name')}</TableHead>
+                        <TableHead>{t('projects.code')}</TableHead>
+                        <TableHead>{t('projects.status')}</TableHead>
+                        <TableHead>{t('projects.owner')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {projects.map((project: any) => (
+                        <TableRow 
+                          key={project.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate(`/projects/${project.id}`)}
+                        >
+                          <TableCell className="font-medium">{project.name}</TableCell>
+                          <TableCell>{project.code || '-'}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{project.status || '-'}</Badge>
+                          </TableCell>
+                          <TableCell>{project.owner?.full_name || project.owner?.email || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Sales Tab */}
           <TabsContent value="sales">
