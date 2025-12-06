@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import {
   CalendarDays,
   CheckSquare,
@@ -73,6 +74,7 @@ type FilterType = 'all' | 'personal' | 'project';
 
 export default function MyItems() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { activeCompany } = useCompany();
   const { data, isLoading } = useMyItems();
   const { data: userProfile } = useUserProfile();
@@ -286,7 +288,16 @@ export default function MyItems() {
                                 </span>
                               </TableCell>
                               <TableCell>
-                                {task.partner?.name || <span className="text-muted-foreground">-</span>}
+                                {task.partner ? (
+                                  <button
+                                    onClick={() => navigate('/partners')}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {task.partner.name}
+                                  </button>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 {task.deadline ? (
@@ -383,7 +394,16 @@ export default function MyItems() {
                                 </span>
                               </TableCell>
                               <TableCell>
-                                {event.partner?.name || <span className="text-muted-foreground">-</span>}
+                                {event.partner ? (
+                                  <button
+                                    onClick={() => navigate('/partners')}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {event.partner.name}
+                                  </button>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <span className="flex items-center gap-1 text-sm">
