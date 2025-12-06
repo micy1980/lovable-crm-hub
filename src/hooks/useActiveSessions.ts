@@ -63,7 +63,7 @@ export const useActiveSessions = () => {
     };
   }, [isSuper, queryClient]);
 
-  const { data: activeSessions = [], isLoading } = useQuery({
+  const { data: activeSessions = [], isLoading, isError } = useQuery({
     queryKey: ['active-sessions'],
     queryFn: async () => {
       console.log('[ActiveSessions] Fetching active sessions...');
@@ -71,13 +71,15 @@ export const useActiveSessions = () => {
 
       if (error) {
         console.error('[ActiveSessions] Error fetching:', error);
-        throw error;
+        // Return empty array instead of throwing to prevent error dialog
+        return [] as ActiveSession[];
       }
 
       console.log('[ActiveSessions] Fetched sessions:', data?.sessions?.length || 0);
       return (data?.sessions || []) as ActiveSession[];
     },
     enabled: isSuper,
+    retry: false, // Don't retry on auth errors
   });
 
   const terminateSession = useMutation({
@@ -104,6 +106,7 @@ export const useActiveSessions = () => {
   return {
     activeSessions,
     isLoading,
+    isError,
     terminateSession,
   };
 };
