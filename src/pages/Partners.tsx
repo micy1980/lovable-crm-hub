@@ -194,37 +194,32 @@ const Partners = () => {
               {t('partners.description')}
             </p>
           </div>
-          <Button onClick={handleOpenCreate} disabled={!canEdit}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('partners.add')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportMenu
+              data={exportData}
+              columns={exportColumns}
+              title="Partnerek"
+            />
+            <ColumnSettingsPopover
+              columnStates={columnStates}
+              columns={columnConfigs}
+              onToggleVisibility={toggleVisibility}
+              onReorder={reorderColumns}
+              onReset={resetToDefaults}
+            />
+            <Button onClick={handleOpenCreate} disabled={!canEdit}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('partners.add')}
+            </Button>
+          </div>
         </div>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{t('partners.list')}</CardTitle>
-                <CardDescription>
-                  {t('partners.listDescription')}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <ExportMenu
-                  data={exportData}
-                  columns={exportColumns}
-                  title="Partnerek"
-                  size="sm"
-                />
-                <ColumnSettingsPopover
-                  columnStates={columnStates}
-                  columns={columnConfigs}
-                  onToggleVisibility={toggleVisibility}
-                  onReorder={reorderColumns}
-                  onReset={resetToDefaults}
-                />
-              </div>
-            </div>
+            <CardTitle>{t('partners.list')}</CardTitle>
+            <CardDescription>
+              {t('partners.listDescription')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
