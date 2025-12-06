@@ -66,6 +66,10 @@ export default function PartnerDetail() {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
   const [isSalesDialogOpen, setIsSalesDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
 
   // Fetch partner details
   const { data: partner, isLoading: partnerLoading } = useQuery({
@@ -346,7 +350,7 @@ export default function PartnerDetail() {
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => checkReadOnly(() => setIsSalesDialogOpen(true))}
+                  onClick={() => checkReadOnly(() => { setSelectedSale(null); setIsSalesDialogOpen(true); })}
                   disabled={!canEdit}
                 >
                   <Plus className="h-4 w-4 mr-1" />
@@ -371,7 +375,10 @@ export default function PartnerDetail() {
                         <TableRow 
                           key={sale.id} 
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => navigate(`/sales/${sale.id}`)}
+                          onClick={() => {
+                            setSelectedSale(sale);
+                            setIsSalesDialogOpen(true);
+                          }}
                         >
                           <TableCell className="font-medium">{sale.name}</TableCell>
                           <TableCell>
@@ -408,7 +415,7 @@ export default function PartnerDetail() {
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => checkReadOnly(() => setIsTaskDialogOpen(true))}
+                  onClick={() => checkReadOnly(() => { setSelectedTask(null); setIsTaskDialogOpen(true); })}
                   disabled={!canEdit}
                 >
                   <Plus className="h-4 w-4 mr-1" />
@@ -433,7 +440,10 @@ export default function PartnerDetail() {
                         <TableRow 
                           key={task.id}
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => task.project ? navigate(`/projects/${task.project.id}`) : navigate('/my-items')}
+                          onClick={() => {
+                            setSelectedTask(task);
+                            setIsTaskDialogOpen(true);
+                          }}
                         >
                           <TableCell className="font-medium">{task.title}</TableCell>
                           <TableCell>
@@ -477,7 +487,7 @@ export default function PartnerDetail() {
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => checkReadOnly(() => setIsEventDialogOpen(true))}
+                  onClick={() => checkReadOnly(() => { setSelectedEvent(null); setIsEventDialogOpen(true); })}
                   disabled={!canEdit}
                 >
                   <Plus className="h-4 w-4 mr-1" />
@@ -502,7 +512,10 @@ export default function PartnerDetail() {
                         <TableRow 
                           key={event.id}
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => event.project ? navigate(`/projects/${event.project.id}`) : navigate('/my-items')}
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setIsEventDialogOpen(true);
+                          }}
                         >
                           <TableCell className="font-medium">{event.title}</TableCell>
                           <TableCell>
@@ -541,7 +554,7 @@ export default function PartnerDetail() {
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => checkReadOnly(() => setIsDocumentDialogOpen(true))}
+                  onClick={() => checkReadOnly(() => { setSelectedDocument(null); setIsDocumentDialogOpen(true); })}
                   disabled={!canEdit}
                 >
                   <Plus className="h-4 w-4 mr-1" />
@@ -565,7 +578,10 @@ export default function PartnerDetail() {
                         <TableRow 
                           key={doc.id}
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => navigate('/documents')}
+                          onClick={() => {
+                            setSelectedDocument(doc);
+                            setIsDocumentDialogOpen(true);
+                          }}
                         >
                           <TableCell className="font-medium">{doc.title}</TableCell>
                           <TableCell>
@@ -607,10 +623,12 @@ export default function PartnerDetail() {
           onOpenChange={(open) => {
             setIsTaskDialogOpen(open);
             if (!open) {
+              setSelectedTask(null);
               queryClient.invalidateQueries({ queryKey: ['partner-tasks', id] });
             }
           }}
           partnerId={id}
+          task={selectedTask}
         />
 
         <EventDialog
@@ -618,10 +636,12 @@ export default function PartnerDetail() {
           onOpenChange={(open) => {
             setIsEventDialogOpen(open);
             if (!open) {
+              setSelectedEvent(null);
               queryClient.invalidateQueries({ queryKey: ['partner-events', id] });
             }
           }}
           defaultPartnerId={id}
+          event={selectedEvent}
         />
 
         <DocumentDialog
@@ -629,10 +649,12 @@ export default function PartnerDetail() {
           onOpenChange={(open) => {
             setIsDocumentDialogOpen(open);
             if (!open) {
+              setSelectedDocument(null);
               queryClient.invalidateQueries({ queryKey: ['partner-documents', id] });
             }
           }}
           defaultPartnerId={id}
+          document={selectedDocument}
         />
 
         <SalesDialog
@@ -640,10 +662,12 @@ export default function PartnerDetail() {
           onOpenChange={(open) => {
             setIsSalesDialogOpen(open);
             if (!open) {
+              setSelectedSale(null);
               queryClient.invalidateQueries({ queryKey: ['partner-sales', id] });
             }
           }}
           partnerId={id}
+          sale={selectedSale}
         />
       </div>
     </LicenseGuard>
