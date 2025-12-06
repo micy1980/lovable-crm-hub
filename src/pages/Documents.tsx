@@ -6,16 +6,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, FileText, Download, ExternalLink } from 'lucide-react';
+import { Plus, Search, FileText, Download, ExternalLink, Trash2 } from 'lucide-react';
 import { DocumentDialog } from '@/components/documents/DocumentDialog';
 import { toast } from 'sonner';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { useDocuments } from '@/hooks/useDocuments';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const Documents = () => {
   const { activeCompany } = useCompany();
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null);
+  const { deleteDocument } = useDocuments();
+  const { data: profile } = useUserProfile();
+
+  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin';
 
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['documents', activeCompany?.id],
@@ -80,6 +98,19 @@ const Documents = () => {
       setSelectedDocument(null);
     }
     setDialogOpen(open);
+  };
+
+  const handleDeleteClick = (doc: any) => {
+    setDocumentToDelete(doc);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (documentToDelete) {
+      await deleteDocument.mutateAsync(documentToDelete.id);
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
+    }
   };
 
   const filteredDocuments = documents.filter((doc) =>
@@ -224,6 +255,16 @@ const Documents = () => {
                   >
                     <ExternalLink className="h-4 w-4" />
                   </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(doc)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -236,6 +277,27 @@ const Documents = () => {
         onOpenChange={handleDialogClose}
         document={selectedDocument}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dokumentum törlése</AlertDialogTitle>
+            <AlertDialogDescription>
+              Biztosan törölni szeretné a "{documentToDelete?.title}" dokumentumot?
+              Ez a művelet nem vonható vissza (a fájl megmarad, de nem lesz látható).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Mégse</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Törlés
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </LicenseGuard>
   );
