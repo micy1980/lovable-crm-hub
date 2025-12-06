@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, BookOpen, LockKeyhole, Unlock, Mail, UserCheck, Clock } from 'lucide-react';
+import { Pencil, Search, Building2, Plus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Power, LockKeyhole, Unlock, Mail, UserCheck, Clock, GripVertical, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+
+const COLUMN_CONFIGS: ColumnConfig[] = [
+  { key: 'user', label: 'Felhasználó', defaultWidth: 200, required: true },
+  { key: 'sa', label: 'SA', defaultWidth: 80 },
+  { key: 'status', label: 'Státusz', defaultWidth: 80 },
+  { key: 'registration', label: 'Regisztráció', defaultWidth: 90 },
+  { key: 'active', label: 'Aktív', defaultWidth: 100 },
+  { key: 'permissions', label: 'Jogok', defaultWidth: 60 },
+  { key: 'createdAt', label: 'Létrehozva', defaultWidth: 130 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 100 },
+];
 
 export function UserList() {
   const { t } = useTranslation();
@@ -44,6 +57,18 @@ export function UserList() {
   const [companyFilter, setCompanyFilter] = useState<string>('all');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const {
+    visibleColumns,
+    columnStates,
+    toggleVisibility,
+    setColumnWidth,
+    reorderColumns,
+    resetToDefaults,
+  } = useColumnSettings({
+    storageKey: 'users-columns',
+    columns: COLUMN_CONFIGS,
+  });
 
   const canEdit = isSuperAdmin(currentProfile) || isAdminOrAbove(currentProfile);
   const currentUserIsSA = isSuperAdmin(currentProfile);
@@ -294,6 +319,14 @@ export function UserList() {
                   ))}
                 </SelectContent>
               </Select>
+
+              <ColumnSettingsPopover
+                columns={COLUMN_CONFIGS}
+                columnStates={columnStates}
+                onToggleVisibility={toggleVisibility}
+                onReorder={reorderColumns}
+                onReset={resetToDefaults}
+              />
             </div>
 
             <div className="border rounded-lg overflow-hidden">
