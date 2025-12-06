@@ -18,15 +18,16 @@ import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'name', label: 'Név', defaultWidth: 200, required: true },
   { key: 'taxId', label: 'Adószám', defaultWidth: 140 },
   { key: 'address', label: 'Cím', defaultWidth: 200 },
-  { key: 'license', label: 'Licensz', defaultWidth: 100 },
+  { key: 'license', label: 'Licensz', defaultWidth: 100, sortable: false },
   { key: 'userCount', label: 'Felhasználók', defaultWidth: 100 },
   { key: 'createdAt', label: 'Létrehozva', defaultWidth: 120 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 140 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 140, sortable: false },
 ];
 
 export function CompanyList() {
@@ -86,6 +87,17 @@ export function CompanyList() {
       return matchesSearch;
     });
   }, [companiesWithUserCount, searchQuery]);
+
+  const { sortedData: sortedCompanies, sortState, handleSort } = useSortableData({
+    data: filteredCompanies,
+    sortFunctions: {
+      name: (a, b) => (a.name || '').localeCompare(b.name || '', 'hu'),
+      taxId: (a, b) => (a.tax_id || '').localeCompare(b.tax_id || '', 'hu'),
+      address: (a, b) => (a.address || '').localeCompare(b.address || '', 'hu'),
+      userCount: (a, b) => (a.user_count || 0) - (b.user_count || 0),
+      createdAt: (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime(),
+    },
+  });
 
   const handleEdit = (company: any) => {
     setEditingCompany(company);
@@ -207,7 +219,7 @@ export function CompanyList() {
             />
           </div>
 
-          {filteredCompanies.length === 0 ? (
+          {sortedCompanies.length === 0 ? (
             <div className="px-4 py-8 text-center text-muted-foreground border rounded-lg">
               {t('companies.empty')}
             </div>
@@ -217,9 +229,11 @@ export function CompanyList() {
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
               getColumnConfig={getColumnConfig}
+              sortState={sortState}
+              onSort={handleSort}
             >
               <TableBody>
-                {filteredCompanies.map((company: any) => (
+                {sortedCompanies.map((company: any) => (
                   <TableRow key={company.id}>
                     {visibleColumns.map((col) => (
                       <ResizableTableCell 

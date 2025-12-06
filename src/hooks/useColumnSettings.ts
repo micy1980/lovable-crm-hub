@@ -7,6 +7,7 @@ export interface ColumnConfig {
   defaultWidth?: number;
   minWidth?: number;
   required?: boolean; // Cannot be hidden
+  sortable?: boolean; // Whether column can be sorted (default: true)
 }
 
 export interface ColumnState {
@@ -14,6 +15,11 @@ export interface ColumnState {
   visible: boolean;
   width: number;
   order: number;
+}
+
+export interface SortState {
+  key: string;
+  direction: 'asc' | 'desc';
 }
 
 interface UseColumnSettingsOptions {
