@@ -245,6 +245,7 @@ const Partners = () => {
                 onColumnResize={setColumnWidth}
                 onColumnReorder={reorderColumns}
                 data={partners}
+                actionColumnHeader="Műveletek"
                 renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
                 renderRow={(partner, columns) => (
                   <TableRow 
