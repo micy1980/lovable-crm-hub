@@ -28,14 +28,14 @@ const Sales = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
-    { key: 'name', label: t('sales.name') || 'Név', required: true, defaultWidth: 200 },
+    { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
-    { key: 'expected_value', label: t('sales.expectedValue') || 'Várható érték', defaultWidth: 150 },
-    { key: 'currency', label: t('sales.currency') || 'Pénznem', defaultWidth: 100 },
-    { key: 'expected_close_date', label: t('sales.expectedCloseDate') || 'Várható lezárás', defaultWidth: 140 },
-    { key: 'status', label: t('sales.status') || 'Státusz', defaultWidth: 120 },
-    { key: 'description', label: t('sales.salesDescription') || 'Leírás', defaultWidth: 200, defaultVisible: false },
-  ], [t]);
+    { key: 'expected_value', label: 'Várható érték', defaultWidth: 150 },
+    { key: 'currency', label: 'Pénznem', defaultWidth: 100 },
+    { key: 'expected_close_date', label: 'Várható lezárás', defaultWidth: 140 },
+    { key: 'status', label: 'Státusz', defaultWidth: 120 },
+    { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false },
+  ], []);
 
   const {
     columnStates,

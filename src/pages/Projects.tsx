@@ -28,13 +28,13 @@ const Projects = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
-    { key: 'name', label: t('projects.name') || 'Név', required: true, defaultWidth: 200 },
-    { key: 'code', label: t('projects.code') || 'Kód', defaultWidth: 120 },
+    { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
+    { key: 'code', label: 'Kód', defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
-    { key: 'description', label: t('projects.projectDescription') || 'Leírás', defaultWidth: 250 },
-    { key: 'status', label: t('projects.status') || 'Státusz', defaultWidth: 120 },
-    { key: 'created_at', label: t('common.createdAt') || 'Létrehozva', defaultWidth: 150 },
-  ], [t]);
+    { key: 'description', label: 'Leírás', defaultWidth: 250 },
+    { key: 'status', label: 'Státusz', defaultWidth: 120 },
+    { key: 'created_at', label: 'Létrehozva', defaultWidth: 150 },
+  ], []);
 
   const {
     columnStates,
