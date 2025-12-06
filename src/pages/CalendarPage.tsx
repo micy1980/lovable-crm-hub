@@ -93,12 +93,17 @@ const CalendarPage = () => {
     queryKey: ['calendar-tasks', activeCompany?.id, viewMode, currentDate.toISOString()],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
+      
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return [];
+      
       const { start, end } = getDateRange();
       const { data, error } = await supabase
         .from('tasks')
         .select(`*, responsible:responsible_user_id(full_name, email), creator:created_by(full_name, email), project:projects(id, name, task_color, event_color), sales:sales(id, name)`)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
+        .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
         .gte('deadline', start.toISOString())
         .lte('deadline', end.toISOString())
         .order('deadline', { ascending: true });
@@ -112,12 +117,17 @@ const CalendarPage = () => {
     queryKey: ['calendar-events', activeCompany?.id, viewMode, currentDate.toISOString()],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
+      
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return [];
+      
       const { start, end } = getDateRange();
       const { data, error } = await supabase
         .from('events')
         .select(`*, responsible_user:profiles!events_responsible_user_id_fkey(full_name, email), project:projects(id, name, task_color, event_color), sales:sales(id, name)`)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
+        .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
         .gte('start_time', start.toISOString())
         .lte('start_time', end.toISOString())
         .order('start_time', { ascending: true });
