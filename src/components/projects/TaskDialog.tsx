@@ -20,6 +20,7 @@ interface TaskDialogProps {
   onOpenChange: (open: boolean) => void;
   projectId?: string;
   salesId?: string;
+  partnerId?: string;
   task?: any;
   defaultDate?: Date;
   defaultTime?: string;
@@ -38,7 +39,7 @@ interface TaskFormData {
   partner_id: string;
 }
 
-export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defaultDate, defaultTime }: TaskDialogProps) => {
+export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, task, defaultDate, defaultTime }: TaskDialogProps) => {
   const { t } = useTranslation();
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
@@ -78,7 +79,7 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
         is_all_day: task.is_all_day || false,
         project_id: task.project_id || projectId || '',
         sales_id: task.sales_id || salesId || '',
-        partner_id: task.partner_id || '',
+        partner_id: task.partner_id || partnerId || '',
       });
     } else if (open && !task) {
       // For new tasks, get current user ID to set as default responsible
@@ -94,11 +95,11 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, task, defau
           is_all_day: false,
           project_id: projectId || '',
           sales_id: salesId || '',
-          partner_id: '',
+          partner_id: partnerId || '',
         });
       });
     }
-  }, [open, task, reset, defaultDate, defaultTime, projectId, salesId]);
+  }, [open, task, reset, defaultDate, defaultTime, projectId, salesId, partnerId]);
 
   // Fetch users for responsible dropdown using RPC function
   const { data: users = [] } = useQuery({
