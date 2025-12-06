@@ -188,6 +188,7 @@
     "euVatNumber": "Uniós adószám",
     "notes": "Megjegyzések",
     "category": "Kategória",
+    "statusLabel": "Státusz",
     "selectCategory": "Válassz kategóriát",
     "basicInfo": "Alapadatok",
     "financialInfo": "Pénzügyi adatok",
