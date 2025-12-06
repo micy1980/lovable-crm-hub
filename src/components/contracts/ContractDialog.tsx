@@ -78,7 +78,7 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
   const paymentFrequencies = getMasterDataByType('PAYMENT_FREQUENCY');
   const currencies = getMasterDataByType('currency');
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<ContractFormData>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors }, trigger } = useForm<ContractFormData>({
     defaultValues: {
       title: '',
       contract_number: '',
@@ -105,6 +105,11 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
       restrict_access: false,
     },
   });
+
+  // Register partner_id with validation
+  useEffect(() => {
+    register('partner_id', { required: 'Kötelező mező' });
+  }, [register]);
 
   const autoRenewal = watch('auto_renewal');
 
@@ -261,10 +266,10 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
                     <Label htmlFor="title">Megnevezés *</Label>
                     <Input
                       id="title"
-                      {...register('title', { required: true })}
-                      className={errors.title ? 'border-red-500' : ''}
+                      {...register('title', { required: 'Kötelező mező' })}
+                      className={errors.title ? 'border-destructive' : ''}
                     />
-                    {errors.title && <span className="text-sm text-red-500">Kötelező mező</span>}
+                    {errors.title && <span className="text-sm text-destructive">{errors.title.message}</span>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contract_number">Szerződésszám</Label>
@@ -322,12 +327,14 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Partner</Label>
+                  <Label>Partner *</Label>
                   <Select
                     value={watch('partner_id')}
-                    onValueChange={(v) => setValue('partner_id', v)}
+                    onValueChange={(v) => {
+                      setValue('partner_id', v, { shouldValidate: true });
+                    }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={errors.partner_id ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Válasszon partnert" />
                     </SelectTrigger>
                     <SelectContent>
@@ -338,6 +345,7 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.partner_id && <span className="text-sm text-destructive">Kötelező mező</span>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
