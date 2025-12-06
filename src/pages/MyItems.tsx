@@ -388,6 +388,7 @@ export default function MyItems() {
                     <ResizableTable
                       visibleColumns={taskColumns.visibleColumns}
                       onColumnResize={taskColumns.setColumnWidth}
+                      onColumnReorder={taskColumns.reorderColumns}
                       data={filteredTasks}
                       actionColumnWidth={100}
                       renderHeader={(col) => taskColumns.getColumnConfig(col.key)?.label || col.key}
@@ -457,6 +458,7 @@ export default function MyItems() {
                     <ResizableTable
                       visibleColumns={eventColumns.visibleColumns}
                       onColumnResize={eventColumns.setColumnWidth}
+                      onColumnReorder={eventColumns.reorderColumns}
                       data={filteredEvents}
                       actionColumnWidth={100}
                       renderHeader={(col) => eventColumns.getColumnConfig(col.key)?.label || col.key}
