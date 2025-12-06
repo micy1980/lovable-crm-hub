@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'name', label: 'Felhasználó', defaultWidth: 180 },
@@ -16,8 +17,8 @@ const COLUMN_CONFIGS: ColumnConfig[] = [
   { key: 'locked_at', label: 'Zárolás Ideje', defaultWidth: 160 },
   { key: 'locked_until', label: 'Zárolás Vége', defaultWidth: 160 },
   { key: 'reason', label: 'Indok', defaultWidth: 200 },
-  { key: 'status', label: 'Státusz', defaultWidth: 100 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 120 },
+  { key: 'status', label: 'Státusz', defaultWidth: 100, sortable: false },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 120, sortable: false },
 ];
 
 export const LockedAccountsTab = () => {
@@ -35,6 +36,22 @@ export const LockedAccountsTab = () => {
   } = useColumnSettings({
     storageKey: 'locked-accounts-columns',
     columns: COLUMN_CONFIGS,
+  });
+
+  const { sortedData, sortState, handleSort } = useSortableData({
+    data: lockedAccounts,
+    sortFunctions: {
+      name: (a, b) => (a.user_full_name || '').localeCompare(b.user_full_name || '', 'hu'),
+      email: (a, b) => (a.user_email || '').localeCompare(b.user_email || '', 'hu'),
+      locked_at: (a, b) => new Date(a.locked_at || 0).getTime() - new Date(b.locked_at || 0).getTime(),
+      locked_until: (a, b) => {
+        if (!a.locked_until && !b.locked_until) return 0;
+        if (!a.locked_until) return 1;
+        if (!b.locked_until) return -1;
+        return new Date(a.locked_until).getTime() - new Date(b.locked_until).getTime();
+      },
+      reason: (a, b) => (a.reason || '').localeCompare(b.reason || '', 'hu'),
+    },
   });
 
   const handleUnlock = (userId: string) => {
@@ -125,7 +142,7 @@ export const LockedAccountsTab = () => {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Betöltés...</div>
-          ) : lockedAccounts.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nincs jelenleg zárolt fiók
             </div>
@@ -135,9 +152,11 @@ export const LockedAccountsTab = () => {
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
               getColumnConfig={getColumnConfig}
+              sortState={sortState}
+              onSort={handleSort}
             >
               <TableBody>
-                {lockedAccounts.map((lock: any) => (
+                {sortedData.map((lock: any) => (
                   <TableRow key={lock.id}>
                     {visibleColumns.map((col) => (
                       <ResizableTableCell 

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TableBody, TableRow, TableCell } from '@/components/ui/table';
+import { TableBody, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useActiveSessions } from '@/hooks/useActiveSessions';
@@ -7,17 +7,18 @@ import { LogOut, RefreshCw, Users } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
-  { key: 'select', label: '', defaultWidth: 50, required: true },
+  { key: 'select', label: '', defaultWidth: 50, required: true, sortable: false },
   { key: 'name', label: 'Felhasználó', defaultWidth: 200 },
   { key: 'email', label: 'Email', defaultWidth: 250 },
   { key: 'last_sign_in', label: 'Utolsó bejelentkezés', defaultWidth: 180 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 150 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 150, sortable: false },
 ];
 
 export const ActiveSessionsTab = () => {
@@ -39,6 +40,15 @@ export const ActiveSessionsTab = () => {
     columns: COLUMN_CONFIGS,
   });
 
+  const { sortedData, sortState, handleSort } = useSortableData({
+    data: activeSessions,
+    sortFunctions: {
+      name: (a, b) => (a.user_full_name || '').localeCompare(b.user_full_name || '', 'hu'),
+      email: (a, b) => (a.user_email || '').localeCompare(b.user_email || '', 'hu'),
+      last_sign_in: (a, b) => new Date(a.last_sign_in_at || 0).getTime() - new Date(b.last_sign_in_at || 0).getTime(),
+    },
+  });
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['active-sessions'] });
   };
@@ -53,7 +63,7 @@ export const ActiveSessionsTab = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const selectableIds = activeSessions
+      const selectableIds = sortedData
         .filter(s => s.user_id !== currentProfile?.id)
         .map(s => s.user_id);
       setSelectedUsers(selectableIds);
@@ -77,7 +87,7 @@ export const ActiveSessionsTab = () => {
     });
   };
 
-  const selectableCount = activeSessions.filter(s => s.user_id !== currentProfile?.id).length;
+  const selectableCount = sortedData.filter(s => s.user_id !== currentProfile?.id).length;
 
   const renderCellContent = (session: any, columnKey: string) => {
     const isCurrentUser = session.user_id === currentProfile?.id;
@@ -156,7 +166,7 @@ export const ActiveSessionsTab = () => {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1">
             <Users className="h-3 w-3" />
-            {activeSessions.length} aktív felhasználó
+            {sortedData.length} aktív felhasználó
           </Badge>
           <ColumnSettingsPopover
             columns={COLUMN_CONFIGS}
@@ -178,7 +188,7 @@ export const ActiveSessionsTab = () => {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Betöltés...</div>
-          ) : activeSessions.length === 0 ? (
+          ) : sortedData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nincs aktív felhasználó
             </div>
@@ -188,9 +198,11 @@ export const ActiveSessionsTab = () => {
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
               getColumnConfig={getColumnConfig}
+              sortState={sortState}
+              onSort={handleSort}
             >
               <TableBody>
-                {activeSessions.map((session) => (
+                {sortedData.map((session) => (
                   <TableRow key={session.user_id}>
                     {visibleColumns.map((col) => (
                       <ResizableTableCell 
