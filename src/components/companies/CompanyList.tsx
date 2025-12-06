@@ -15,6 +15,18 @@ import { CompanyLicenseManagementDialog } from './CompanyLicenseManagementDialog
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
 import { useCompanyLicenses } from '@/hooks/useCompanyLicenses';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+
+const COLUMN_CONFIGS: ColumnConfig[] = [
+  { key: 'name', label: 'Név', defaultWidth: 200, required: true },
+  { key: 'taxId', label: 'Adószám', defaultWidth: 120 },
+  { key: 'address', label: 'Cím', defaultWidth: 200 },
+  { key: 'license', label: 'Licensz', defaultWidth: 120 },
+  { key: 'userCount', label: 'Felhasználók', defaultWidth: 120 },
+  { key: 'createdAt', label: 'Létrehozva', defaultWidth: 120 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 140 },
+];
 
 export function CompanyList() {
   const { t } = useTranslation();
@@ -31,6 +43,18 @@ export function CompanyList() {
   
   const userIsSuperAdmin = isSuperAdmin(profile);
   const { getUsedSeats, getLicenseForCompany } = useCompanyLicenses();
+
+  const {
+    visibleColumns,
+    columnStates,
+    toggleVisibility,
+    setColumnWidth,
+    reorderColumns,
+    resetToDefaults,
+  } = useColumnSettings({
+    storageKey: 'companies-columns',
+    columns: COLUMN_CONFIGS,
+  });
 
   useMemo(() => {
     const fetchUserCounts = async () => {
@@ -147,13 +171,22 @@ export function CompanyList() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={t('companies.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('companies.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <ColumnSettingsPopover
+              columns={COLUMN_CONFIGS}
+              columnStates={columnStates}
+              onToggleVisibility={toggleVisibility}
+              onReorder={reorderColumns}
+              onReset={resetToDefaults}
             />
           </div>
 
