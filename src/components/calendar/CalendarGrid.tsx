@@ -45,8 +45,6 @@ export const CalendarGrid = ({
   const weekdays = i18n.language === 'hu' ? WEEKDAYS_HU : WEEKDAYS_EN;
   const [activeItem, setActiveItem] = useState<CalendarItem | null>(null);
 
-  console.log('CalendarGrid received personal colors:', { personalTaskColor, personalEventColor });
-
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -55,53 +53,27 @@ export const CalendarGrid = ({
   const getItemsForDate = (date: Date): CalendarItem[] => {
     const dayTasks: CalendarItem[] = tasks
       .filter((task) => task.deadline && isSameDay(new Date(task.deadline), date))
-      .map(task => {
-        const projectColor = task.project?.task_color;
-        const hasProject = !!task.project_id;
-        const finalColor = projectColor || (!hasProject ? personalTaskColor : null) || null;
-        console.log('Task color debug:', { 
-          taskTitle: task.title, 
-          project_id: task.project_id,
-          hasProject,
-          projectColor, 
-          personalTaskColor, 
-          finalColor 
-        });
-        return {
-          id: task.id,
-          title: task.title,
-          type: 'task' as const,
-          status: task.status,
-          deadline: task.deadline,
-          is_all_day: task.is_all_day,
-          color: finalColor,
-        };
-      });
+      .map(task => ({
+        id: task.id,
+        title: task.title,
+        type: 'task' as const,
+        status: task.status,
+        deadline: task.deadline,
+        is_all_day: task.is_all_day,
+        color: task.project?.task_color || (!task.project_id ? personalTaskColor : null) || null,
+      }));
     
     const dayEvents: CalendarItem[] = events
       .filter((event) => event.start_time && isSameDay(new Date(event.start_time), date))
-      .map(event => {
-        const projectColor = event.project?.event_color;
-        const hasProject = !!event.project_id;
-        const finalColor = projectColor || (!hasProject ? personalEventColor : null) || null;
-        console.log('Event color debug:', { 
-          eventTitle: event.title, 
-          project_id: event.project_id,
-          hasProject,
-          projectColor, 
-          personalEventColor, 
-          finalColor 
-        });
-        return {
-          id: event.id,
-          title: event.title,
-          type: 'event' as const,
-          start_time: event.start_time,
-          end_time: event.end_time,
-          is_all_day: event.is_all_day,
-          color: finalColor,
-        };
-      });
+      .map(event => ({
+        id: event.id,
+        title: event.title,
+        type: 'event' as const,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        is_all_day: event.is_all_day,
+        color: event.project?.event_color || (!event.project_id ? personalEventColor : null) || null,
+      }));
 
     return [...dayTasks, ...dayEvents];
   };

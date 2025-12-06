@@ -24,32 +24,23 @@ export const PersonalColorSettings = () => {
   }, [profile]);
 
   const handleSave = async () => {
-    if (!user?.id) {
-      console.error('No user ID for saving personal colors');
-      return;
-    }
-    
-    console.log('Saving personal colors:', { taskColor, eventColor, userId: user.id });
+    if (!user?.id) return;
     
     setIsSaving(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({
           personal_task_color: taskColor,
           personal_event_color: eventColor,
         })
-        .eq('id', user.id)
-        .select();
-
-      console.log('Update result:', { data, error });
+        .eq('id', user.id);
 
       if (error) throw error;
 
       await queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       toast.success('Személyes színek mentve');
     } catch (error: any) {
-      console.error('Error saving personal colors:', error);
       toast.error('Hiba történt: ' + error.message);
     } finally {
       setIsSaving(false);
