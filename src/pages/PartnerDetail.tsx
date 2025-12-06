@@ -430,7 +430,11 @@ export default function PartnerDetail() {
                     </TableHeader>
                     <TableBody>
                       {tasks.map((task: any) => (
-                        <TableRow key={task.id}>
+                        <TableRow 
+                          key={task.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => task.project ? navigate(`/projects/${task.project.id}`) : navigate('/my-items')}
+                        >
                           <TableCell className="font-medium">{task.title}</TableCell>
                           <TableCell>
                             <Badge variant="outline">{t(`tasks.status.${task.status}`)}</Badge>
@@ -438,7 +442,10 @@ export default function PartnerDetail() {
                           <TableCell>
                             {task.project ? (
                               <button
-                                onClick={() => navigate(`/projects/${task.project.id}`)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/projects/${task.project.id}`);
+                                }}
                                 className="text-primary hover:underline"
                               >
                                 {task.project.name}
@@ -492,12 +499,19 @@ export default function PartnerDetail() {
                     </TableHeader>
                     <TableBody>
                       {events.map((event: any) => (
-                        <TableRow key={event.id}>
+                        <TableRow 
+                          key={event.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => event.project ? navigate(`/projects/${event.project.id}`) : navigate('/my-items')}
+                        >
                           <TableCell className="font-medium">{event.title}</TableCell>
                           <TableCell>
                             {event.project ? (
                               <button
-                                onClick={() => navigate(`/projects/${event.project.id}`)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/projects/${event.project.id}`);
+                                }}
                                 className="text-primary hover:underline"
                               >
                                 {event.project.name}
@@ -548,7 +562,11 @@ export default function PartnerDetail() {
                     </TableHeader>
                     <TableBody>
                       {documents.map((doc: any) => (
-                        <TableRow key={doc.id}>
+                        <TableRow 
+                          key={doc.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate('/documents')}
+                        >
                           <TableCell className="font-medium">{doc.title}</TableCell>
                           <TableCell>
                             <Badge variant="outline">{doc.visibility}</Badge>
