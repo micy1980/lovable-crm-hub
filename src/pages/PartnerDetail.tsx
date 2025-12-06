@@ -27,6 +27,7 @@ import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { PartnerDialog } from '@/components/partners/PartnerDialog';
 import { TaskDialog } from '@/components/projects/TaskDialog';
+import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { EventDialog } from '@/components/events/EventDialog';
 import { DocumentDialog } from '@/components/documents/DocumentDialog';
 import { SalesDialog } from '@/components/sales/SalesDialog';
@@ -66,6 +67,7 @@ export default function PartnerDetail() {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
   const [isSalesDialogOpen, setIsSalesDialogOpen] = useState(false);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
@@ -221,13 +223,23 @@ export default function PartnerDetail() {
               )}
             </div>
           </div>
-          <Button 
-            onClick={() => checkReadOnly(() => setIsDialogOpen(true))} 
-            disabled={!canEdit}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            {t('common.edit')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => checkReadOnly(() => setIsProjectDialogOpen(true))} 
+              disabled={!canEdit}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t('projects.create')}
+            </Button>
+            <Button 
+              onClick={() => checkReadOnly(() => setIsDialogOpen(true))} 
+              disabled={!canEdit}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              {t('common.edit')}
+            </Button>
+          </div>
         </div>
 
         {/* Partner Info Cards */}
@@ -668,6 +680,11 @@ export default function PartnerDetail() {
           }}
           partnerId={id}
           sale={selectedSale}
+        />
+
+        <ProjectDialog
+          open={isProjectDialogOpen}
+          onOpenChange={setIsProjectDialogOpen}
         />
       </div>
     </LicenseGuard>
