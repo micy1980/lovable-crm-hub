@@ -2,7 +2,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO } from 'date-fns';
 import { hu, enUS } from 'date-fns/locale';
@@ -18,18 +18,6 @@ interface CalendarItem {
   isAllDay?: boolean;
 }
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'completed':
-      return <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />;
-    case 'in_progress':
-      return <Clock className="h-3 w-3 text-blue-500 flex-shrink-0" />;
-    case 'pending':
-      return <AlertCircle className="h-3 w-3 text-orange-500 flex-shrink-0" />;
-    default:
-      return null;
-  }
-};
 
 export const WeeklyCalendarWidget = () => {
   const { activeCompany } = useCompany();
@@ -151,21 +139,26 @@ export const WeeklyCalendarWidget = () => {
                 </div>
                 <div className="space-y-0.5 overflow-hidden">
                   {dayItems.slice(0, 3).map((item) => (
-                    <div
+                    <button
                       key={item.id}
+                      onClick={() => navigate('/calendar')}
                       className={cn(
-                        "text-[10px] px-1 py-0.5 rounded truncate shadow-sm border border-black/10 dark:border-white/10",
+                        "w-full text-left text-[10px] px-1 py-0.5 rounded truncate shadow-sm border transition-opacity hover:opacity-80",
                         item.type === 'task'
-                          ? "bg-blue-500 text-white"
-                          : "bg-violet-500 text-white"
+                          ? "bg-blue-600 text-white border-blue-700"
+                          : "bg-violet-600 text-white border-violet-700"
                       )}
                       title={item.title}
                     >
                       <div className="flex items-center gap-0.5">
-                        {item.type === 'task' && getStatusIcon(item.status || 'pending')}
+                        {item.type === 'task' ? (
+                          <CheckCircle className="h-2.5 w-2.5 flex-shrink-0" />
+                        ) : (
+                          <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
+                        )}
                         <span className="truncate">{item.title}</span>
                       </div>
-                    </div>
+                    </button>
                   ))}
                   {dayItems.length > 3 && (
                     <div className="text-[10px] text-muted-foreground text-center">
