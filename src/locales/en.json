@@ -140,6 +140,8 @@
     "actions": "Actions",
     "columns": "Columns",
     "visibleColumns": "Visible columns",
+    "dragToReorder": "Drag to reorder columns",
+    "reset": "Reset",
     "yes": "Yes",
     "no": "No",
     "createdAt": "Created",

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
@@ -32,14 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TableRow, TableCell } from '@/components/ui/table';
 import { TaskDialog } from '@/components/projects/TaskDialog';
 import { EventDialog } from '@/components/events/EventDialog';
 import {
@@ -55,8 +48,10 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 
-// Color map matching calendar DraggableItem
 const colorMap: Record<string, { bg: string; textOnBg: string }> = {
   red: { bg: 'bg-red-500', textOnBg: 'text-white' },
   blue: { bg: 'bg-blue-500', textOnBg: 'text-white' },
@@ -72,6 +67,9 @@ const colorMap: Record<string, { bg: string; textOnBg: string }> = {
 
 type FilterType = 'all' | 'personal' | 'project';
 
+const TASKS_STORAGE_KEY = 'my-items-tasks-columns';
+const EVENTS_STORAGE_KEY = 'my-items-events-columns';
+
 export default function MyItems() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -84,14 +82,12 @@ export default function MyItems() {
   const personalEventColor = userProfile?.personal_event_color || null;
 
   const getItemColor = (item: any, type: 'task' | 'event') => {
-    // Project/sales items use project color
     if (item.project_id && item.project) {
       const projectColor = type === 'task' ? item.project.task_color : item.project.event_color;
       if (projectColor && colorMap[projectColor]) {
         return colorMap[projectColor];
       }
     }
-    // Personal items use personal color
     if (!item.project_id && !item.sales_id) {
       const personalColor = type === 'task' ? personalTaskColor : personalEventColor;
       if (personalColor && colorMap[personalColor]) {
@@ -108,6 +104,28 @@ export default function MyItems() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'task' | 'event'; id: string } | null>(null);
+
+  // Task column settings
+  const taskColumnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'title', label: t('tasks.title'), defaultVisible: true, defaultWidth: 200, required: true },
+    { key: 'status', label: t('tasks.statusLabel'), defaultVisible: true, defaultWidth: 120 },
+    { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150 },
+    { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150 },
+    { key: 'deadline', label: t('tasks.deadline'), defaultVisible: true, defaultWidth: 160 },
+  ], [t]);
+
+  const taskColumns = useColumnSettings({ storageKey: TASKS_STORAGE_KEY, columns: taskColumnConfigs });
+
+  // Event column settings
+  const eventColumnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'title', label: t('events.title'), defaultVisible: true, defaultWidth: 200, required: true },
+    { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150 },
+    { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150 },
+    { key: 'startTime', label: t('events.startTime'), defaultVisible: true, defaultWidth: 180 },
+    { key: 'location', label: t('events.location'), defaultVisible: true, defaultWidth: 150 },
+  ], [t]);
+
+  const eventColumns = useColumnSettings({ storageKey: EVENTS_STORAGE_KEY, columns: eventColumnConfigs });
 
   const filteredTasks = (data?.tasks || []).filter((task: any) => {
     if (filter === 'personal') return !task.project_id && !task.sales_id;
@@ -177,6 +195,118 @@ export default function MyItems() {
     return { icon: User, label: t('myItems.personal'), color: 'text-orange-500' };
   };
 
+  const getTaskCellValue = (task: any, key: string) => {
+    const typeInfo = getItemTypeLabel(task);
+    const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'completed';
+    const taskColor = getItemColor(task, 'task');
+
+    switch (key) {
+      case 'title':
+        return (
+          <div className="flex items-center gap-2">
+            {taskColor && (
+              <div className={`w-1.5 h-8 rounded-sm ${taskColor.bg} shrink-0`} />
+            )}
+            <span className="font-medium">{task.title}</span>
+            {isOverdue && (
+              <AlertCircle className="h-4 w-4 text-destructive" />
+            )}
+          </div>
+        );
+      case 'status':
+        return (
+          <Badge variant={getStatusBadge(task.status)}>
+            {t(`tasks.status.${task.status}`)}
+          </Badge>
+        );
+      case 'type':
+        return (
+          <span className={`flex items-center gap-1 ${typeInfo.color}`}>
+            <typeInfo.icon className="h-4 w-4" />
+            {typeInfo.label}
+          </span>
+        );
+      case 'partner':
+        return task.partner ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/partners/${task.partner.id}`); }}
+            className="text-primary hover:underline"
+          >
+            {task.partner.name}
+          </button>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      case 'deadline':
+        return task.deadline ? (
+          <span className="flex items-center gap-1 text-sm">
+            <Clock className="h-3 w-3" />
+            {format(new Date(task.deadline), 'yyyy.MM.dd HH:mm', { locale: hu })}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      default:
+        return '-';
+    }
+  };
+
+  const getEventCellValue = (event: any, key: string) => {
+    const typeInfo = getItemTypeLabel(event);
+    const eventColor = getItemColor(event, 'event');
+
+    switch (key) {
+      case 'title':
+        return (
+          <div className="flex items-center gap-2">
+            {eventColor && (
+              <div className={`w-1.5 h-8 rounded-sm ${eventColor.bg} shrink-0`} />
+            )}
+            <span className="font-medium">{event.title}</span>
+            {event.is_all_day && (
+              <Badge variant="outline">{t('events.allDay')}</Badge>
+            )}
+          </div>
+        );
+      case 'type':
+        return (
+          <span className={`flex items-center gap-1 ${typeInfo.color}`}>
+            <typeInfo.icon className="h-4 w-4" />
+            {typeInfo.label}
+          </span>
+        );
+      case 'partner':
+        return event.partner ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/partners/${event.partner.id}`); }}
+            className="text-primary hover:underline"
+          >
+            {event.partner.name}
+          </button>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      case 'startTime':
+        return (
+          <span className="flex items-center gap-1 text-sm">
+            <Clock className="h-3 w-3" />
+            {format(new Date(event.start_time), event.is_all_day ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm', { locale: hu })}
+            {event.end_time && (
+              <> - {format(new Date(event.end_time), event.is_all_day ? 'yyyy.MM.dd' : 'HH:mm', { locale: hu })}</>
+            )}
+          </span>
+        );
+      case 'location':
+        return event.location ? (
+          <span className="text-sm truncate max-w-[200px] block">{event.location}</span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      default:
+        return '-';
+    }
+  };
+
   if (!activeCompany) {
     return (
       <LicenseGuard feature="my_items">
@@ -229,10 +359,19 @@ export default function MyItems() {
                   <CardTitle>{t('myItems.tasks')}</CardTitle>
                   <CardDescription>{t('myItems.tasksDescription')}</CardDescription>
                 </div>
-                <Button onClick={() => { setSelectedTask(null); setTaskDialogOpen(true); }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('myItems.newTask')}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <ColumnSettingsPopover
+                    columnStates={taskColumns.columnStates}
+                    columns={taskColumnConfigs}
+                    onToggleVisibility={taskColumns.toggleVisibility}
+                    onReorder={taskColumns.reorderColumns}
+                    onReset={taskColumns.resetToDefaults}
+                  />
+                  <Button onClick={() => { setSelectedTask(null); setTaskDialogOpen(true); }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('myItems.newTask')}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -246,88 +385,36 @@ export default function MyItems() {
                   </div>
                 ) : (
                   <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t('tasks.title')}</TableHead>
-                          <TableHead>{t('tasks.statusLabel')}</TableHead>
-                          <TableHead>{t('myItems.type')}</TableHead>
-                          <TableHead>{t('partners.title')}</TableHead>
-                          <TableHead>{t('tasks.deadline')}</TableHead>
-                          <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
+                    <ResizableTable
+                      visibleColumns={taskColumns.visibleColumns}
+                      onColumnResize={taskColumns.setColumnWidth}
+                      data={filteredTasks}
+                      actionColumnWidth={100}
+                      renderHeader={(col) => taskColumns.getColumnConfig(col.key)?.label || col.key}
+                      renderRow={(task, columns) => (
+                        <TableRow key={task.id}>
+                          {columns.map((col) => (
+                            <ResizableTableCell key={col.key} width={col.width}>
+                              {getTaskCellValue(task, col.key)}
+                            </ResizableTableCell>
+                          ))}
+                          <TableCell className="w-[100px]">
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditTask(task)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick('task', task.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredTasks.map((task: any) => {
-                          const typeInfo = getItemTypeLabel(task);
-                          const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'completed';
-                          const taskColor = getItemColor(task, 'task');
-                          
-                          return (
-                            <TableRow key={task.id}>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  {taskColor && (
-                                    <div className={`w-1.5 h-8 rounded-sm ${taskColor.bg} shrink-0`} />
-                                  )}
-                                  <span className="font-medium">{task.title}</span>
-                                  {isOverdue && (
-                                    <AlertCircle className="h-4 w-4 text-destructive" />
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant={getStatusBadge(task.status)}>
-                                  {t(`tasks.status.${task.status}`)}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <span className={`flex items-center gap-1 ${typeInfo.color}`}>
-                                  <typeInfo.icon className="h-4 w-4" />
-                                  {typeInfo.label}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                {task.partner ? (
-                                  <button
-                                    onClick={() => navigate(`/partners/${task.partner.id}`)}
-                                    className="text-primary hover:underline"
-                                  >
-                                    {task.partner.name}
-                                  </button>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {task.deadline ? (
-                                  <span className="flex items-center gap-1 text-sm">
-                                    <Clock className="h-3 w-3" />
-                                    {format(new Date(task.deadline), 'yyyy.MM.dd HH:mm', { locale: hu })}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="icon" onClick={() => handleEditTask(task)}>
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteClick('task', task.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                      )}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -341,10 +428,19 @@ export default function MyItems() {
                   <CardTitle>{t('myItems.events')}</CardTitle>
                   <CardDescription>{t('myItems.eventsDescription')}</CardDescription>
                 </div>
-                <Button onClick={() => { setSelectedEvent(null); setEventDialogOpen(true); }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('myItems.newEvent')}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <ColumnSettingsPopover
+                    columnStates={eventColumns.columnStates}
+                    columns={eventColumnConfigs}
+                    onToggleVisibility={eventColumns.toggleVisibility}
+                    onReorder={eventColumns.reorderColumns}
+                    onReset={eventColumns.resetToDefaults}
+                  />
+                  <Button onClick={() => { setSelectedEvent(null); setEventDialogOpen(true); }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('myItems.newEvent')}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -358,88 +454,36 @@ export default function MyItems() {
                   </div>
                 ) : (
                   <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t('events.title')}</TableHead>
-                          <TableHead>{t('myItems.type')}</TableHead>
-                          <TableHead>{t('partners.title')}</TableHead>
-                          <TableHead>{t('events.startTime')}</TableHead>
-                          <TableHead>{t('events.location')}</TableHead>
-                          <TableHead className="w-[100px]">{t('common.actions')}</TableHead>
+                    <ResizableTable
+                      visibleColumns={eventColumns.visibleColumns}
+                      onColumnResize={eventColumns.setColumnWidth}
+                      data={filteredEvents}
+                      actionColumnWidth={100}
+                      renderHeader={(col) => eventColumns.getColumnConfig(col.key)?.label || col.key}
+                      renderRow={(event, columns) => (
+                        <TableRow key={event.id}>
+                          {columns.map((col) => (
+                            <ResizableTableCell key={col.key} width={col.width}>
+                              {getEventCellValue(event, col.key)}
+                            </ResizableTableCell>
+                          ))}
+                          <TableCell className="w-[100px]">
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick('event', event.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredEvents.map((event: any) => {
-                          const typeInfo = getItemTypeLabel(event);
-                          const eventColor = getItemColor(event, 'event');
-                          
-                          return (
-                            <TableRow key={event.id}>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  {eventColor && (
-                                    <div className={`w-1.5 h-8 rounded-sm ${eventColor.bg} shrink-0`} />
-                                  )}
-                                  <span className="font-medium">{event.title}</span>
-                                  {event.is_all_day && (
-                                    <Badge variant="outline">{t('events.allDay')}</Badge>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <span className={`flex items-center gap-1 ${typeInfo.color}`}>
-                                  <typeInfo.icon className="h-4 w-4" />
-                                  {typeInfo.label}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                {event.partner ? (
-                                  <button
-                                    onClick={() => navigate(`/partners/${event.partner.id}`)}
-                                    className="text-primary hover:underline"
-                                  >
-                                    {event.partner.name}
-                                  </button>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <span className="flex items-center gap-1 text-sm">
-                                  <Clock className="h-3 w-3" />
-                                  {format(new Date(event.start_time), event.is_all_day ? 'yyyy.MM.dd' : 'yyyy.MM.dd HH:mm', { locale: hu })}
-                                  {event.end_time && (
-                                    <> - {format(new Date(event.end_time), event.is_all_day ? 'yyyy.MM.dd' : 'HH:mm', { locale: hu })}</>
-                                  )}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                {event.location ? (
-                                  <span className="text-sm truncate max-w-[200px] block">{event.location}</span>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteClick('event', event.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                      )}
+                    />
                   </div>
                 )}
               </CardContent>
