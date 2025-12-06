@@ -65,7 +65,7 @@ const Sales = () => {
 
       const { data, error } = await supabase
         .from('sales')
-        .select('*, partner:partners(name)')
+        .select('*, partner:partners!sales_partner_id_fkey(name)')
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
