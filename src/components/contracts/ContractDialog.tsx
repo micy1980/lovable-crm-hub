@@ -221,6 +221,11 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
       sales_id: data.sales_id || null,
       contract_type: data.contract_type || null,
       payment_frequency: data.payment_frequency || null,
+      // Convert empty date strings to null for PostgreSQL
+      signed_date: data.signed_date || null,
+      effective_date: data.effective_date || null,
+      expiry_date: data.expiry_date || null,
+      billing_start_date: data.billing_start_date || null,
     };
 
     if (contract) {
