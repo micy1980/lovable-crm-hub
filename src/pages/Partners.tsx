@@ -207,8 +207,8 @@ const Partners = () => {
               onReorder={reorderColumns}
               onReset={resetToDefaults}
             />
-            <Button onClick={handleOpenCreate} disabled={!canEdit}>
-              <Plus className="mr-1 h-4 w-4" />
+            <Button onClick={handleOpenCreate} disabled={!canEdit} className="min-w-[140px]">
+              <Plus className="h-4 w-4" />
               {t('partners.add')}
             </Button>
           </div>

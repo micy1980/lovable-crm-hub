@@ -155,8 +155,8 @@ const Projects = () => {
             }))}
             title="Projektek"
           />
-          <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
-            <Plus className="mr-1 h-4 w-4" />
+          <Button onClick={() => setDialogOpen(true)} disabled={!canEdit} className="min-w-[140px]">
+            <Plus className="h-4 w-4" />
             {t('projects.newProject')}
           </Button>
         </div>
