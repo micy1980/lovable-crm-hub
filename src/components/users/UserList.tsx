@@ -28,14 +28,14 @@ import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
-  { key: 'user', label: 'Felhasználó', defaultWidth: 200, required: true },
-  { key: 'sa', label: 'SA', defaultWidth: 80 },
-  { key: 'status', label: 'Státusz', defaultWidth: 80 },
-  { key: 'registration', label: 'Regisztráció', defaultWidth: 90 },
-  { key: 'active', label: 'Aktív', defaultWidth: 100 },
-  { key: 'permissions', label: 'Jogok', defaultWidth: 60 },
-  { key: 'createdAt', label: 'Létrehozva', defaultWidth: 130 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 100 },
+  { key: 'user', label: 'Felhasználó', defaultWidth: 220, required: true },
+  { key: 'sa', label: 'SA státusz', defaultWidth: 100 },
+  { key: 'status', label: 'Állapot', defaultWidth: 80 },
+  { key: 'registration', label: 'Regisztráció', defaultWidth: 100 },
+  { key: 'active', label: 'Aktív', defaultWidth: 120 },
+  { key: 'permissions', label: 'Jogosultságok', defaultWidth: 100 },
+  { key: 'createdAt', label: 'Létrehozva', defaultWidth: 150 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 120 },
 ];
 
 export function UserList() {
@@ -331,7 +331,7 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] bg-background border-b border-border">
+              <div className="grid grid-cols-[220px_100px_80px_100px_120px_100px_150px_120px] bg-background border-b border-border">
                 <div 
                   className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('fullName')}
@@ -390,7 +390,7 @@ export function UserList() {
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[220px_100px_80px_100px_120px_100px_150px_120px] border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
