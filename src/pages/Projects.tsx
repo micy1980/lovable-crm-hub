@@ -12,8 +12,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { ProjectDialog } from '@/components/projects/ProjectDialog';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ExportMenu } from '@/components/shared/ExportMenu';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { ResizableTable } from '@/components/shared/ResizableTable';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -22,6 +26,28 @@ const Projects = () => {
   const { canEdit } = useReadOnlyMode();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'name', label: t('projects.name') || 'Név', required: true, defaultWidth: 200 },
+    { key: 'code', label: t('projects.code') || 'Kód', defaultWidth: 120 },
+    { key: 'partner', label: 'Partner', defaultWidth: 180 },
+    { key: 'description', label: t('projects.projectDescription') || 'Leírás', defaultWidth: 250 },
+    { key: 'status', label: t('projects.status') || 'Státusz', defaultWidth: 120 },
+    { key: 'created_at', label: t('common.createdAt') || 'Létrehozva', defaultWidth: 150 },
+  ], [t]);
+
+  const {
+    columnStates,
+    visibleColumns,
+    toggleVisibility,
+    setColumnWidth,
+    reorderColumns,
+    resetToDefaults,
+    getColumnConfig,
+  } = useColumnSettings({
+    storageKey: 'projects-column-settings',
+    columns: columnConfigs,
+  });
 
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects', activeCompany?.id],
@@ -43,6 +69,43 @@ const Projects = () => {
     },
     enabled: !!activeCompany,
   });
+
+  const getStatusLabel = (status: string | null) => {
+    if (!status) return '-';
+    switch (status) {
+      case 'planning': return 'Tervezés';
+      case 'in_progress': return 'Folyamatban';
+      case 'on_hold': return 'Felfüggesztve';
+      case 'completed': return 'Befejezett';
+      case 'cancelled': return 'Törölve';
+      default: return status;
+    }
+  };
+
+  const renderCellContent = (project: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'name':
+        return <span className="font-medium">{project.name}</span>;
+      case 'code':
+        return project.code || '-';
+      case 'partner':
+        return project.partner?.name || '-';
+      case 'description':
+        return project.description ? (
+          <span className="line-clamp-2">{project.description}</span>
+        ) : '-';
+      case 'status':
+        return project.status ? (
+          <Badge variant="secondary">{getStatusLabel(project.status)}</Badge>
+        ) : '-';
+      case 'created_at':
+        return project.created_at 
+          ? new Date(project.created_at).toLocaleDateString('hu-HU')
+          : '-';
+      default:
+        return '-';
+    }
+  };
 
   if (!activeCompany) {
     return (
@@ -77,15 +140,19 @@ const Projects = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <ColumnSettingsPopover
+            columnStates={columnStates}
+            columns={columnConfigs}
+            onToggleVisibility={toggleVisibility}
+            onReorder={reorderColumns}
+            onReset={resetToDefaults}
+          />
           <ExportMenu
             data={projects || []}
-            columns={[
-              { header: 'Név', key: 'name' },
-              { header: 'Kód', key: 'code' },
-              { header: 'Leírás', key: 'description' },
-              { header: 'Státusz', key: 'status' },
-              { header: 'Létrehozva', key: 'created_at' },
-            ]}
+            columns={visibleColumns.map(col => ({
+              header: getColumnConfig(col.key)?.label || col.key,
+              key: col.key === 'partner' ? 'partner.name' : col.key,
+            }))}
             title="Projektek"
           />
           <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
@@ -108,40 +175,28 @@ const Projects = () => {
               {t('projects.loadingProjects')}
             </div>
           ) : projects && projects.length > 0 ? (
-            <div className="space-y-4">
-              {projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="flex items-center justify-between border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/projects/${project.id}`)}
-                >
-                  <div>
-                    <h3 className="font-semibold">{project.name}</h3>
-                    {project.code && (
-                      <p className="text-sm text-muted-foreground">{t('projects.code')}: {project.code}</p>
-                    )}
-                    {project.partner && (
-                      <p className="text-sm text-muted-foreground">Partner: {project.partner.name}</p>
-                    )}
-                    {project.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
-                    )}
-                    {project.status && (
-                      <Badge variant="secondary" className="mt-2">
-                        {project.status === 'planning' && 'Tervezés'}
-                        {project.status === 'in_progress' && 'Folyamatban'}
-                        {project.status === 'on_hold' && 'Felfüggesztve'}
-                        {project.status === 'completed' && 'Befejezett'}
-                        {project.status === 'cancelled' && 'Törölve'}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/projects/${project.id}`); }}>
-                    {t('common.viewDetails')}
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <ResizableTable
+              visibleColumns={visibleColumns}
+              getColumnConfig={getColumnConfig}
+              onColumnResize={setColumnWidth}
+              onColumnReorder={reorderColumns}
+            >
+              <TableBody>
+                {projects.map((project) => (
+                  <TableRow
+                    key={project.id}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    {visibleColumns.map((col) => (
+                      <TableCell key={col.key} style={{ width: col.width }}>
+                        {renderCellContent(project, col.key)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </ResizableTable>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               {t('projects.noProjectsFound')}

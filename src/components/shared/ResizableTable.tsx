@@ -1,30 +1,44 @@
 import React, { useRef, useCallback, useState } from 'react';
 import { GripVertical } from 'lucide-react';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Table, TableHeader, TableRow, TableHead } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import type { ColumnState } from '@/hooks/useColumnSettings';
+import type { ColumnState, ColumnConfig } from '@/hooks/useColumnSettings';
 
-interface ResizableTableProps {
+interface ResizableTableBaseProps {
   visibleColumns: ColumnState[];
   onColumnResize: (key: string, width: number) => void;
   onColumnReorder?: (fromIndex: number, toIndex: number) => void;
+  className?: string;
+}
+
+interface ResizableTableWithRenderProps extends ResizableTableBaseProps {
   renderHeader: (column: ColumnState) => React.ReactNode;
   renderRow: (item: any, columns: ColumnState[]) => React.ReactNode;
   data: any[];
   actionColumnWidth?: number;
-  className?: string;
+  getColumnConfig?: never;
+  children?: never;
 }
 
-export function ResizableTable({
-  visibleColumns,
-  onColumnResize,
-  onColumnReorder,
-  renderHeader,
-  renderRow,
-  data,
-  actionColumnWidth = 80,
-  className,
-}: ResizableTableProps) {
+interface ResizableTableWithChildrenProps extends ResizableTableBaseProps {
+  getColumnConfig: (key: string) => ColumnConfig | undefined;
+  children: React.ReactNode;
+  renderHeader?: never;
+  renderRow?: never;
+  data?: never;
+  actionColumnWidth?: never;
+}
+
+type ResizableTableProps = ResizableTableWithRenderProps | ResizableTableWithChildrenProps;
+
+export function ResizableTable(props: ResizableTableProps) {
+  const {
+    visibleColumns,
+    onColumnResize,
+    onColumnReorder,
+    className,
+  } = props;
+
   const [resizing, setResizing] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -94,6 +108,57 @@ export function ResizableTable({
     setDragOverIndex(null);
   };
 
+  // Children-based version (new)
+  if ('children' in props && props.children) {
+    const { getColumnConfig, children } = props;
+    
+    return (
+      <div className={cn('overflow-x-auto rounded-md border', className)}>
+        <Table style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
+          <TableHeader>
+            <TableRow>
+              {visibleColumns.map((col, index) => (
+                <TableHead
+                  key={col.key}
+                  style={{ width: col.width, minWidth: col.width, maxWidth: col.width }}
+                  className={cn(
+                    'relative select-none',
+                    dragOverIndex === index && 'bg-accent',
+                    draggedIndex === index && 'opacity-50'
+                  )}
+                  draggable={!!onColumnReorder}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="flex items-center gap-1 pr-2">
+                    {onColumnReorder && (
+                      <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
+                    )}
+                    <span className="truncate">{getColumnConfig(col.key)?.label || col.key}</span>
+                  </div>
+                  <div
+                    className={cn(
+                      'absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 transition-colors',
+                      resizing === col.key && 'bg-primary'
+                    )}
+                    onMouseDown={(e) => handleMouseDown(e, col.key, col.width)}
+                  />
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          {children}
+        </Table>
+      </div>
+    );
+  }
+
+  // Render props version (legacy)
+  const { renderHeader, renderRow, data, actionColumnWidth = 80 } = props as ResizableTableWithRenderProps;
+
   return (
     <div className={cn('overflow-x-auto', className)}>
       <Table style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
@@ -135,9 +200,7 @@ export function ResizableTable({
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {data.map((item) => renderRow(item, visibleColumns))}
-        </TableBody>
+        {data.map((item) => renderRow(item, visibleColumns))}
       </Table>
     </div>
   );
@@ -151,11 +214,11 @@ interface ResizableTableCellProps {
 
 export function ResizableTableCell({ width, children, className }: ResizableTableCellProps) {
   return (
-    <TableCell
+    <td
       style={{ width, minWidth: width, maxWidth: width }}
-      className={cn('truncate', className)}
+      className={cn('truncate p-4 align-middle [&:has([role=checkbox])]:pr-0', className)}
     >
       {children}
-    </TableCell>
+    </td>
   );
 }
