@@ -65,7 +65,7 @@ const Sales = () => {
 
       const { data, error } = await supabase
         .from('sales')
-        .select('*, partners(name)')
+        .select('*, partner:partners(name)')
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
@@ -94,7 +94,7 @@ const Sales = () => {
       case 'name':
         return <span className="font-medium">{sale.name}</span>;
       case 'partner':
-        return sale.partners?.name || '-';
+        return sale.partner?.name || '-';
       case 'expected_value':
         return formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings);
       case 'currency':
