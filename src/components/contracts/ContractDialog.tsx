@@ -249,7 +249,7 @@ const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogProps) =
               <TabsTrigger value="notifications" className="text-sm">Figyelmeztetések</TabsTrigger>
             </TabsList>
 
-            <div className="min-h-[400px]">
+            <div className="h-[450px] overflow-y-auto">
               <TabsContent value="basic" className="space-y-4 mt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
