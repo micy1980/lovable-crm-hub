@@ -15,6 +15,7 @@ interface SalesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sale?: any;
+  partnerId?: string;
 }
 
 interface SalesFormData {
@@ -28,7 +29,7 @@ interface SalesFormData {
   partner_id: string;
 }
 
-export const SalesDialog = ({ open, onOpenChange, sale }: SalesDialogProps) => {
+export const SalesDialog = ({ open, onOpenChange, sale, partnerId }: SalesDialogProps) => {
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export const SalesDialog = ({ open, onOpenChange, sale }: SalesDialogProps) => {
       currency: 'HUF',
       expected_close_date: '',
       business_unit: '',
-      partner_id: '',
+      partner_id: partnerId || '',
     }
   });
 

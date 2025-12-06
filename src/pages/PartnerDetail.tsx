@@ -29,6 +29,7 @@ import { PartnerDialog } from '@/components/partners/PartnerDialog';
 import { TaskDialog } from '@/components/projects/TaskDialog';
 import { EventDialog } from '@/components/events/EventDialog';
 import { DocumentDialog } from '@/components/documents/DocumentDialog';
+import { SalesDialog } from '@/components/sales/SalesDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +65,7 @@ export default function PartnerDetail() {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
+  const [isSalesDialogOpen, setIsSalesDialogOpen] = useState(false);
 
   // Fetch partner details
   const { data: partner, isLoading: partnerLoading } = useQuery({
@@ -337,9 +339,19 @@ export default function PartnerDetail() {
           {/* Sales Tab */}
           <TabsContent value="sales">
             <Card>
-              <CardHeader>
-                <CardTitle>{t('sales.title')}</CardTitle>
-                <CardDescription>{t('partners.relatedSales')}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t('sales.title')}</CardTitle>
+                  <CardDescription>{t('partners.relatedSales')}</CardDescription>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => checkReadOnly(() => setIsSalesDialogOpen(true))}
+                  disabled={!canEdit}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('sales.create')}
+                </Button>
               </CardHeader>
               <CardContent>
                 {sales.length === 0 ? (
@@ -603,6 +615,17 @@ export default function PartnerDetail() {
             }
           }}
           defaultPartnerId={id}
+        />
+
+        <SalesDialog
+          open={isSalesDialogOpen}
+          onOpenChange={(open) => {
+            setIsSalesDialogOpen(open);
+            if (!open) {
+              queryClient.invalidateQueries({ queryKey: ['partner-sales', id] });
+            }
+          }}
+          partnerId={id}
         />
       </div>
     </LicenseGuard>
