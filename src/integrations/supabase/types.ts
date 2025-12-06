@@ -1896,6 +1896,8 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      hard_delete_contract: { Args: { _contract_id: string }; Returns: boolean }
+      hard_delete_document: { Args: { _document_id: string }; Returns: boolean }
       invalidate_2fa_verifications: {
         Args: { _user_id: string }
         Returns: undefined
