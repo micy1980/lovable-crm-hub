@@ -18,6 +18,7 @@ import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const STORAGE_KEY = 'contracts-column-settings';
 
@@ -62,6 +63,18 @@ const Contracts = () => {
       c.partner?.name?.toLowerCase().includes(lower)
     );
   }, [contracts, searchTerm]);
+
+  const { sortedData: sortedContracts, sortState, handleSort } = useSortableData({
+    data: filteredContracts,
+    sortFunctions: {
+      title: (a, b) => (a.title || '').localeCompare(b.title || '', 'hu'),
+      partner: (a, b) => (a.partner?.name || '').localeCompare(b.partner?.name || '', 'hu'),
+      type: (a, b) => (a.contract_type || '').localeCompare(b.contract_type || '', 'hu'),
+      expiry: (a, b) => new Date(a.expiry_date || 0).getTime() - new Date(b.expiry_date || 0).getTime(),
+      value: (a, b) => (a.total_value || 0) - (b.total_value || 0),
+      status: (a, b) => (a.status || '').localeCompare(b.status || ''),
+    },
+  });
 
   const getStatusBadge = (status: string | null) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
@@ -192,7 +205,7 @@ const Contracts = () => {
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : filteredContracts.length === 0 ? (
+        ) : sortedContracts.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -207,8 +220,10 @@ const Contracts = () => {
               visibleColumns={visibleColumns}
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
-              data={filteredContracts}
+              data={sortedContracts}
               renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
+              sortState={sortState}
+              onSort={handleSort}
               renderRow={(contract, columns) => (
                 <TableRow 
                   key={contract.id} 

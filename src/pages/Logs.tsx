@@ -28,6 +28,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable } from '@/components/shared/ResizableTable';
+import { useSortableData } from '@/hooks/useSortableData';
 
 // User-Company Assignments Component
 const UserCompanyAssignments = () => {
@@ -115,6 +116,17 @@ const UserCompanyAssignments = () => {
     return matchesUser && matchesCompany;
   });
 
+  const { sortedData: sortedAssignments, sortState: assignmentSortState, handleSort: handleAssignmentSort } = useSortableData({
+    data: filteredAssignments,
+    sortFunctions: {
+      user_name: (a, b) => (a.profiles?.full_name || '').localeCompare(b.profiles?.full_name || '', 'hu'),
+      user_id: (a, b) => (a.user_id || '').localeCompare(b.user_id || ''),
+      company_name: (a, b) => (a.companies?.name || '').localeCompare(b.companies?.name || '', 'hu'),
+      company_id: (a, b) => (a.company_id || '').localeCompare(b.company_id || ''),
+      role: (a, b) => (a.companyRole || '').localeCompare(b.companyRole || ''),
+    },
+  });
+
   const renderAssignmentCellContent = (assignment: any, columnKey: string) => {
     switch (columnKey) {
       case 'user_name':
@@ -199,7 +211,7 @@ const UserCompanyAssignments = () => {
         </div>
       </div>
 
-      {filteredAssignments.length === 0 ? (
+      {sortedAssignments.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">{t('logs.noAssignments')}</p>
         </div>
@@ -209,9 +221,11 @@ const UserCompanyAssignments = () => {
           getColumnConfig={assignmentGetColumnConfig}
           onColumnResize={assignmentSetColumnWidth}
           onColumnReorder={assignmentReorderColumns}
+          sortState={assignmentSortState}
+          onSort={handleAssignmentSort}
         >
           <TableBody>
-            {filteredAssignments.map((assignment: any) => (
+            {sortedAssignments.map((assignment: any) => (
               <TableRow key={assignment.id} className="h-10">
                 {assignmentVisibleColumns.map((col) => (
                   <TableCell key={col.key} className="py-2" style={{ width: col.width }}>
@@ -313,6 +327,18 @@ const Logs = () => {
       return data;
     },
     enabled: isSuper,
+  });
+
+  const { sortedData: sortedLogs, sortState: logsSortState, handleSort: handleLogsSort } = useSortableData({
+    data: logs,
+    defaultSort: { key: 'timestamp', direction: 'desc' },
+    sortFunctions: {
+      timestamp: (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime(),
+      company: (a, b) => ((a.companies as any)?.name || '').localeCompare((b.companies as any)?.name || '', 'hu'),
+      user: (a, b) => ((a.profiles as any)?.full_name || '').localeCompare((b.profiles as any)?.full_name || '', 'hu'),
+      entity_type: (a, b) => (a.entity_type || '').localeCompare(b.entity_type || ''),
+      action: (a, b) => (a.action || '').localeCompare(b.action || ''),
+    },
   });
 
   // Get unique event types from logs
@@ -471,7 +497,7 @@ const Logs = () => {
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : logs.length === 0 ? (
+          ) : sortedLogs.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">{t('logs.noLogs')}</p>
             </div>
@@ -481,9 +507,11 @@ const Logs = () => {
               getColumnConfig={logsGetColumnConfig}
               onColumnResize={logsSetColumnWidth}
               onColumnReorder={logsReorderColumns}
+              sortState={logsSortState}
+              onSort={handleLogsSort}
             >
               <TableBody>
-                {logs.map((log) => (
+                {sortedLogs.map((log) => (
                   <TableRow key={log.id}>
                     {logsVisibleColumns.map((col) => (
                       <TableCell key={col.key} style={{ width: col.width }}>

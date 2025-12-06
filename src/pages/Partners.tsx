@@ -15,6 +15,7 @@ import { ExportMenu } from '@/components/shared/ExportMenu';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -42,15 +43,15 @@ const Partners = () => {
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'name', label: t('partners.name'), defaultVisible: true, defaultWidth: 200, required: true },
     { key: 'category', label: t('partners.category'), defaultVisible: true, defaultWidth: 120 },
-    { key: 'headquarters', label: t('partners.headquarters'), defaultVisible: true, defaultWidth: 200 },
-    { key: 'site', label: t('partners.site'), defaultVisible: false, defaultWidth: 200 },
-    { key: 'mailing', label: t('partners.mailingAddress'), defaultVisible: false, defaultWidth: 200 },
+    { key: 'headquarters', label: t('partners.headquarters'), defaultVisible: true, defaultWidth: 200, sortable: false },
+    { key: 'site', label: t('partners.site'), defaultVisible: false, defaultWidth: 200, sortable: false },
+    { key: 'mailing', label: t('partners.mailingAddress'), defaultVisible: false, defaultWidth: 200, sortable: false },
     { key: 'phone', label: t('partners.phone'), defaultVisible: true, defaultWidth: 130 },
     { key: 'email', label: t('partners.email'), defaultVisible: true, defaultWidth: 180 },
     { key: 'taxId', label: t('partners.taxId'), defaultVisible: true, defaultWidth: 150 },
     { key: 'euVatNumber', label: t('partners.euVatNumber'), defaultVisible: false, defaultWidth: 150 },
     { key: 'currency', label: t('partners.defaultCurrency'), defaultVisible: false, defaultWidth: 100 },
-    { key: 'status', label: t('partners.statusLabel') || 'Státusz', defaultVisible: true, defaultWidth: 100 },
+    { key: 'status', label: t('partners.statusLabel') || 'Státusz', defaultVisible: true, defaultWidth: 100, sortable: false },
   ], [t]);
 
   // Columns that should be centered
@@ -65,6 +66,19 @@ const Partners = () => {
     resetToDefaults,
     getColumnConfig,
   } = useColumnSettings({ storageKey: STORAGE_KEY, columns: columnConfigs });
+
+  const { sortedData: sortedPartners, sortState, handleSort } = useSortableData({
+    data: partners,
+    sortFunctions: {
+      name: (a, b) => (a.name || '').localeCompare(b.name || '', 'hu'),
+      category: (a, b) => (a.category || '').localeCompare(b.category || '', 'hu'),
+      phone: (a, b) => (a.phone || '').localeCompare(b.phone || ''),
+      email: (a, b) => (a.email || '').localeCompare(b.email || ''),
+      taxId: (a, b) => (a.tax_id || '').localeCompare(b.tax_id || ''),
+      euVatNumber: (a, b) => (a.eu_vat_number || '').localeCompare(b.eu_vat_number || ''),
+      currency: (a, b) => (a.default_currency || '').localeCompare(b.default_currency || ''),
+    },
+  });
 
   // Export columns - only visible ones
   const exportColumns = useMemo(() => {
@@ -235,7 +249,7 @@ const Partners = () => {
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8">{t('common.loading')}</div>
-            ) : partners.length === 0 ? (
+            ) : sortedPartners.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 {t('partners.empty')}
               </div>
@@ -244,9 +258,11 @@ const Partners = () => {
                 visibleColumns={visibleColumns}
                 onColumnResize={setColumnWidth}
                 onColumnReorder={reorderColumns}
-                data={partners}
+                data={sortedPartners}
                 actionColumnHeader="Műveletek"
                 renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
+                sortState={sortState}
+                onSort={handleSort}
                 renderRow={(partner, columns) => (
                   <TableRow 
                     key={partner.id} 

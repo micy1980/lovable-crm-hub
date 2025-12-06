@@ -18,6 +18,7 @@ import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable } from '@/components/shared/ResizableTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -31,7 +32,7 @@ const Projects = () => {
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'code', label: 'Kód', defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
-    { key: 'description', label: 'Leírás', defaultWidth: 250 },
+    { key: 'description', label: 'Leírás', defaultWidth: 250, sortable: false },
     { key: 'status', label: 'Státusz', defaultWidth: 120 },
     { key: 'created_at', label: 'Létrehozva', defaultWidth: 150 },
   ], []);
@@ -71,6 +72,17 @@ const Projects = () => {
       return data;
     },
     enabled: !!activeCompany,
+  });
+
+  const { sortedData: sortedProjects, sortState, handleSort } = useSortableData({
+    data: projects || [],
+    sortFunctions: {
+      name: (a, b) => (a.name || '').localeCompare(b.name || '', 'hu'),
+      code: (a, b) => (a.code || '').localeCompare(b.code || ''),
+      partner: (a, b) => (a.partner?.name || '').localeCompare(b.partner?.name || '', 'hu'),
+      status: (a, b) => (a.status || '').localeCompare(b.status || ''),
+      created_at: (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime(),
+    },
   });
 
   const getStatusLabel = (status: string | null) => {
@@ -177,15 +189,17 @@ const Projects = () => {
             <div className="text-center py-8 text-muted-foreground">
               {t('projects.loadingProjects')}
             </div>
-          ) : projects && projects.length > 0 ? (
+          ) : sortedProjects.length > 0 ? (
             <ResizableTable
               visibleColumns={visibleColumns}
               getColumnConfig={getColumnConfig}
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
+              sortState={sortState}
+              onSort={handleSort}
             >
               <TableBody>
-                {projects.map((project) => (
+                {sortedProjects.map((project) => (
                   <TableRow
                     key={project.id}
                     className="cursor-pointer hover:bg-accent/50"
