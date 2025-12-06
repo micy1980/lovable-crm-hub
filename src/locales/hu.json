@@ -140,6 +140,8 @@
     "actions": "Műveletek",
     "columns": "Oszlopok",
     "visibleColumns": "Látható oszlopok",
+    "dragToReorder": "Húzással átrendezheti az oszlopokat",
+    "reset": "Visszaállítás",
     "yes": "Igen",
     "no": "Nem",
     "createdAt": "Létrehozva",
