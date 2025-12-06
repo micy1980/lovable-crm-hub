@@ -110,7 +110,7 @@ export const ActiveSessionsTab = () => {
                   <TableHead>Felhasználó</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Utolsó bejelentkezés</TableHead>
-                  <TableHead className="text-right">Műveletek</TableHead>
+                  <TableHead>Műveletek</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,7 +120,7 @@ export const ActiveSessionsTab = () => {
 
                   return (
                     <TableRow key={session.user_id}>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={(checked) => 
@@ -129,7 +129,7 @@ export const ActiveSessionsTab = () => {
                           disabled={isCurrentUser}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-center">
                         {session.user_full_name || 'N/A'}
                         {isCurrentUser && (
                           <Badge variant="secondary" className="ml-2 text-xs">
@@ -137,8 +137,8 @@ export const ActiveSessionsTab = () => {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>{session.user_email}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">{session.user_email}</TableCell>
+                      <TableCell className="text-center">
                         {session.last_sign_in_at ? (
                           <span className="text-sm">
                             {new Date(session.last_sign_in_at).toLocaleString('hu-HU', {
@@ -154,7 +154,7 @@ export const ActiveSessionsTab = () => {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
                         <Button
                           size="sm"
                           variant="outline"

@@ -300,39 +300,39 @@ export function UserList() {
               {/* Header Row */}
               <div className="grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] bg-background border-b border-border">
                 <div 
-                  className="px-4 py-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 border-r border-border"
+                  className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('fullName')}
                 >
                   {t('users.user')}
                   {getSortIcon('fullName')}
                 </div>
-                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
+                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
                   {t('users.saStatus')}
                 </div>
-                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
+                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
                   {t('users.status')}
                 </div>
-                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
+                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
                   Regisztráció
                 </div>
                 <div 
-                  className="px-4 py-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1 border-r border-border"
+                  className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('isActive')}
                 >
                   {t('users.active')}
                   {getSortIcon('isActive')}
                 </div>
-                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
+                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center border-r border-border">
                   {t('users.permissions')}
                 </div>
                 <div 
-                  className="px-4 py-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1 border-r border-border"
+                  className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('createdAt')}
                 >
                   {t('users.createdAt')}
                   {getSortIcon('createdAt')}
                 </div>
-                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-end">
+                <div className="px-4 py-3 text-sm font-semibold text-foreground flex items-center justify-center">
                   {t('common.actions')}
                 </div>
               </div>
@@ -531,7 +531,7 @@ export function UserList() {
                             </div>
 
                             {/* Actions Column */}
-                            <div className="px-4 py-3 flex items-center justify-end gap-1">
+                            <div className="px-4 py-3 flex items-center justify-center gap-1">
                               {userIsLocked && currentUserIsSA && (
                                 <TooltipProvider>
                                   <Tooltip>
