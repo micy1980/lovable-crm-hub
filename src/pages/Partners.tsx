@@ -237,6 +237,7 @@ const Partners = () => {
               <ResizableTable
                 visibleColumns={visibleColumns}
                 onColumnResize={setColumnWidth}
+                onColumnReorder={reorderColumns}
                 data={partners}
                 renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
                 renderRow={(partner, columns) => (

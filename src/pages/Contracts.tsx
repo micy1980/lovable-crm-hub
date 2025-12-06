@@ -208,6 +208,7 @@ const Contracts = () => {
             <ResizableTable
               visibleColumns={visibleColumns}
               onColumnResize={setColumnWidth}
+              onColumnReorder={reorderColumns}
               data={filteredContracts}
               renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
               renderRow={(contract, columns) => (
