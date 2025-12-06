@@ -65,7 +65,7 @@ export function AppSidebar() {
   );
 
   // Check if we're in the settings or account management area
-  const isSettingsActive = location.pathname === '/settings' || location.pathname === '/account-management';
+  const isSettingsActive = location.pathname === '/settings' || location.pathname === '/account-management' || location.pathname === '/companies';
   
   // Check if we're in the document storage area
   const isDocumentStorageActive = location.pathname === '/documents' || location.pathname === '/contracts' || location.pathname.startsWith('/contracts/');
@@ -184,6 +184,21 @@ export function AppSidebar() {
                           </NavLink>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                      {isSuper && (
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink
+                              to="/companies"
+                              end
+                              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                              activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                            >
+                              <Building2 className="h-4 w-4" />
+                              <span>Vállalatok</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )}
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton asChild>
                           <NavLink
