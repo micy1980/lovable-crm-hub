@@ -215,10 +215,12 @@ export function CompanyList() {
                   const sortField_ = getSortField();
                   const isSortable = sortField_ !== null;
                   
+                    const isLeftAlign = ['name', 'taxId', 'address'].includes(col.key);
+                    
                     return (
                       <div
                         key={col.key}
-                        className={`text-sm font-semibold text-foreground flex items-center gap-1 px-4 py-3 min-w-0 ${col.key === 'name' ? 'justify-start' : 'justify-center'} ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                        className={`text-sm font-semibold text-foreground flex items-center gap-1 px-4 py-3 min-w-0 ${isLeftAlign ? 'justify-start' : 'justify-center'} ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
                         onClick={isSortable ? () => handleSort(sortField_!) : undefined}
                       >
                         <span className="truncate">{config?.label}</span>
@@ -246,25 +248,25 @@ export function CompanyList() {
                       switch (col.key) {
                         case 'name':
                           return (
-                            <div key={col.key} className={`font-medium flex items-center truncate px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`font-medium flex items-center truncate px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               {company.name}
                             </div>
                           );
                         case 'taxId':
                           return (
-                            <div key={col.key} className={`flex items-center text-sm px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`flex items-center text-sm px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               {company.tax_id || '-'}
                             </div>
                           );
                         case 'address':
                           return (
-                            <div key={col.key} className={`flex items-center text-sm truncate px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`flex items-center text-sm truncate px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               {company.address || '-'}
                             </div>
                           );
                         case 'license':
                           return (
-                            <div key={col.key} className={`flex items-center justify-center px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`flex items-center justify-center px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               <CompanyLicenseInfo 
                                 companyId={company.id} 
                                 companyName={company.name}
@@ -274,19 +276,19 @@ export function CompanyList() {
                           );
                         case 'userCount':
                           return (
-                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               {company.user_count} / {company.max_users || '-'}
                             </div>
                           );
                         case 'createdAt':
                           return (
-                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
                             </div>
                           );
                         case 'actions':
                           return (
-                            <div key={col.key} className={`flex items-center justify-center gap-1 px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                            <div key={col.key} className={`flex items-center justify-center gap-1 px-4 py-3 min-w-0 ${!isLast ? 'border-r border-border' : ''}`}>
                               <Button
                                 variant="ghost"
                                 size="icon"
