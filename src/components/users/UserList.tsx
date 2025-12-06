@@ -28,14 +28,14 @@ import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 
 const COLUMN_CONFIGS: ColumnConfig[] = [
-  { key: 'user', label: 'Felhasználó', defaultWidth: 300, required: true },
+  { key: 'user', label: 'Felhasználó', defaultWidth: 280, required: true },
   { key: 'sa', label: 'SA státusz', defaultWidth: 100 },
   { key: 'status', label: 'Állapot', defaultWidth: 80 },
   { key: 'registration', label: 'Regisztráció', defaultWidth: 100 },
   { key: 'active', label: 'Aktív', defaultWidth: 120 },
   { key: 'permissions', label: 'Jogosultságok', defaultWidth: 120 },
   { key: 'createdAt', label: 'Létrehozva', defaultWidth: 150 },
-  { key: 'actions', label: 'Műveletek', defaultWidth: 70 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 90 },
 ];
 
 export function UserList() {
@@ -332,7 +332,7 @@ export function UserList() {
             <div className="border rounded-lg overflow-x-auto">
               <div className="w-fit min-w-full">
                 {/* Header Row */}
-                <div className="grid grid-cols-[300px_100px_80px_100px_120px_120px_150px_70px] bg-background border-b border-border">
+                <div className="grid grid-cols-[280px_100px_80px_100px_120px_120px_150px_90px] bg-background border-b border-border">
                 <div 
                   className="px-4 py-3 text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('fullName')}
@@ -391,7 +391,7 @@ export function UserList() {
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[300px_100px_80px_100px_120px_120px_150px_70px] border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[280px_100px_80px_100px_120px_120px_150px_90px] border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
