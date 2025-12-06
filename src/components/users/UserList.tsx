@@ -298,41 +298,41 @@ export function UserList() {
 
             <div className="border rounded-lg overflow-hidden">
               {/* Header Row */}
-              <div className="grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] gap-4 px-4 py-3 bg-background border-b border-border">
+              <div className="grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] bg-background border-b border-border">
                 <div 
-                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1"
+                  className="px-4 py-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 border-r border-border"
                   onClick={() => handleSort('fullName')}
                 >
                   {t('users.user')}
                   {getSortIcon('fullName')}
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
                   {t('users.saStatus')}
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
                   {t('users.status')}
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
                   Regisztráció
                 </div>
                 <div 
-                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                  className="px-4 py-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('isActive')}
                 >
                   {t('users.active')}
                   {getSortIcon('isActive')}
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center">
+                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-center border-r border-border">
                   {t('users.permissions')}
                 </div>
                 <div 
-                  className="text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                  className="px-4 py-3 text-sm font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center justify-center gap-1 border-r border-border"
                   onClick={() => handleSort('createdAt')}
                 >
                   {t('users.createdAt')}
                   {getSortIcon('createdAt')}
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground flex items-center justify-end">
+                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground flex items-center justify-end">
                   {t('common.actions')}
                 </div>
               </div>
@@ -357,19 +357,19 @@ export function UserList() {
                         <div key={user.id}>
                           <div
                             className={cn(
-                              "grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] gap-4 px-4 py-3 border-b hover:bg-muted/20 transition-colors",
+                              "grid grid-cols-[200px_80px_80px_90px_100px_60px_130px_100px] border-b hover:bg-muted/20 transition-colors",
                               index % 2 === 1 ? 'bg-muted/10' : '',
                               isLastSA ? 'border-b-2 border-border' : 'border-border'
                             )}
                           >
                             {/* User Column */}
-                            <div className="flex flex-col justify-center min-w-0">
+                            <div className="px-4 py-3 flex flex-col justify-center min-w-0 border-r border-border">
                               <span className="font-medium text-sm truncate">{user.full_name || '-'}</span>
                               <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                             </div>
 
                             {/* SA Column */}
-                            <div className="flex items-center justify-center">
+                            <div className="px-4 py-3 flex items-center justify-center border-r border-border">
                               {isSA ? (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -389,7 +389,7 @@ export function UserList() {
                             </div>
 
                             {/* Status Column (Locked) */}
-                            <div className="flex items-center justify-center">
+                            <div className="px-4 py-3 flex items-center justify-center border-r border-border">
                               {userIsLocked && lockDetails ? (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -428,7 +428,7 @@ export function UserList() {
                             </div>
 
                             {/* Registration Status Column */}
-                            <div className="flex items-center justify-center">
+                            <div className="px-4 py-3 flex items-center justify-center border-r border-border">
                               {user.registered_at ? (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -480,7 +480,7 @@ export function UserList() {
                             </div>
 
                             {/* Active Column */}
-                            <div className="flex items-center justify-center">
+                            <div className="px-4 py-3 flex items-center justify-center border-r border-border">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -503,7 +503,7 @@ export function UserList() {
                             </div>
 
                             {/* Permissions Column */}
-                            <div className="flex items-center justify-center">
+                            <div className="px-4 py-3 flex items-center justify-center border-r border-border">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -524,14 +524,14 @@ export function UserList() {
                             </div>
 
                             {/* Created At Column */}
-                            <div className="flex items-center justify-center">
+                            <div className="px-4 py-3 flex items-center justify-center border-r border-border">
                               <span className="text-xs text-muted-foreground">
                                 {format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}
                               </span>
                             </div>
 
                             {/* Actions Column */}
-                            <div className="flex items-center justify-end gap-1">
+                            <div className="px-4 py-3 flex items-center justify-end gap-1">
                               {userIsLocked && currentUserIsSA && (
                                 <TooltipProvider>
                                   <Tooltip>
