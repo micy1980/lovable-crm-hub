@@ -66,6 +66,7 @@ interface FormData {
   location: string;
   project_id: string;
   sales_id: string;
+  partner_id: string;
   responsible_user_id: string;
   is_all_day: boolean;
 }
@@ -100,6 +101,7 @@ export const EventDialog = ({
       location: '',
       project_id: '',
       sales_id: '',
+      partner_id: '',
       responsible_user_id: '',
       is_all_day: false,
     }
@@ -154,6 +156,22 @@ export const EventDialog = ({
     enabled: !!activeCompany?.id && open,
   });
 
+  const { data: partners = [] } = useQuery({
+    queryKey: ['partners-for-events', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany?.id) return [];
+      const { data, error } = await supabase
+        .from('partners')
+        .select('id, name')
+        .eq('company_id', activeCompany.id)
+        .is('deleted_at', null)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany?.id && open,
+  });
+
   useEffect(() => {
     if (open) {
       if (event) {
@@ -170,6 +188,7 @@ export const EventDialog = ({
           location: event.location || '',
           project_id: event.project_id || '',
           sales_id: event.sales_id || '',
+          partner_id: event.partner_id || '',
           responsible_user_id: event.responsible_user_id || '',
           is_all_day: event.is_all_day || false,
         });
@@ -190,6 +209,7 @@ export const EventDialog = ({
             location: '',
             project_id: defaultProjectId || '',
             sales_id: defaultSalesId || '',
+            partner_id: '',
             responsible_user_id: currentUserId,
             is_all_day: false,
           });
@@ -228,6 +248,7 @@ export const EventDialog = ({
       location: data.location,
       project_id: data.project_id || null,
       sales_id: data.sales_id || null,
+      partner_id: data.partner_id || null,
       responsible_user_id: data.responsible_user_id || null,
       is_all_day: data.is_all_day,
       participants: participants.map(p => ({
@@ -445,6 +466,24 @@ export const EventDialog = ({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t('partners.title', 'Partner')}</Label>
+            <Select
+              value={watch('partner_id') || '_none_'}
+              onValueChange={(v) => setValue('partner_id', v === '_none_' ? '' : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('events.selectPartner', 'Válasszon partnert')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none_">{t('common.none', 'Nincs')}</SelectItem>
+                {partners.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

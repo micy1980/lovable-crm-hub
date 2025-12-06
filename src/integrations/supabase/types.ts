@@ -316,6 +316,7 @@ export type Database = {
           id: string
           is_all_day: boolean | null
           location: string | null
+          partner_id: string | null
           project_id: string | null
           responsible_user_id: string | null
           sales_id: string | null
@@ -333,6 +334,7 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           location?: string | null
+          partner_id?: string | null
           project_id?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
@@ -350,6 +352,7 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           location?: string | null
+          partner_id?: string | null
           project_id?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
@@ -377,6 +380,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {
@@ -1181,6 +1191,7 @@ export type Database = {
           description: string | null
           id: string
           is_all_day: boolean | null
+          partner_id: string | null
           project_id: string | null
           responsible_user_id: string | null
           sales_id: string | null
@@ -1197,6 +1208,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_all_day?: boolean | null
+          partner_id?: string | null
           project_id?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
@@ -1213,6 +1225,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_all_day?: boolean | null
+          partner_id?: string | null
           project_id?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
@@ -1240,6 +1253,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {
