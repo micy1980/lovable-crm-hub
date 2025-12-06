@@ -162,7 +162,10 @@
     "partnersDescription": "Ügyfelek, beszállítók, partnerek",
     "upcomingTasksTitle": "Közelgő feladatok",
     "tasksDescription": "Feladatok a következő 7 napban",
-    "noDeadline": "Nincs határidő"
+    "noDeadline": "Nincs határidő",
+    "weeklyOverview": "Heti áttekintés",
+    "viewCalendar": "Naptár megtekintése",
+    "more": "további"
   },
   "partners": {
     "title": "Partnerek",

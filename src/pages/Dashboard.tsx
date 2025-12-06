@@ -9,6 +9,7 @@ import { TasksWidget } from '@/components/dashboard/TasksWidget';
 import { ProjectsChart } from '@/components/dashboard/ProjectsChart';
 import { SalesChart } from '@/components/dashboard/SalesChart';
 import { RecentActivityWidget } from '@/components/dashboard/RecentActivityWidget';
+import { WeeklyCalendarWidget } from '@/components/dashboard/WeeklyCalendarWidget';
 
 const Dashboard = () => {
   const { activeCompany } = useCompany();
@@ -140,6 +141,8 @@ const Dashboard = () => {
 
         <LicenseStatusWidget />
       </div>
+
+      <WeeklyCalendarWidget />
 
       <TasksWidget />
       
