@@ -261,11 +261,11 @@ export default function MyItems() {
                           const taskColor = getItemColor(task, 'task');
                           
                           return (
-                            <TableRow 
-                              key={task.id} 
-                              className={taskColor ? `${taskColor.bg} ${taskColor.textOnBg}` : ''}
-                            >
-                              <TableCell>
+                            <TableRow key={task.id} className="relative">
+                              {taskColor && (
+                                <td className={`absolute left-0 top-0 bottom-0 w-1 ${taskColor.bg}`} />
+                              )}
+                              <TableCell className={taskColor ? 'pl-4' : ''}>
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium">{task.title}</span>
                                   {isOverdue && (
@@ -359,11 +359,11 @@ export default function MyItems() {
                           const eventColor = getItemColor(event, 'event');
                           
                           return (
-                            <TableRow 
-                              key={event.id}
-                              className={eventColor ? `${eventColor.bg} ${eventColor.textOnBg}` : ''}
-                            >
-                              <TableCell>
+                            <TableRow key={event.id} className="relative">
+                              {eventColor && (
+                                <td className={`absolute left-0 top-0 bottom-0 w-1 ${eventColor.bg}`} />
+                              )}
+                              <TableCell className={eventColor ? 'pl-4' : ''}>
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium">{event.title}</span>
                                   {event.is_all_day && (
