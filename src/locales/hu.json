@@ -204,10 +204,12 @@
     "relatedTasks": "A partnerhez kapcsolódó feladatok",
     "relatedEvents": "A partnerhez kapcsolódó események",
     "relatedDocuments": "A partnerhez kapcsolódó dokumentumok",
+    "relatedProjects": "A partnerhez kapcsolódó projektek",
     "noSales": "Nincs kapcsolódó értékesítés",
     "noTasks": "Nincs kapcsolódó feladat",
     "noEvents": "Nincs kapcsolódó esemény",
     "noDocuments": "Nincs kapcsolódó dokumentum",
+    "noProjects": "Nincs kapcsolódó projekt",
     "address": {
       "country": "Ország",
       "county": "Megye",
