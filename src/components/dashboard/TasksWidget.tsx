@@ -81,24 +81,24 @@ export const TasksWidget = () => {
             <CardDescription>Ezek a feladatok már lejártak</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-1">
               {overdueTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-start justify-between border-b pb-3 last:border-0 cursor-pointer hover:bg-accent/50 p-2 rounded transition-colors"
+                  className="flex items-center justify-between border-b py-1.5 last:border-0 cursor-pointer hover:bg-accent/50 px-2 rounded transition-colors"
                   onClick={() => handleTaskClick(task)}
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{task.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {task.projects?.name || task.sales?.name || 'Általános'}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2 ml-2">
                     <Badge variant="destructive" className="text-xs">
                       Lejárt
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'Nincs határidő'}
                     </span>
                   </div>
@@ -119,24 +119,24 @@ export const TasksWidget = () => {
         </CardHeader>
         <CardContent>
           {upcomingTasks && upcomingTasks.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {upcomingTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-start justify-between border-b pb-3 last:border-0 cursor-pointer hover:bg-accent/50 p-2 rounded transition-colors"
+                  className="flex items-center justify-between border-b py-1.5 last:border-0 cursor-pointer hover:bg-accent/50 px-2 rounded transition-colors"
                   onClick={() => handleTaskClick(task)}
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{task.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {task.projects?.name || task.sales?.name || 'Általános'}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2 ml-2">
                     <Badge variant="outline" className="text-xs">
                       {task.status}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'Nincs határidő'}
                     </span>
                   </div>
