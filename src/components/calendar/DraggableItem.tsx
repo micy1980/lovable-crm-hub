@@ -37,19 +37,19 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-// Color map for custom colors
+// Color map for custom colors - with better dark mode visibility
 const colorMap: Record<string, { bg: string; bgLight: string; border: string; text: string; darkBg: string; darkBorder: string; darkText: string }> = {
-  blue: { bg: 'bg-blue-500', bgLight: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', darkBg: 'dark:bg-blue-900/30', darkBorder: 'dark:border-blue-700', darkText: 'dark:text-blue-300' },
-  green: { bg: 'bg-green-500', bgLight: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', darkBg: 'dark:bg-green-900/30', darkBorder: 'dark:border-green-700', darkText: 'dark:text-green-300' },
-  orange: { bg: 'bg-orange-500', bgLight: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', darkBg: 'dark:bg-orange-900/30', darkBorder: 'dark:border-orange-700', darkText: 'dark:text-orange-300' },
-  red: { bg: 'bg-red-500', bgLight: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', darkBg: 'dark:bg-red-900/30', darkBorder: 'dark:border-red-700', darkText: 'dark:text-red-300' },
-  purple: { bg: 'bg-purple-500', bgLight: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-800', darkBg: 'dark:bg-purple-900/30', darkBorder: 'dark:border-purple-700', darkText: 'dark:text-purple-300' },
-  pink: { bg: 'bg-pink-500', bgLight: 'bg-pink-100', border: 'border-pink-300', text: 'text-pink-800', darkBg: 'dark:bg-pink-900/30', darkBorder: 'dark:border-pink-700', darkText: 'dark:text-pink-300' },
-  cyan: { bg: 'bg-cyan-500', bgLight: 'bg-cyan-100', border: 'border-cyan-300', text: 'text-cyan-800', darkBg: 'dark:bg-cyan-900/30', darkBorder: 'dark:border-cyan-700', darkText: 'dark:text-cyan-300' },
-  yellow: { bg: 'bg-yellow-500', bgLight: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-800', darkBg: 'dark:bg-yellow-900/30', darkBorder: 'dark:border-yellow-700', darkText: 'dark:text-yellow-300' },
-  indigo: { bg: 'bg-indigo-500', bgLight: 'bg-indigo-100', border: 'border-indigo-300', text: 'text-indigo-800', darkBg: 'dark:bg-indigo-900/30', darkBorder: 'dark:border-indigo-700', darkText: 'dark:text-indigo-300' },
-  teal: { bg: 'bg-teal-500', bgLight: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', darkBg: 'dark:bg-teal-900/30', darkBorder: 'dark:border-teal-700', darkText: 'dark:text-teal-300' },
-  violet: { bg: 'bg-violet-500', bgLight: 'bg-violet-100', border: 'border-violet-300', text: 'text-violet-800', darkBg: 'dark:bg-violet-900/30', darkBorder: 'dark:border-violet-700', darkText: 'dark:text-violet-300' },
+  blue: { bg: 'bg-blue-500', bgLight: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', darkBg: 'dark:bg-blue-500/25', darkBorder: 'dark:border-blue-500/50', darkText: 'dark:text-blue-200' },
+  green: { bg: 'bg-green-500', bgLight: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', darkBg: 'dark:bg-green-500/25', darkBorder: 'dark:border-green-500/50', darkText: 'dark:text-green-200' },
+  orange: { bg: 'bg-orange-500', bgLight: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', darkBg: 'dark:bg-orange-500/25', darkBorder: 'dark:border-orange-500/50', darkText: 'dark:text-orange-200' },
+  red: { bg: 'bg-red-500', bgLight: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', darkBg: 'dark:bg-red-500/25', darkBorder: 'dark:border-red-500/50', darkText: 'dark:text-red-200' },
+  purple: { bg: 'bg-purple-500', bgLight: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-800', darkBg: 'dark:bg-purple-500/25', darkBorder: 'dark:border-purple-500/50', darkText: 'dark:text-purple-200' },
+  pink: { bg: 'bg-pink-500', bgLight: 'bg-pink-100', border: 'border-pink-300', text: 'text-pink-800', darkBg: 'dark:bg-pink-500/25', darkBorder: 'dark:border-pink-500/50', darkText: 'dark:text-pink-200' },
+  cyan: { bg: 'bg-cyan-500', bgLight: 'bg-cyan-100', border: 'border-cyan-300', text: 'text-cyan-800', darkBg: 'dark:bg-cyan-500/25', darkBorder: 'dark:border-cyan-500/50', darkText: 'dark:text-cyan-200' },
+  yellow: { bg: 'bg-yellow-500', bgLight: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-800', darkBg: 'dark:bg-yellow-500/25', darkBorder: 'dark:border-yellow-500/50', darkText: 'dark:text-yellow-200' },
+  indigo: { bg: 'bg-indigo-500', bgLight: 'bg-indigo-100', border: 'border-indigo-300', text: 'text-indigo-800', darkBg: 'dark:bg-indigo-500/25', darkBorder: 'dark:border-indigo-500/50', darkText: 'dark:text-indigo-200' },
+  teal: { bg: 'bg-teal-500', bgLight: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', darkBg: 'dark:bg-teal-500/25', darkBorder: 'dark:border-teal-500/50', darkText: 'dark:text-teal-200' },
+  violet: { bg: 'bg-violet-500', bgLight: 'bg-violet-100', border: 'border-violet-300', text: 'text-violet-800', darkBg: 'dark:bg-violet-500/25', darkBorder: 'dark:border-violet-500/50', darkText: 'dark:text-violet-200' },
 };
 
 const getCustomColorClass = (color: string | null | undefined): string => {
