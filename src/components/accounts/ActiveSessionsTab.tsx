@@ -129,7 +129,7 @@ export const ActiveSessionsTab = () => {
                           disabled={isCurrentUser}
                         />
                       </TableCell>
-                      <TableCell className="font-medium text-center">
+                      <TableCell className="font-medium">
                         {session.user_full_name || 'N/A'}
                         {isCurrentUser && (
                           <Badge variant="secondary" className="ml-2 text-xs">
@@ -137,7 +137,7 @@ export const ActiveSessionsTab = () => {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-center">{session.user_email}</TableCell>
+                      <TableCell>{session.user_email}</TableCell>
                       <TableCell className="text-center">
                         {session.last_sign_in_at ? (
                           <span className="text-sm">

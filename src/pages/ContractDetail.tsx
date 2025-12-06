@@ -349,18 +349,18 @@ const ContractDetail = () => {
                     <TableBody>
                       {versions.map((version) => (
                         <TableRow key={version.id}>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge variant="outline">v{version.version_number}</Badge>
                           </TableCell>
                           <TableCell>{version.title}</TableCell>
                           <TableCell className="max-w-xs truncate">
                             {version.change_summary || '-'}
                           </TableCell>
-                          <TableCell>{formatFileSize(version.file_size)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">{formatFileSize(version.file_size)}</TableCell>
+                          <TableCell className="text-center">
                             {version.created_at && formatDate(version.created_at)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {version.file_path && (
                               <Button
                                 variant="ghost"

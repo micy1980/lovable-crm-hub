@@ -332,7 +332,7 @@ export function UserCompanyPermissionsDialog({ user, open, onClose }: UserCompan
 
                     return (
                       <TableRow key={company.id} className="hover:bg-muted/50">
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Checkbox
                             checked={isAssigned}
                             onCheckedChange={(checked) =>

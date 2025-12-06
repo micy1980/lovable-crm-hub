@@ -212,9 +212,9 @@ export function CompanyList() {
                   key={company.id}
                   className="grid grid-cols-[200px_120px_1fr_120px_120px_120px_140px] border-b border-border hover:bg-muted/20 transition-colors"
                 >
-                  <div className="font-medium flex items-center justify-center truncate px-4 py-3 border-r border-border">{company.name}</div>
-                  <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
-                  <div className="flex items-center justify-center text-sm truncate px-4 py-3 border-r border-border">{company.address || '-'}</div>
+                  <div className="font-medium flex items-center truncate px-4 py-3 border-r border-border">{company.name}</div>
+                  <div className="flex items-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
+                  <div className="flex items-center text-sm truncate px-4 py-3 border-r border-border">{company.address || '-'}</div>
                   <div className="flex items-center justify-center px-4 py-3 border-r border-border">
                     <CompanyLicenseInfo 
                       companyId={company.id} 
