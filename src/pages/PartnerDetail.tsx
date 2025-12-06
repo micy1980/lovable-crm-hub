@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import {
@@ -18,7 +19,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
+import { usePartners } from '@/hooks/usePartners';
+import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
+import { PartnerDialog } from '@/components/partners/PartnerDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +51,10 @@ export default function PartnerDetail() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeCompany } = useCompany();
+  const queryClient = useQueryClient();
+  const { updatePartner } = usePartners();
+  const { canEdit, checkReadOnly } = useReadOnlyMode();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Fetch partner details
   const { data: partner, isLoading: partnerLoading } = useQuery({
@@ -198,6 +206,13 @@ export default function PartnerDetail() {
               )}
             </div>
           </div>
+          <Button 
+            onClick={() => checkReadOnly(() => setIsDialogOpen(true))} 
+            disabled={!canEdit}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            {t('common.edit')}
+          </Button>
         </div>
 
         {/* Partner Info Cards */}
@@ -502,6 +517,21 @@ export default function PartnerDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <PartnerDialog
+          open={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          onSubmit={(data) => {
+            updatePartner.mutate({ id: partner.id, ...data }, {
+              onSuccess: () => {
+                setIsDialogOpen(false);
+                queryClient.invalidateQueries({ queryKey: ['partner', id] });
+              },
+            });
+          }}
+          isSubmitting={updatePartner.isPending}
+          initialData={partner}
+        />
       </div>
     </LicenseGuard>
   );
