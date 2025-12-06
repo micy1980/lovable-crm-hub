@@ -565,8 +565,7 @@ export function UserList() {
                             </div>
 
                             {/* Actions Column */}
-                            <div className="px-4 py-3">
-                              <div className="flex items-center justify-center gap-1">
+                            <div className="px-4 py-3 flex items-center justify-center gap-1">
                               {userIsLocked && currentUserIsSA && (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -624,7 +623,7 @@ export function UserList() {
                                       }}
                                       disabled={!canEdit || (isSA && (isSelf || !currentUserIsSA))}
                                     >
-                              <Trash2 className="h-4 w-4" />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -637,7 +636,6 @@ export function UserList() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              </div>
                             </div>
                           </div>
                         </div>
