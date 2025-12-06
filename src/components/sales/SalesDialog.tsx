@@ -126,6 +126,9 @@ export const SalesDialog = ({ open, onOpenChange, sale, partnerId }: SalesDialog
       }
 
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      if (sale) {
+        queryClient.invalidateQueries({ queryKey: ['sale', sale.id] });
+      }
       onOpenChange(false);
       reset();
     } catch (error: any) {

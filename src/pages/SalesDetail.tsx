@@ -114,7 +114,7 @@ const SalesDetail = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Várható érték</p>
-                <p className="mt-1 text-right font-mono">
+                <p className="mt-1 font-mono">
                   {sale.expected_value 
                     ? `${formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings)} ${sale.currency || 'HUF'}`
                     : 'Nincs megadva'}
