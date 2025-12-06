@@ -18,6 +18,8 @@ import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable } from '@/components/shared/ResizableTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -26,6 +28,8 @@ const Sales = () => {
   const { canEdit } = useReadOnlyMode();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { settings: systemSettings } = useSystemSettings();
+  const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
@@ -37,8 +41,9 @@ const Sales = () => {
     { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false },
   ], []);
 
-  // Columns that should be centered
+  // Columns that should be centered or right-aligned
   const centeredColumns = ['currency', 'expected_close_date', 'status'];
+  const rightAlignedColumns = ['expected_value'];
 
   const {
     columnStates,
@@ -91,9 +96,7 @@ const Sales = () => {
       case 'partner':
         return sale.partners?.name || '-';
       case 'expected_value':
-        return sale.expected_value 
-          ? sale.expected_value.toLocaleString('hu-HU')
-          : '-';
+        return formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings);
       case 'currency':
         return sale.currency || 'HUF';
       case 'expected_close_date':
@@ -198,7 +201,13 @@ const Sales = () => {
                       <TableCell 
                         key={col.key} 
                         style={{ width: col.width }}
-                        className={centeredColumns.includes(col.key) ? 'text-center' : ''}
+                        className={
+                          centeredColumns.includes(col.key) 
+                            ? 'text-center' 
+                            : rightAlignedColumns.includes(col.key)
+                              ? 'text-right'
+                              : ''
+                        }
                       >
                         {renderCellContent(sale, col.key)}
                       </TableCell>

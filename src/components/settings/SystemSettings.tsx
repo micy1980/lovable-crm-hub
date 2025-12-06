@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
@@ -20,6 +21,10 @@ export const SystemSettings = () => {
   const [twoFactorMaxAttempts, setTwoFactorMaxAttempts] = useState<string>('10');
   const [twoFactorWindowMinutes, setTwoFactorWindowMinutes] = useState<string>('10');
   const [twoFactorLockMinutes, setTwoFactorLockMinutes] = useState<string>('10');
+  // Number formatting states
+  const [useSystemLocale, setUseSystemLocale] = useState<boolean>(true);
+  const [thousandSeparator, setThousandSeparator] = useState<string>(' ');
+  const [decimalSeparator, setDecimalSeparator] = useState<string>(',');
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -54,6 +59,16 @@ export const SystemSettings = () => {
       }
       if (settings.two_factor_lock_minutes) {
         setTwoFactorLockMinutes(settings.two_factor_lock_minutes);
+      }
+      // Number formatting settings
+      if (settings.use_system_locale_formatting !== undefined) {
+        setUseSystemLocale(settings.use_system_locale_formatting !== 'false');
+      }
+      if (settings.number_thousand_separator) {
+        setThousandSeparator(settings.number_thousand_separator);
+      }
+      if (settings.number_decimal_separator) {
+        setDecimalSeparator(settings.number_decimal_separator);
       }
     }
   }, [settings]);
@@ -147,6 +162,23 @@ export const SystemSettings = () => {
       updateSetting.mutate({
         key: 'two_factor_lock_minutes',
         value: lockMinutes.toString(),
+      });
+    }
+
+    // Number formatting settings
+    updateSetting.mutate({
+      key: 'use_system_locale_formatting',
+      value: useSystemLocale.toString(),
+    });
+
+    if (!useSystemLocale) {
+      updateSetting.mutate({
+        key: 'number_thousand_separator',
+        value: thousandSeparator,
+      });
+      updateSetting.mutate({
+        key: 'number_decimal_separator',
+        value: decimalSeparator,
       });
     }
   };
@@ -385,6 +417,68 @@ export const SystemSettings = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Mennyi ideig legyen zárolva a 2FA sikertelen kísérletek után (alapértelmezett: 10 perc)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Number Formatting */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Számformázás</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="use-system-locale">
+                    Böngésző területi beállításai használata
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Ha bekapcsolva, a számok formázása a böngésző nyelvi beállításai szerint történik
+                  </p>
+                </div>
+                <Switch
+                  id="use-system-locale"
+                  checked={useSystemLocale}
+                  onCheckedChange={setUseSystemLocale}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="thousand-separator">
+                  Ezres elválasztó
+                </Label>
+                <Input
+                  id="thousand-separator"
+                  type="text"
+                  maxLength={1}
+                  value={thousandSeparator}
+                  onChange={(e) => setThousandSeparator(e.target.value)}
+                  className="w-24"
+                  disabled={useSystemLocale}
+                  placeholder=" "
+                />
+                <p className="text-xs text-muted-foreground">
+                  Karakter, ami elválasztja az ezreseket (pl. szóköz, pont, vessző)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="decimal-separator">
+                  Tizedes elválasztó
+                </Label>
+                <Input
+                  id="decimal-separator"
+                  type="text"
+                  maxLength={1}
+                  value={decimalSeparator}
+                  onChange={(e) => setDecimalSeparator(e.target.value)}
+                  className="w-24"
+                  disabled={useSystemLocale}
+                  placeholder=","
+                />
+                <p className="text-xs text-muted-foreground">
+                  Karakter, ami elválasztja a tizedeseket (pl. vessző, pont)
                 </p>
               </div>
             </div>
