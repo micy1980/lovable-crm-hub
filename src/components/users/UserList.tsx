@@ -66,7 +66,7 @@ export function UserList() {
     reorderColumns,
     resetToDefaults,
   } = useColumnSettings({
-    storageKey: 'users-columns',
+    storageKey: 'users-columns-v2',
     columns: COLUMN_CONFIGS,
   });
 
