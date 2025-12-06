@@ -249,7 +249,8 @@ export const useMyItems = () => {
         .select(`
           *,
           project:projects(id, name, task_color, event_color),
-          sales:sales(id, name)
+          sales:sales(id, name),
+          partner:partners(id, name)
         `)
         .eq('company_id', activeCompany.id)
         .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
@@ -264,7 +265,8 @@ export const useMyItems = () => {
         .select(`
           *,
           project:projects(id, name, task_color, event_color),
-          sales:sales(id, name)
+          sales:sales(id, name),
+          partner:partners(id, name)
         `)
         .eq('company_id', activeCompany.id)
         .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
