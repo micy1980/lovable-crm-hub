@@ -565,8 +565,8 @@ export function UserList() {
                             </div>
 
                             {/* Actions Column */}
-                            <div className="px-4 py-3 text-center">
-                              <div className="inline-flex items-center justify-center gap-1">
+                            <div className="px-4 py-3 flex items-center justify-center" style={{ justifySelf: 'stretch' }}>
+                              <div className="flex items-center justify-center gap-1 w-full">
                               {userIsLocked && currentUserIsSA && (
                                 <TooltipProvider>
                                   <Tooltip>
