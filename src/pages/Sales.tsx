@@ -9,11 +9,15 @@ import { isSuperAdmin } from '@/lib/roleUtils';
 import { Link, useNavigate } from 'react-router-dom';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SalesDialog } from '@/components/sales/SalesDialog';
 import { ExportMenu } from '@/components/shared/ExportMenu';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { ResizableTable } from '@/components/shared/ResizableTable';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -22,6 +26,29 @@ const Sales = () => {
   const { canEdit } = useReadOnlyMode();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'name', label: t('sales.name') || 'Név', required: true, defaultWidth: 200 },
+    { key: 'partner', label: 'Partner', defaultWidth: 180 },
+    { key: 'expected_value', label: t('sales.expectedValue') || 'Várható érték', defaultWidth: 150 },
+    { key: 'currency', label: t('sales.currency') || 'Pénznem', defaultWidth: 100 },
+    { key: 'expected_close_date', label: t('sales.expectedCloseDate') || 'Várható lezárás', defaultWidth: 140 },
+    { key: 'status', label: t('sales.status') || 'Státusz', defaultWidth: 120 },
+    { key: 'description', label: t('sales.salesDescription') || 'Leírás', defaultWidth: 200, defaultVisible: false },
+  ], [t]);
+
+  const {
+    columnStates,
+    visibleColumns,
+    toggleVisibility,
+    setColumnWidth,
+    reorderColumns,
+    resetToDefaults,
+    getColumnConfig,
+  } = useColumnSettings({
+    storageKey: 'sales-column-settings',
+    columns: columnConfigs,
+  });
 
   const { data: sales, isLoading } = useQuery({
     queryKey: ['sales', activeCompany?.id],
@@ -40,6 +67,48 @@ const Sales = () => {
     },
     enabled: !!activeCompany,
   });
+
+  const getStatusLabel = (status: string | null) => {
+    if (!status) return '-';
+    switch (status) {
+      case 'lead': return 'Lead';
+      case 'qualified': return 'Minősített';
+      case 'proposal': return 'Ajánlat';
+      case 'negotiation': return 'Tárgyalás';
+      case 'closed_won': return 'Megnyert';
+      case 'closed_lost': return 'Elveszett';
+      default: return status;
+    }
+  };
+
+  const renderCellContent = (sale: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'name':
+        return <span className="font-medium">{sale.name}</span>;
+      case 'partner':
+        return sale.partners?.name || '-';
+      case 'expected_value':
+        return sale.expected_value 
+          ? sale.expected_value.toLocaleString('hu-HU')
+          : '-';
+      case 'currency':
+        return sale.currency || 'HUF';
+      case 'expected_close_date':
+        return sale.expected_close_date
+          ? new Date(sale.expected_close_date).toLocaleDateString('hu-HU')
+          : '-';
+      case 'status':
+        return sale.status ? (
+          <Badge variant="secondary">{getStatusLabel(sale.status)}</Badge>
+        ) : '-';
+      case 'description':
+        return sale.description ? (
+          <span className="line-clamp-2">{sale.description}</span>
+        ) : '-';
+      default:
+        return '-';
+    }
+  };
 
   if (!activeCompany) {
     return (
@@ -74,16 +143,19 @@ const Sales = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <ColumnSettingsPopover
+            columnStates={columnStates}
+            columns={columnConfigs}
+            onToggleVisibility={toggleVisibility}
+            onReorder={reorderColumns}
+            onReset={resetToDefaults}
+          />
           <ExportMenu
             data={sales || []}
-            columns={[
-              { header: 'Név', key: 'name' },
-              { header: 'Leírás', key: 'description' },
-              { header: 'Státusz', key: 'status' },
-              { header: 'Várható érték', key: 'expected_value' },
-              { header: 'Pénznem', key: 'currency' },
-              { header: 'Várható lezárás', key: 'expected_close_date' },
-            ]}
+            columns={visibleColumns.map(col => ({
+              header: getColumnConfig(col.key)?.label || col.key,
+              key: col.key === 'partner' ? 'partners.name' : col.key,
+            }))}
             title="Értékesítések"
           />
           <Button onClick={() => setDialogOpen(true)} disabled={!canEdit}>
@@ -106,40 +178,28 @@ const Sales = () => {
               Betöltés...
             </div>
           ) : sales && sales.length > 0 ? (
-            <div className="space-y-4">
-              {sales.map((sale) => (
-                <div
-                  key={sale.id}
-                  className="flex items-center justify-between border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/sales/${sale.id}`)}
-                >
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{sale.name}</h3>
-                    {sale.partners && (
-                      <p className="text-sm text-muted-foreground">Partner: {sale.partners.name}</p>
-                    )}
-                    {sale.expected_value && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Várható érték: {sale.expected_value.toLocaleString()} {sale.currency || 'HUF'}
-                      </p>
-                    )}
-                    {sale.status && (
-                      <Badge variant="secondary" className="mt-2">
-                        {sale.status === 'lead' && 'Lead'}
-                        {sale.status === 'qualified' && 'Minősített'}
-                        {sale.status === 'proposal' && 'Ajánlat'}
-                        {sale.status === 'negotiation' && 'Tárgyalás'}
-                        {sale.status === 'closed_won' && 'Megnyert'}
-                        {sale.status === 'closed_lost' && 'Elveszett'}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/sales/${sale.id}`); }}>
-                    Részletek
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <ResizableTable
+              visibleColumns={visibleColumns}
+              getColumnConfig={getColumnConfig}
+              onColumnResize={setColumnWidth}
+              onColumnReorder={reorderColumns}
+            >
+              <TableBody>
+                {sales.map((sale) => (
+                  <TableRow
+                    key={sale.id}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => navigate(`/sales/${sale.id}`)}
+                  >
+                    {visibleColumns.map((col) => (
+                      <TableCell key={col.key} style={{ width: col.width }}>
+                        {renderCellContent(sale, col.key)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </ResizableTable>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               Nincs értékesítési lehetőség

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -21,23 +21,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { ResizableTable } from '@/components/shared/ResizableTable';
 
 // User-Company Assignments Component
 const UserCompanyAssignments = () => {
   const { t } = useTranslation();
   const [userFilter, setUserFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
+
+  const assignmentColumnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'user_name', label: t('logs.userName') || 'Felhasználó', required: true, defaultWidth: 180 },
+    { key: 'user_id', label: 'User ID', defaultWidth: 280 },
+    { key: 'company_name', label: t('logs.company') || 'Vállalat', defaultWidth: 180 },
+    { key: 'company_id', label: 'Company ID', defaultWidth: 280 },
+    { key: 'role', label: t('settings.role') || 'Szerepkör', defaultWidth: 100 },
+  ], [t]);
+
+  const {
+    columnStates: assignmentColumnStates,
+    visibleColumns: assignmentVisibleColumns,
+    toggleVisibility: assignmentToggleVisibility,
+    setColumnWidth: assignmentSetColumnWidth,
+    reorderColumns: assignmentReorderColumns,
+    resetToDefaults: assignmentResetToDefaults,
+    getColumnConfig: assignmentGetColumnConfig,
+  } = useColumnSettings({
+    storageKey: 'logs-assignments-column-settings',
+    columns: assignmentColumnConfigs,
+  });
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['user-company-assignments'],
@@ -98,6 +115,43 @@ const UserCompanyAssignments = () => {
     return matchesUser && matchesCompany;
   });
 
+  const renderAssignmentCellContent = (assignment: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'user_name':
+        return (
+          <span className="text-sm font-medium">
+            {assignment.profiles?.full_name || t('logs.unknown')}
+          </span>
+        );
+      case 'user_id':
+        return (
+          <span className="font-mono text-xs text-muted-foreground">
+            {assignment.user_id}
+          </span>
+        );
+      case 'company_name':
+        return (
+          <span className="text-sm">
+            {assignment.companies?.name || t('logs.unknown')}
+          </span>
+        );
+      case 'company_id':
+        return (
+          <span className="font-mono text-xs text-muted-foreground">
+            {assignment.company_id}
+          </span>
+        );
+      case 'role':
+        return (
+          <Badge variant="secondary" className="text-xs h-5">
+            {assignment.companyRole}
+          </Badge>
+        );
+      default:
+        return '-';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -134,6 +188,15 @@ const UserCompanyAssignments = () => {
             className="w-full px-3 py-2 border rounded-md bg-background"
           />
         </div>
+        <div className="flex items-end">
+          <ColumnSettingsPopover
+            columnStates={assignmentColumnStates}
+            columns={assignmentColumnConfigs}
+            onToggleVisibility={assignmentToggleVisibility}
+            onReorder={assignmentReorderColumns}
+            onReset={assignmentResetToDefaults}
+          />
+        </div>
       </div>
 
       {filteredAssignments.length === 0 ? (
@@ -141,50 +204,24 @@ const UserCompanyAssignments = () => {
           <p className="text-muted-foreground">{t('logs.noAssignments')}</p>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow className="h-8">
-                <TableHead className="py-2 w-auto">{t('logs.userName')}</TableHead>
-                <TableHead className="py-2 w-auto">User ID</TableHead>
-                <TableHead className="py-2 w-auto">{t('logs.company')}</TableHead>
-                <TableHead className="py-2 w-auto">Company ID</TableHead>
-                <TableHead className="py-2 w-[100px]">{t('settings.role')}</TableHead>
+        <ResizableTable
+          visibleColumns={assignmentVisibleColumns}
+          getColumnConfig={assignmentGetColumnConfig}
+          onColumnResize={assignmentSetColumnWidth}
+          onColumnReorder={assignmentReorderColumns}
+        >
+          <TableBody>
+            {filteredAssignments.map((assignment: any) => (
+              <TableRow key={assignment.id} className="h-10">
+                {assignmentVisibleColumns.map((col) => (
+                  <TableCell key={col.key} className="py-2" style={{ width: col.width }}>
+                    {renderAssignmentCellContent(assignment, col.key)}
+                  </TableCell>
+                ))}
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAssignments.map((assignment: any) => (
-                <TableRow key={assignment.id} className="h-10">
-                  <TableCell className="py-2 w-auto">
-                    <span className="text-sm font-medium">
-                      {assignment.profiles?.full_name || t('logs.unknown')}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 w-auto">
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {assignment.user_id}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 w-auto">
-                    <span className="text-sm">
-                      {assignment.companies?.name || t('logs.unknown')}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 w-auto">
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {assignment.company_id}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 w-[100px]">
-                    <Badge variant="secondary" className="text-xs h-5">
-                      {assignment.companyRole}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </ResizableTable>
       )}
     </div>
   );
@@ -196,6 +233,28 @@ const Logs = () => {
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<string>('all');
+
+  const logsColumnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'timestamp', label: t('logs.timestamp') || 'Időbélyeg', required: true, defaultWidth: 160 },
+    { key: 'company', label: t('logs.company') || 'Vállalat', defaultWidth: 150 },
+    { key: 'user', label: t('logs.user') || 'Felhasználó', defaultWidth: 180 },
+    { key: 'entity_type', label: t('logs.entityType') || 'Entitás', defaultWidth: 120 },
+    { key: 'action', label: t('logs.action') || 'Művelet', defaultWidth: 100 },
+    { key: 'details', label: t('logs.details') || 'Részletek', defaultWidth: 250 },
+  ], [t]);
+
+  const {
+    columnStates: logsColumnStates,
+    visibleColumns: logsVisibleColumns,
+    toggleVisibility: logsToggleVisibility,
+    setColumnWidth: logsSetColumnWidth,
+    reorderColumns: logsReorderColumns,
+    resetToDefaults: logsResetToDefaults,
+    getColumnConfig: logsGetColumnConfig,
+  } = useColumnSettings({
+    storageKey: 'logs-audit-column-settings',
+    columns: logsColumnConfigs,
+  });
 
   // Check if user is super_admin
   const isSuper = isSuperAdmin(profile);
@@ -260,6 +319,60 @@ const Logs = () => {
   const eventTypes = Array.from(
     new Set(logs.map((log) => log.entity_type).filter(Boolean))
   ).sort();
+
+  const renderLogCellContent = (log: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'timestamp':
+        return (
+          <span className="font-mono text-xs">
+            {new Date(log.created_at!).toLocaleString('hu-HU')}
+          </span>
+        );
+      case 'company':
+        return log.company_id ? (
+          <span className="text-sm">
+            {(log.companies as any)?.name || log.company_id}
+          </span>
+        ) : (
+          <Badge variant="outline">{t('logs.system')}</Badge>
+        );
+      case 'user':
+        return (
+          <div className="text-sm">
+            <div className="font-medium">
+              {(log.profiles as any)?.full_name || t('logs.unknown')}
+            </div>
+            <div className="text-muted-foreground text-xs">
+              {(log.profiles as any)?.email}
+            </div>
+          </div>
+        );
+      case 'entity_type':
+        return <Badge variant="secondary">{log.entity_type}</Badge>;
+      case 'action':
+        return (
+          <Badge
+            variant={
+              log.action === 'DELETE'
+                ? 'destructive'
+                : log.action === 'CREATE'
+                ? 'default'
+                : 'outline'
+            }
+          >
+            {log.action}
+          </Badge>
+        );
+      case 'details':
+        return log.entity_id ? (
+          <div className="text-xs text-muted-foreground truncate">
+            {t('logs.entityId')}: {log.entity_id}
+          </div>
+        ) : '-';
+      default:
+        return '-';
+    }
+  };
 
   if (profileLoading) {
     return (
@@ -341,6 +454,16 @@ const Logs = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="flex items-end">
+              <ColumnSettingsPopover
+                columnStates={logsColumnStates}
+                columns={logsColumnConfigs}
+                onToggleVisibility={logsToggleVisibility}
+                onReorder={logsReorderColumns}
+                onReset={logsResetToDefaults}
+              />
+            </div>
           </div>
 
           {/* Logs Table */}
@@ -353,71 +476,24 @@ const Logs = () => {
               <p className="text-muted-foreground">{t('logs.noLogs')}</p>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('logs.timestamp')}</TableHead>
-                    <TableHead>{t('logs.company')}</TableHead>
-                    <TableHead>{t('logs.user')}</TableHead>
-                    <TableHead>{t('logs.entityType')}</TableHead>
-                    <TableHead>{t('logs.action')}</TableHead>
-                    <TableHead>{t('logs.details')}</TableHead>
+            <ResizableTable
+              visibleColumns={logsVisibleColumns}
+              getColumnConfig={logsGetColumnConfig}
+              onColumnResize={logsSetColumnWidth}
+              onColumnReorder={logsReorderColumns}
+            >
+              <TableBody>
+                {logs.map((log) => (
+                  <TableRow key={log.id}>
+                    {logsVisibleColumns.map((col) => (
+                      <TableCell key={col.key} style={{ width: col.width }}>
+                        {renderLogCellContent(log, col.key)}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-mono text-xs">
-                        {new Date(log.created_at!).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {log.company_id ? (
-                          <span className="text-sm">
-                            {(log.companies as any)?.name || log.company_id}
-                          </span>
-                        ) : (
-                          <Badge variant="outline">{t('logs.system')}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {(log.profiles as any)?.full_name || t('logs.unknown')}
-                          </div>
-                          <div className="text-muted-foreground text-xs">
-                            {(log.profiles as any)?.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{log.entity_type}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            log.action === 'DELETE'
-                              ? 'destructive'
-                              : log.action === 'CREATE'
-                              ? 'default'
-                              : 'outline'
-                          }
-                        >
-                          {log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        {log.entity_id && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            {t('logs.entityId')}: {log.entity_id}
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </ResizableTable>
           )}
             </CardContent>
           </Card>
