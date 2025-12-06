@@ -4,6 +4,7 @@ import {
   FolderKanban,
   TrendingUp,
   FileText,
+  FileSignature,
   Calendar,
   Settings,
   Building2,
@@ -49,6 +50,7 @@ export function AppSidebar() {
     { title: t('nav.projects'), url: '/projects', icon: FolderKanban, feature: 'projects' },
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
     { title: t('nav.documents'), url: '/documents', icon: FileText, feature: 'documents' },
+    { title: 'Szerződések', url: '/contracts', icon: FileSignature, feature: 'documents' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
     { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'my_items' },
   ];
