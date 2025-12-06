@@ -193,48 +193,39 @@ export function CompanyList() {
           <div className="border rounded-lg overflow-x-auto">
             <div className="min-w-[800px]">
               {/* Header Row */}
-              <div className="grid grid-cols-[20%_12%_22%_10%_10%_12%_14%] bg-background border-b border-border">
-                <div 
-                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                  onClick={() => handleSort('name')}
-                >
-                  {t('companies.name')}
-                  {getSortIcon('name')}
-                </div>
-                <div 
-                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                  onClick={() => handleSort('tax_id')}
-                >
-                  {t('companies.taxId')}
-                  {getSortIcon('tax_id')}
-                </div>
-                <div 
-                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                  onClick={() => handleSort('address')}
-                >
-                  {t('companies.address')}
-                  {getSortIcon('address')}
-                </div>
-                <div className="text-sm font-semibold text-foreground text-center flex items-center justify-center px-4 py-3 border-r border-border">
-                  {t('companies.license')}
-                </div>
-                <div 
-                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                  onClick={() => handleSort('user_count')}
-                >
-                  {t('companies.userCount')}
-                  {getSortIcon('user_count')}
-                </div>
-                <div 
-                  className="text-sm font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center justify-center gap-1 px-4 py-3 border-r border-border"
-                  onClick={() => handleSort('created_at')}
-                >
-                  {t('companies.createdAt')}
-                  {getSortIcon('created_at')}
-                </div>
-                <div className="text-sm font-semibold text-foreground text-center flex items-center justify-center px-4 py-3">
-                  {t('common.actions')}
-                </div>
+              <div 
+                className="grid bg-background border-b border-border"
+                style={{ gridTemplateColumns: visibleColumns.map(() => '1fr').join(' ') }}
+              >
+                {visibleColumns.map((col, idx) => {
+                  const isLast = idx === visibleColumns.length - 1;
+                  const config = COLUMN_CONFIGS.find(c => c.key === col.key);
+                  
+                  const getSortField = () => {
+                    switch (col.key) {
+                      case 'name': return 'name';
+                      case 'taxId': return 'tax_id';
+                      case 'address': return 'address';
+                      case 'userCount': return 'user_count';
+                      case 'createdAt': return 'created_at';
+                      default: return null;
+                    }
+                  };
+                  
+                  const sortField_ = getSortField();
+                  const isSortable = sortField_ !== null;
+                  
+                  return (
+                    <div
+                      key={col.key}
+                      className={`text-sm font-semibold text-foreground flex items-center justify-center gap-1 px-4 py-3 ${!isLast ? 'border-r border-border' : ''} ${isSortable ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                      onClick={isSortable ? () => handleSort(sortField_!) : undefined}
+                    >
+                      {config?.label}
+                      {isSortable && getSortIcon(sortField_!)}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Body Rows */}
@@ -243,56 +234,92 @@ export function CompanyList() {
                   {t('companies.empty')}
                 </div>
               ) : (
-                filteredCompanies.map((company: any, index: number) => (
+                filteredCompanies.map((company: any) => (
                   <div
                     key={company.id}
-                    className="grid grid-cols-[20%_12%_22%_10%_10%_12%_14%] border-b border-border hover:bg-muted/20 transition-colors"
+                    className="grid border-b border-border hover:bg-muted/20 transition-colors"
+                    style={{ gridTemplateColumns: visibleColumns.map(() => '1fr').join(' ') }}
                   >
-                    <div className="font-medium flex items-center truncate px-4 py-3 border-r border-border">{company.name}</div>
-                    <div className="flex items-center text-sm px-4 py-3 border-r border-border">{company.tax_id || '-'}</div>
-                    <div className="flex items-center text-sm truncate px-4 py-3 border-r border-border">{company.address || '-'}</div>
-                    <div className="flex items-center justify-center px-4 py-3 border-r border-border">
-                      <CompanyLicenseInfo 
-                        companyId={company.id} 
-                        companyName={company.name}
-                        isSuperAdmin={userIsSuperAdmin}
-                      />
-                    </div>
-                    <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
-                      {company.user_count} / {company.max_users || '-'}
-                    </div>
-                    <div className="flex items-center justify-center text-sm px-4 py-3 border-r border-border">
-                      {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
-                    </div>
-                    <div className="flex items-center justify-center gap-1 px-4 py-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(company)}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {userIsSuperAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setManagingLicenseCompany(company)}
-                          className="h-8 w-8"
-                          title="Licensz kezelés"
-                        >
-                          <Key className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeletingCompany(company)}
-                        className="h-8 w-8"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {visibleColumns.map((col, idx) => {
+                      const isLast = idx === visibleColumns.length - 1;
+                      
+                      switch (col.key) {
+                        case 'name':
+                          return (
+                            <div key={col.key} className={`font-medium flex items-center truncate px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              {company.name}
+                            </div>
+                          );
+                        case 'taxId':
+                          return (
+                            <div key={col.key} className={`flex items-center text-sm px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              {company.tax_id || '-'}
+                            </div>
+                          );
+                        case 'address':
+                          return (
+                            <div key={col.key} className={`flex items-center text-sm truncate px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              {company.address || '-'}
+                            </div>
+                          );
+                        case 'license':
+                          return (
+                            <div key={col.key} className={`flex items-center justify-center px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              <CompanyLicenseInfo 
+                                companyId={company.id} 
+                                companyName={company.name}
+                                isSuperAdmin={userIsSuperAdmin}
+                              />
+                            </div>
+                          );
+                        case 'userCount':
+                          return (
+                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              {company.user_count} / {company.max_users || '-'}
+                            </div>
+                          );
+                        case 'createdAt':
+                          return (
+                            <div key={col.key} className={`flex items-center justify-center text-sm px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              {company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-'}
+                            </div>
+                          );
+                        case 'actions':
+                          return (
+                            <div key={col.key} className={`flex items-center justify-center gap-1 px-4 py-3 ${!isLast ? 'border-r border-border' : ''}`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(company)}
+                                className="h-8 w-8"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              {userIsSuperAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setManagingLicenseCompany(company)}
+                                  className="h-8 w-8"
+                                  title="Licensz kezelés"
+                                >
+                                  <Key className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeletingCompany(company)}
+                                className="h-8 w-8"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        default:
+                          return null;
+                      }
+                    })}
                   </div>
                 ))
               )}
