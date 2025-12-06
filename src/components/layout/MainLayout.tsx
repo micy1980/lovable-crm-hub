@@ -51,7 +51,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <TopBar />
-          <main className="flex-1 overflow-auto bg-background p-6">
+          <main className="flex-1 overflow-auto bg-background bg-grid-lg p-6">
             {children}
           </main>
         </div>
