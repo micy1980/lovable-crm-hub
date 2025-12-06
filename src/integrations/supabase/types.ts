@@ -98,6 +98,255 @@ export type Database = {
           },
         ]
       }
+      contract_user_access: {
+        Row: {
+          company_id: string
+          contract_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          contract_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          contract_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_user_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_user_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_user_access_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_user_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_versions: {
+        Row: {
+          change_summary: string | null
+          contract_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          title: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          contract_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          title: string
+          version_number?: number
+        }
+        Update: {
+          change_summary?: string | null
+          contract_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          title?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_versions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          auto_renewal: boolean | null
+          billing_start_date: string | null
+          contract_number: string | null
+          contract_type: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          deleted_at: string | null
+          description: string | null
+          effective_date: string | null
+          expiry_date: string | null
+          expiry_warning_days: number | null
+          id: string
+          owner_company_id: string
+          partner_id: string | null
+          payment_day: number | null
+          payment_frequency: string | null
+          project_id: string | null
+          renewal_period_months: number | null
+          renewal_warning_days: number | null
+          restrict_access: boolean | null
+          sales_id: string | null
+          signed_date: string | null
+          status: string | null
+          termination_notice_days: number | null
+          termination_warning_days: number | null
+          title: string
+          total_value: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_renewal?: boolean | null
+          billing_start_date?: string | null
+          contract_number?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          effective_date?: string | null
+          expiry_date?: string | null
+          expiry_warning_days?: number | null
+          id?: string
+          owner_company_id: string
+          partner_id?: string | null
+          payment_day?: number | null
+          payment_frequency?: string | null
+          project_id?: string | null
+          renewal_period_months?: number | null
+          renewal_warning_days?: number | null
+          restrict_access?: boolean | null
+          sales_id?: string | null
+          signed_date?: string | null
+          status?: string | null
+          termination_notice_days?: number | null
+          termination_warning_days?: number | null
+          title: string
+          total_value?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_renewal?: boolean | null
+          billing_start_date?: string | null
+          contract_number?: string | null
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          effective_date?: string | null
+          expiry_date?: string | null
+          expiry_warning_days?: number | null
+          id?: string
+          owner_company_id?: string
+          partner_id?: string | null
+          payment_day?: number | null
+          payment_frequency?: string | null
+          project_id?: string | null
+          renewal_period_months?: number | null
+          renewal_warning_days?: number | null
+          restrict_access?: boolean | null
+          sales_id?: string | null
+          signed_date?: string | null
+          status?: string | null
+          termination_notice_days?: number | null
+          termination_warning_days?: number | null
+          title?: string
+          total_value?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_owner_company_id_fkey"
+            columns: ["owner_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_owner_company_id_fkey"
+            columns: ["owner_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       costs: {
         Row: {
           amount: number
@@ -1694,6 +1943,7 @@ export type Database = {
         Returns: undefined
       }
       soft_delete_company: { Args: { _company_id: string }; Returns: boolean }
+      soft_delete_contract: { Args: { _contract_id: string }; Returns: boolean }
       soft_delete_document: { Args: { _document_id: string }; Returns: boolean }
       soft_delete_event: { Args: { _event_id: string }; Returns: boolean }
       soft_delete_project: { Args: { _project_id: string }; Returns: boolean }
