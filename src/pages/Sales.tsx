@@ -20,6 +20,7 @@ import { ResizableTable } from '@/components/shared/ResizableTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
+import { useSortableData } from '@/hooks/useSortableData';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -38,7 +39,7 @@ const Sales = () => {
     { key: 'currency', label: 'Pénznem', defaultWidth: 100 },
     { key: 'expected_close_date', label: 'Várható lezárás', defaultWidth: 140 },
     { key: 'status', label: 'Státusz', defaultWidth: 120 },
-    { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false },
+    { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false, sortable: false },
   ], []);
 
   // Columns that should be centered or right-aligned
@@ -95,6 +96,17 @@ const Sales = () => {
     enabled: !!activeCompany,
   });
 
+  const { sortedData: sortedSales, sortState, handleSort } = useSortableData({
+    data: sales || [],
+    sortFunctions: {
+      name: (a, b) => (a.name || '').localeCompare(b.name || '', 'hu'),
+      partner: (a, b) => (a.partnerName || '').localeCompare(b.partnerName || '', 'hu'),
+      expected_value: (a, b) => (a.expected_value || 0) - (b.expected_value || 0),
+      currency: (a, b) => (a.currency || '').localeCompare(b.currency || ''),
+      expected_close_date: (a, b) => new Date(a.expected_close_date || 0).getTime() - new Date(b.expected_close_date || 0).getTime(),
+      status: (a, b) => (a.status || '').localeCompare(b.status || ''),
+    },
+  });
   const getStatusLabel = (status: string | null) => {
     if (!status) return '-';
     switch (status) {
@@ -202,15 +214,17 @@ const Sales = () => {
             <div className="text-center py-8 text-muted-foreground">
               Betöltés...
             </div>
-          ) : sales && sales.length > 0 ? (
+          ) : sortedSales.length > 0 ? (
             <ResizableTable
               visibleColumns={visibleColumns}
               getColumnConfig={getColumnConfig}
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
+              sortState={sortState}
+              onSort={handleSort}
             >
               <TableBody>
-                {sales.map((sale) => (
+                {sortedSales.map((sale) => (
                   <TableRow
                     key={sale.id}
                     className="cursor-pointer hover:bg-accent/50"
