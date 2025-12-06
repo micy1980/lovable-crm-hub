@@ -133,7 +133,7 @@ export function ResizableTable(props: ResizableTableProps) {
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="flex items-center gap-1 pr-2">
+                <div className="flex items-center justify-center gap-1 w-full">
                     {onColumnReorder && (
                       <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
                     )}
@@ -180,7 +180,7 @@ export function ResizableTable(props: ResizableTableProps) {
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
               >
-                <div className="flex items-center gap-1 pr-2">
+              <div className="flex items-center justify-center gap-1 w-full">
                   {onColumnReorder && (
                     <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
                   )}
