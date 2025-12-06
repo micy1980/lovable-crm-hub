@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TableBody, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useLoginAttemptsList } from '@/hooks/useLoginAttemptsList';
@@ -8,12 +8,36 @@ import { useState, useMemo } from 'react';
 import { CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+
+const COLUMN_CONFIGS: ColumnConfig[] = [
+  { key: 'time', label: 'Időpont', defaultWidth: 180 },
+  { key: 'email', label: 'Email', defaultWidth: 250 },
+  { key: 'ip', label: 'IP Cím', defaultWidth: 150 },
+  { key: 'user_agent', label: 'User Agent', defaultWidth: 250 },
+  { key: 'status', label: 'Státusz', defaultWidth: 120 },
+];
 
 export const LoginAttemptsTab = () => {
   const { loginAttempts, isLoading } = useLoginAttemptsList(200);
   const [emailFilter, setEmailFilter] = useState('');
   const [ipFilter, setIpFilter] = useState('');
   const queryClient = useQueryClient();
+
+  const {
+    visibleColumns,
+    columnStates,
+    toggleVisibility,
+    setColumnWidth,
+    reorderColumns,
+    resetToDefaults,
+    getColumnConfig,
+  } = useColumnSettings({
+    storageKey: 'login-attempts-columns',
+    columns: COLUMN_CONFIGS,
+  });
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['login-attempts'] });
@@ -41,13 +65,51 @@ export const LoginAttemptsTab = () => {
     return { successful, failed, uniqueIps, uniqueEmails };
   }, [filteredAttempts]);
 
+  const renderCellContent = (attempt: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'time':
+        return <span className="font-mono text-xs">{formatDate(attempt.attempt_time)}</span>;
+      case 'email':
+        return attempt.email;
+      case 'ip':
+        return <span className="font-mono text-xs">{attempt.ip_address || 'N/A'}</span>;
+      case 'user_agent':
+        return (
+          <span className="text-xs text-muted-foreground truncate block" title={attempt.user_agent}>
+            {attempt.user_agent || 'N/A'}
+          </span>
+        );
+      case 'status':
+        return attempt.success ? (
+          <Badge variant="default" className="bg-green-500">
+            <CheckCircle className="mr-1 h-3 w-3" />
+            Sikeres
+          </Badge>
+        ) : (
+          <Badge variant="destructive">
+            <XCircle className="mr-1 h-3 w-3" />
+            Sikertelen
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
         <Button onClick={handleRefresh} variant="outline" size="sm">
           <RefreshCw className="mr-2 h-4 w-4" />
           Frissítés
         </Button>
+        <ColumnSettingsPopover
+          columns={COLUMN_CONFIGS}
+          columnStates={columnStates}
+          onToggleVisibility={toggleVisibility}
+          onReorder={reorderColumns}
+          onReset={resetToDefaults}
+        />
       </div>
 
       {/* Statistics Cards */}
@@ -133,46 +195,28 @@ export const LoginAttemptsTab = () => {
               Nincs találat
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Időpont</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>IP Cím</TableHead>
-                  <TableHead>User Agent</TableHead>
-                  <TableHead>Státusz</TableHead>
-                </TableRow>
-              </TableHeader>
+            <ResizableTable
+              visibleColumns={visibleColumns}
+              onColumnResize={setColumnWidth}
+              onColumnReorder={reorderColumns}
+              getColumnConfig={getColumnConfig}
+            >
               <TableBody>
                 {filteredAttempts.map((attempt: any) => (
                   <TableRow key={attempt.id}>
-                    <TableCell className="font-mono text-xs text-center">
-                      {formatDate(attempt.attempt_time)}
-                    </TableCell>
-                    <TableCell>{attempt.email}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {attempt.ip_address || 'N/A'}
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
-                      {attempt.user_agent || 'N/A'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {attempt.success ? (
-                        <Badge variant="default" className="bg-green-500">
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Sikeres
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive">
-                          <XCircle className="mr-1 h-3 w-3" />
-                          Sikertelen
-                        </Badge>
-                      )}
-                    </TableCell>
+                    {visibleColumns.map((col) => (
+                      <ResizableTableCell 
+                        key={col.key} 
+                        width={col.width}
+                        className={['time', 'status'].includes(col.key) ? 'text-center' : ''}
+                      >
+                        {renderCellContent(attempt, col.key)}
+                      </ResizableTableCell>
+                    ))}
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </ResizableTable>
           )}
         </CardContent>
       </Card>
