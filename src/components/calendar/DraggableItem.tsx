@@ -116,11 +116,10 @@ export const DraggableItem = ({ item, onDoubleClick, variant = 'compact', showTi
   let colorClass: string;
   let compactBgClass: string;
   
-  if (hasCustomColor) {
+  if (hasCustomColor && item.color && colorMap[item.color]) {
+    const c = colorMap[item.color];
     colorClass = getCustomColorClass(item.color);
-    compactBgClass = item.color && colorMap[item.color] 
-      ? `${colorMap[item.color].bgLight}/50 hover:${colorMap[item.color].bgLight}`
-      : '';
+    compactBgClass = `${c.bgLight} ${c.darkBg}`;
   } else {
     colorClass = isEvent ? getEventColor() : getTaskStatusColor(item.status || 'pending');
     compactBgClass = isEvent ? "bg-violet-500/20 hover:bg-violet-500/30" : "bg-primary/10 hover:bg-primary/20";
