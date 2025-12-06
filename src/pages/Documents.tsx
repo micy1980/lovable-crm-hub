@@ -261,7 +261,7 @@ const Documents = () => {
                 <TableRow 
                   key={doc.id} 
                   className={`cursor-pointer hover:bg-muted/50 ${doc.deleted_at ? 'opacity-60' : ''}`}
-                  onClick={() => handleEdit(doc)}
+                  onClick={() => navigate(`/documents/${doc.id}`)}
                 >
                   {columns.map((col) => (
                     <ResizableTableCell 
