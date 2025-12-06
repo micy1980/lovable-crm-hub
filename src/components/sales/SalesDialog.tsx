@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 
 interface SalesDialogProps {
   open: boolean;
@@ -35,7 +36,7 @@ export const SalesDialog = ({ open, onOpenChange, sale, partnerId }: SalesDialog
   const { t } = useTranslation();
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<SalesFormData>({
-    defaultValues: sale || {
+    defaultValues: {
       name: '',
       description: '',
       status: 'lead',
@@ -46,6 +47,35 @@ export const SalesDialog = ({ open, onOpenChange, sale, partnerId }: SalesDialog
       partner_id: partnerId || '',
     }
   });
+
+  // Reset form when sale changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      if (sale) {
+        reset({
+          name: sale.name || '',
+          description: sale.description || '',
+          status: sale.status || 'lead',
+          expected_value: sale.expected_value?.toString() || '',
+          currency: sale.currency || 'HUF',
+          expected_close_date: sale.expected_close_date || '',
+          business_unit: sale.business_unit || '',
+          partner_id: sale.partner_id || partnerId || '',
+        });
+      } else {
+        reset({
+          name: '',
+          description: '',
+          status: 'lead',
+          expected_value: '',
+          currency: 'HUF',
+          expected_close_date: '',
+          business_unit: '',
+          partner_id: partnerId || '',
+        });
+      }
+    }
+  }, [open, sale, partnerId, reset]);
 
   // Fetch partners for dropdown
   const { data: partners = [] } = useQuery({
