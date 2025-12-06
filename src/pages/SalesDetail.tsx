@@ -24,13 +24,7 @@ const SalesDetail = () => {
 
       const { data, error } = await supabase
         .from('sales')
-        .select(`
-          *,
-          partner:partners (
-            id,
-            name
-          )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -38,6 +32,24 @@ const SalesDetail = () => {
       return data;
     },
     enabled: !!id,
+  });
+
+  // Fetch partner separately
+  const { data: partner } = useQuery({
+    queryKey: ['sale-partner', sale?.partner_id],
+    queryFn: async () => {
+      if (!sale?.partner_id) return null;
+
+      const { data, error } = await supabase
+        .from('partners')
+        .select('id, name')
+        .eq('id', sale.partner_id)
+        .single();
+
+      if (error) return null;
+      return data;
+    },
+    enabled: !!sale?.partner_id,
   });
 
   if (isLoading) {
@@ -71,8 +83,8 @@ const SalesDetail = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">{sale.name}</h1>
-          {sale.partner && (
-            <p className="text-muted-foreground">Partner: {sale.partner.name}</p>
+          {partner && (
+            <p className="text-muted-foreground">Partner: {partner.name}</p>
           )}
           </div>
           <Button onClick={() => setEditDialogOpen(true)} disabled={!canEdit}>

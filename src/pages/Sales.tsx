@@ -65,13 +65,32 @@ const Sales = () => {
 
       const { data, error } = await supabase
         .from('sales')
-        .select('*, partner:partners(id, name)')
+        .select('*')
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Fetch partner names for each sale that has a partner_id
+      const partnerIds = [...new Set(data.filter(s => s.partner_id).map(s => s.partner_id))];
+      let partnerMap: Record<string, string> = {};
+      
+      if (partnerIds.length > 0) {
+        const { data: partners } = await supabase
+          .from('partners')
+          .select('id, name')
+          .in('id', partnerIds);
+        
+        if (partners) {
+          partnerMap = Object.fromEntries(partners.map(p => [p.id, p.name]));
+        }
+      }
+      
+      return data.map(sale => ({
+        ...sale,
+        partnerName: sale.partner_id ? partnerMap[sale.partner_id] || null : null
+      }));
     },
     enabled: !!activeCompany,
   });
@@ -94,7 +113,7 @@ const Sales = () => {
       case 'name':
         return <span className="font-medium">{sale.name}</span>;
       case 'partner':
-        return sale.partner?.name || '-';
+        return sale.partnerName || '-';
       case 'expected_value':
         return formatCurrency(sale.expected_value, sale.currency || 'HUF', numberFormatSettings);
       case 'currency':
