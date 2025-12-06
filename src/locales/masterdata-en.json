@@ -9,6 +9,9 @@
       "COST_CATEGORY": "Cost Categories",
       "BUSINESS_UNIT": "Business Units",
       "TASK_STATUS": "Task Statuses",
+      "CONTRACT_TYPE": "Contract Types",
+      "CONTRACT_STATUS": "Contract Statuses",
+      "PAYMENT_FREQUENCY": "Payment Frequency",
       "COUNTRY": "Countries",
       "COUNTY": "Counties",
       "STREET_TYPE": "Street Types"
