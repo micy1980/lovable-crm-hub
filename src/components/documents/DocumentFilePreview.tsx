@@ -110,14 +110,19 @@ export const DocumentFilePreview = ({
           )}
           
           {!loading && !error && previewUrl && isPdf && (
-            <iframe
-              src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
-              title={fileName}
+            <object
+              data={previewUrl}
+              type="application/pdf"
               className="w-full h-[70vh] border-0"
               style={{ minHeight: '500px' }}
-            />
+            >
+              <embed 
+                src={previewUrl} 
+                type="application/pdf"
+                className="w-full h-[70vh]"
+              />
+            </object>
           )}
-          
           {!canPreview && (
             <div className="flex flex-col items-center gap-4 text-muted-foreground p-8">
               <FileText className="h-16 w-16" />
