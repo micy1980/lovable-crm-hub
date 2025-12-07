@@ -244,7 +244,11 @@ export const useDocumentFiles = (documentId: string | undefined) => {
   };
 
   const downloadMultipleFiles = async (fileIds: string[]) => {
+    console.log('downloadMultipleFiles called with fileIds:', fileIds);
+    console.log('Available files:', files);
+    
     const filesToDownload = files.filter(f => fileIds.includes(f.id));
+    console.log('Files to download:', filesToDownload);
     
     if (filesToDownload.length === 0) {
       toast.error('Nincs kiválasztott fájl');
@@ -262,8 +266,11 @@ export const useDocumentFiles = (documentId: string | undefined) => {
     try {
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
+      let successCount = 0;
       
       for (const file of filesToDownload) {
+        console.log(`Downloading file: ${file.file_name}, path: ${file.file_path}`);
+        
         const { data, error } = await supabase.storage
           .from('documents')
           .download(file.file_path);
@@ -273,12 +280,31 @@ export const useDocumentFiles = (documentId: string | undefined) => {
           continue;
         }
 
+        if (!data) {
+          console.error(`No data received for ${file.file_name}`);
+          continue;
+        }
+
+        console.log(`Downloaded ${file.file_name}, blob size: ${data.size}`);
+        
         // Convert Blob to ArrayBuffer for JSZip
         const arrayBuffer = await data.arrayBuffer();
+        console.log(`ArrayBuffer size for ${file.file_name}: ${arrayBuffer.byteLength}`);
+        
         zip.file(file.file_name, arrayBuffer);
+        successCount++;
+      }
+
+      console.log(`Successfully added ${successCount} files to ZIP`);
+      
+      if (successCount === 0) {
+        toast.error('Nem sikerült egyetlen fájlt sem letölteni');
+        return;
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
+      console.log(`Generated ZIP blob size: ${zipBlob.size}`);
+      
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -288,8 +314,9 @@ export const useDocumentFiles = (documentId: string | undefined) => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success(`${filesToDownload.length} fájl letöltve ZIP formátumban`);
+      toast.success(`${successCount} fájl letöltve ZIP formátumban`);
     } catch (error: any) {
+      console.error('ZIP creation error:', error);
       toast.error('Hiba a ZIP létrehozása során: ' + error.message);
     } finally {
       setIsDownloadingZip(false);
