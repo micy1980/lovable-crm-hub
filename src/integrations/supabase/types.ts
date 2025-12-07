@@ -14,6 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          company_id: string
+          content: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          content: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          content?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -677,8 +732,13 @@ export type Database = {
           id: string
           is_all_day: boolean | null
           location: string | null
+          occurrence_date: string | null
+          parent_event_id: string | null
           partner_id: string | null
           project_id: string | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_type: string | null
           responsible_user_id: string | null
           sales_id: string | null
           start_time: string
@@ -695,8 +755,13 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           location?: string | null
+          occurrence_date?: string | null
+          parent_event_id?: string | null
           partner_id?: string | null
           project_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
           start_time: string
@@ -713,8 +778,13 @@ export type Database = {
           id?: string
           is_all_day?: boolean | null
           location?: string | null
+          occurrence_date?: string | null
+          parent_event_id?: string | null
           partner_id?: string | null
           project_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
           start_time?: string
@@ -741,6 +811,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
           {
@@ -1660,8 +1737,13 @@ export type Database = {
           description: string | null
           id: string
           is_all_day: boolean | null
+          occurrence_date: string | null
+          parent_task_id: string | null
           partner_id: string | null
           project_id: string | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_type: string | null
           responsible_user_id: string | null
           sales_id: string | null
           status: string | null
@@ -1677,8 +1759,13 @@ export type Database = {
           description?: string | null
           id?: string
           is_all_day?: boolean | null
+          occurrence_date?: string | null
+          parent_task_id?: string | null
           partner_id?: string | null
           project_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
           status?: string | null
@@ -1694,8 +1781,13 @@ export type Database = {
           description?: string | null
           id?: string
           is_all_day?: boolean | null
+          occurrence_date?: string | null
+          parent_task_id?: string | null
           partner_id?: string | null
           project_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
           responsible_user_id?: string | null
           sales_id?: string | null
           status?: string | null
@@ -1722,6 +1814,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
           {

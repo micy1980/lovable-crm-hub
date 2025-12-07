@@ -15,6 +15,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { Trash2 } from 'lucide-react';
+import { RecurrenceFields, RecurrenceType } from '@/components/shared/RecurrenceFields';
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,6 +38,9 @@ interface TaskFormData {
   project_id: string;
   sales_id: string;
   partner_id: string;
+  recurrence_type: RecurrenceType;
+  recurrence_interval: number;
+  recurrence_end_date: string;
 }
 
 export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, task, defaultDate, defaultTime }: TaskDialogProps) => {
@@ -58,12 +62,18 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
       project_id: '',
       sales_id: '',
       partner_id: '',
+      recurrence_type: 'none',
+      recurrence_interval: 1,
+      recurrence_end_date: '',
     }
   });
 
   const isAllDay = watch('is_all_day');
   const selectedProjectId = watch('project_id');
   const selectedSalesId = watch('sales_id');
+  const recurrenceType = watch('recurrence_type');
+  const recurrenceInterval = watch('recurrence_interval');
+  const recurrenceEndDate = watch('recurrence_end_date');
 
   // Update form when task changes or dialog opens
   useEffect(() => {
@@ -80,6 +90,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
         project_id: task.project_id || projectId || '',
         sales_id: task.sales_id || salesId || '',
         partner_id: task.partner_id || partnerId || '',
+        recurrence_type: task.recurrence_type || 'none',
+        recurrence_interval: task.recurrence_interval || 1,
+        recurrence_end_date: task.recurrence_end_date || '',
       });
     } else if (open && !task) {
       // For new tasks, get current user ID to set as default responsible
@@ -96,6 +109,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
           project_id: projectId || '',
           sales_id: salesId || '',
           partner_id: partnerId || '',
+          recurrence_type: 'none',
+          recurrence_interval: 1,
+          recurrence_end_date: '',
         });
       });
     }
@@ -203,6 +219,9 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
         responsible_user_id: data.responsible_user_id || null,
         deadline: deadlineISO,
         is_all_day: data.is_all_day,
+        recurrence_type: data.recurrence_type || 'none',
+        recurrence_interval: data.recurrence_interval || 1,
+        recurrence_end_date: data.recurrence_end_date || null,
       };
 
       if (task) {
@@ -428,6 +447,16 @@ export const TaskDialog = ({ open, onOpenChange, projectId, salesId, partnerId, 
               </SelectContent>
             </Select>
           </div>
+
+          {/* Recurrence Fields */}
+          <RecurrenceFields
+            recurrenceType={recurrenceType}
+            recurrenceInterval={recurrenceInterval}
+            recurrenceEndDate={recurrenceEndDate}
+            onRecurrenceTypeChange={(v) => setValue('recurrence_type', v)}
+            onRecurrenceIntervalChange={(v) => setValue('recurrence_interval', v)}
+            onRecurrenceEndDateChange={(v) => setValue('recurrence_end_date', v)}
+          />
 
           <DialogFooter className="flex justify-between">
             <div>

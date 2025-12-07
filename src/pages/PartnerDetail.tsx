@@ -21,6 +21,7 @@ import {
   CheckSquare,
 } from 'lucide-react';
 import { TagSelector, TagDisplay } from '@/components/shared/TagSelector';
+import { CommentsSection } from '@/components/shared/CommentsSection';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePartners } from '@/hooks/usePartners';
@@ -688,6 +689,15 @@ export default function PartnerDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Comments Section */}
+        {id && (
+          <Card>
+            <CardContent className="pt-6">
+              <CommentsSection entityType="partner" entityId={id} />
+            </CardContent>
+          </Card>
+        )}
 
         <PartnerDialog
           open={isDialogOpen}

@@ -15,6 +15,7 @@ import {
   Lock
 } from 'lucide-react';
 import { TagSelector } from '@/components/shared/TagSelector';
+import { CommentsSection } from '@/components/shared/CommentsSection';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -350,6 +351,15 @@ const ContractDetail = () => {
             </TabsContent>
 
           </Tabs>
+
+          {/* Comments Section */}
+          {id && (
+            <Card>
+              <CardContent className="pt-6">
+                <CommentsSection entityType="contract" entityId={id} />
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <ContractDialog

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { TagSelector } from '@/components/shared/TagSelector';
+import { CommentsSection } from '@/components/shared/CommentsSection';
 import { ProjectTasks } from '@/components/projects/ProjectTasks';
 import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { useState } from 'react';
@@ -210,6 +211,15 @@ const ProjectDetail = () => {
       </div>
 
       {id && <ProjectTasks projectId={id} canEdit={canEdit} />}
+
+      {/* Comments Section */}
+      {id && (
+        <Card>
+          <CardContent className="pt-6">
+            <CommentsSection entityType="project" entityId={id} />
+          </CardContent>
+        </Card>
+      )}
 
       <ProjectDialog
         open={editDialogOpen}
