@@ -238,14 +238,9 @@ export const DocumentFilePreview = ({
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const highlights = container.querySelectorAll('.pdf-search-highlight');
-    highlights.forEach(el => {
-      const parent = el.parentNode;
-      if (parent) {
-        parent.replaceChild(document.createTextNode(el.textContent || ''), el);
-        parent.normalize();
-      }
-    });
+    // Remove overlay highlights
+    const overlays = container.querySelectorAll('.pdf-highlight-overlay');
+    overlays.forEach(el => el.remove());
   };
 
   const performSearch = () => {
@@ -262,12 +257,12 @@ export const DocumentFilePreview = ({
     // Clear previous highlights
     clearHighlights();
 
-    const results: { pageNum: number; index: number }[] = [];
+    const results: { pageNum: number; element: HTMLElement }[] = [];
     const searchLower = searchText.toLowerCase();
 
-    // Find all text layer spans
+    // Find all text layer spans and create overlay highlights
     pageRefs.current.forEach((pageEl, pageNum) => {
-      const textLayer = pageEl.querySelector('.react-pdf__Page__textContent');
+      const textLayer = pageEl.querySelector('.react-pdf__Page__textContent') as HTMLElement;
       if (!textLayer) return;
 
       const spans = textLayer.querySelectorAll('span');
@@ -275,51 +270,84 @@ export const DocumentFilePreview = ({
         const text = span.textContent || '';
         const textLower = text.toLowerCase();
         
-        if (textLower.includes(searchLower)) {
-          // Highlight the matching text
-          const regex = new RegExp(`(${searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-          const parts = text.split(regex);
+        let startIndex = 0;
+        while ((startIndex = textLower.indexOf(searchLower, startIndex)) !== -1) {
+          // Create a range for the matched text
+          const range = document.createRange();
+          const textNode = span.firstChild;
           
-          if (parts.length > 1) {
-            span.innerHTML = '';
-            parts.forEach(part => {
-              if (part.toLowerCase() === searchLower) {
-              const mark = document.createElement('mark');
-                mark.className = 'pdf-search-highlight';
-                mark.textContent = part;
-                span.appendChild(mark);
-                results.push({ pageNum, index: results.length });
-              } else {
-                span.appendChild(document.createTextNode(part));
+          if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+            try {
+              range.setStart(textNode, startIndex);
+              range.setEnd(textNode, startIndex + searchText.length);
+              
+              const rects = range.getClientRects();
+              const textLayerRect = textLayer.getBoundingClientRect();
+              
+              for (let i = 0; i < rects.length; i++) {
+                const rect = rects[i];
+                const highlight = document.createElement('div');
+                highlight.className = 'pdf-highlight-overlay';
+                highlight.style.cssText = `
+                  position: absolute;
+                  left: ${rect.left - textLayerRect.left}px;
+                  top: ${rect.top - textLayerRect.top}px;
+                  width: ${rect.width}px;
+                  height: ${rect.height}px;
+                  background-color: #fbbf24;
+                  opacity: 0.6;
+                  pointer-events: none;
+                  border-radius: 2px;
+                  z-index: 1;
+                `;
+                textLayer.appendChild(highlight);
+                results.push({ pageNum, element: highlight });
               }
-            });
+            } catch (e) {
+              // Range error - skip this match
+            }
           }
+          
+          startIndex += searchText.length;
         }
       });
     });
 
-    setSearchResults(results);
+    setSearchResults(results.map((r, i) => ({ pageNum: r.pageNum, index: i })));
     setCurrentSearchIndex(0);
 
-    // Scroll to first result
+    // Scroll to first result and highlight it
     if (results.length > 0) {
-      scrollToResult(0);
+      highlightCurrentResult(0);
+      results[0].element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  };
+
+  const highlightCurrentResult = (index: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const highlights = container.querySelectorAll('.pdf-highlight-overlay') as NodeListOf<HTMLElement>;
+    highlights.forEach((el, i) => {
+      if (i === index) {
+        el.style.backgroundColor = '#f97316';
+        el.style.opacity = '0.8';
+        el.style.boxShadow = '0 0 0 2px #f97316';
+      } else {
+        el.style.backgroundColor = '#fbbf24';
+        el.style.opacity = '0.6';
+        el.style.boxShadow = 'none';
+      }
+    });
   };
 
   const scrollToResult = (index: number) => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const highlights = container.querySelectorAll('.pdf-search-highlight');
+    const highlights = container.querySelectorAll('.pdf-highlight-overlay') as NodeListOf<HTMLElement>;
     if (highlights[index]) {
-      // Remove current highlight class from all
-      highlights.forEach(el => {
-        el.classList.remove('current-result');
-      });
-      
-      // Add current highlight class
-      highlights[index].classList.add('current-result');
+      highlightCurrentResult(index);
       highlights[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
