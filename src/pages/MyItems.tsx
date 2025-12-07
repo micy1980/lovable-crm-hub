@@ -113,7 +113,7 @@ export default function MyItems() {
 
   // Task column settings
   const taskColumnConfigs: ColumnConfig[] = useMemo(() => [
-    { key: 'select', label: '', defaultVisible: true, defaultWidth: 50, required: true },
+    { key: 'select', label: 'Kijelölés', defaultVisible: true, defaultWidth: 50, required: true },
     { key: 'title', label: t('tasks.title'), defaultVisible: true, defaultWidth: 200, required: true, sortable: true },
     { key: 'status', label: t('tasks.statusLabel'), defaultVisible: true, defaultWidth: 120, sortable: true },
     { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150, sortable: true },
@@ -125,7 +125,7 @@ export default function MyItems() {
 
   // Event column settings
   const eventColumnConfigs: ColumnConfig[] = useMemo(() => [
-    { key: 'select', label: '', defaultVisible: true, defaultWidth: 50, required: true },
+    { key: 'select', label: 'Kijelölés', defaultVisible: true, defaultWidth: 50, required: true },
     { key: 'title', label: t('events.title'), defaultVisible: true, defaultWidth: 200, required: true, sortable: true },
     { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150, sortable: true },
     { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150, sortable: true },
