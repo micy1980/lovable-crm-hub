@@ -456,7 +456,13 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                                          fileName.match(/\.xlsx?$/) ||
                                          fileName.match(/\.xlsm$/) ||
                                          fileName.match(/\.xlsb$/);
-                          const canPreview = isImage || isPdf || isWord || isExcel;
+                          const isPowerPoint = file.mime_type?.includes('presentation') ||
+                                              file.mime_type?.includes('powerpoint') ||
+                                              file.mime_type === 'application/vnd.ms-powerpoint' ||
+                                              fileName.match(/\.pptx?$/) ||
+                                              fileName.match(/\.pptm$/) ||
+                                              fileName.match(/\.ppsx?$/);
+                          const canPreview = isImage || isPdf || isWord || isExcel || isPowerPoint;
                           
                           return canPreview ? (
                             <Button

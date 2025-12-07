@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs, Outline } from 'react-pdf';
 import { WordPreview } from './WordPreview';
 import { ExcelPreview } from './ExcelPreview';
+import { PowerPointPreview } from './PowerPointPreview';
 
 interface OutlineItem {
   title: string;
@@ -84,7 +85,13 @@ export const DocumentFilePreview = ({
                   !!fileNameLower.match(/\.xlsx?$/) ||
                   !!fileNameLower.match(/\.xlsm$/) ||
                   !!fileNameLower.match(/\.xlsb$/);
-  const canPreview = isImage || isPdf || isWord || isExcel;
+  const isPowerPoint = mimeType?.includes('presentation') ||
+                       mimeType?.includes('powerpoint') ||
+                       mimeType === 'application/vnd.ms-powerpoint' ||
+                       !!fileNameLower.match(/\.pptx?$/) ||
+                       !!fileNameLower.match(/\.pptm$/) ||
+                       !!fileNameLower.match(/\.ppsx?$/);
+  const canPreview = isImage || isPdf || isWord || isExcel || isPowerPoint;
   const zoom = ZOOM_LEVELS[zoomIndex];
 
   const revokeUrls = useCallback(() => {
@@ -670,6 +677,18 @@ export const DocumentFilePreview = ({
   if (isExcel) {
     return (
       <ExcelPreview
+        open={open}
+        onOpenChange={onOpenChange}
+        filePath={filePath}
+        fileName={fileName}
+        onDownload={onDownload}
+      />
+    );
+  }
+
+  if (isPowerPoint) {
+    return (
+      <PowerPointPreview
         open={open}
         onOpenChange={onOpenChange}
         filePath={filePath}
