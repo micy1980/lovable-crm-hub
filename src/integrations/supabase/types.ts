@@ -161,7 +161,9 @@ export type Database = {
           file_path: string | null
           file_size: number | null
           id: string
+          is_current: boolean
           mime_type: string | null
+          original_file_id: string | null
           title: string
           version_number: number
         }
@@ -174,7 +176,9 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           id?: string
+          is_current?: boolean
           mime_type?: string | null
+          original_file_id?: string | null
           title: string
           version_number?: number
         }
@@ -187,7 +191,9 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           id?: string
+          is_current?: boolean
           mime_type?: string | null
+          original_file_id?: string | null
           title?: string
           version_number?: number
         }
@@ -204,6 +210,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_versions_original_file_id_fkey"
+            columns: ["original_file_id"]
+            isOneToOne: false
+            referencedRelation: "contract_versions"
             referencedColumns: ["id"]
           },
         ]
