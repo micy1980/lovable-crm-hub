@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
@@ -33,18 +32,16 @@ const ENTITY_TYPE_LABELS: Record<TagEntityType, string> = {
   event: 'Esemény',
 };
 
-interface TagWithAssignments {
+interface TagAssignment {
   id: string;
-  name: string;
-  color: string;
-  company_id: string;
+  tag_id: string;
+  tag_name: string;
+  tag_color: string;
   company_name: string;
+  entity_type: TagEntityType;
+  entity_id: string;
+  entity_name: string;
   created_at: string;
-  assignments: {
-    entity_type: TagEntityType;
-    entity_id: string;
-    entity_name: string;
-  }[];
 }
 
 export const TagsAuditTab = () => {
@@ -54,10 +51,10 @@ export const TagsAuditTab = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'name', label: 'Címke', required: true, defaultWidth: 150 },
-    { key: 'color', label: 'Szín', defaultWidth: 80 },
+    { key: 'color', label: 'Szín', defaultWidth: 50 },
     { key: 'company', label: 'Vállalat', defaultWidth: 150 },
-    { key: 'usage_count', label: 'Használat', defaultWidth: 100 },
-    { key: 'assignments', label: 'Hozzárendelések', defaultWidth: 400 },
+    { key: 'module', label: 'Modul', defaultWidth: 120 },
+    { key: 'entity_name', label: 'Elem neve', defaultWidth: 200 },
     { key: 'created_at', label: 'Létrehozva', defaultWidth: 150 },
   ], []);
 
@@ -74,7 +71,7 @@ export const TagsAuditTab = () => {
     columns: columnConfigs,
   });
 
-  const { data: tagsWithAssignments = [], isLoading } = useQuery({
+  const { data: tagAssignments = [], isLoading } = useQuery({
     queryKey: ['tags-with-assignments-audit'],
     staleTime: 0,
     queryFn: async () => {
@@ -202,24 +199,41 @@ export const TagsAuditTab = () => {
 
       await Promise.all(fetchPromises);
 
-      // Build tag assignments
-      const result: TagWithAssignments[] = tags.map((tag: any) => {
+      // Build flat list of tag assignments - one row per assignment
+      const result: TagAssignment[] = [];
+      
+      tags.forEach((tag: any) => {
         const tagEntityTags = entityTags?.filter((et) => et.tag_id === tag.id) || [];
-        const assignments = tagEntityTags.map((et) => ({
-          entity_type: et.entity_type as TagEntityType,
-          entity_id: et.entity_id,
-          entity_name: entityNames[et.entity_id] || et.entity_id,
-        }));
-
-        return {
-          id: tag.id,
-          name: tag.name,
-          color: tag.color || 'blue',
-          company_id: tag.company_id,
-          company_name: tag.companies?.name || '',
-          created_at: tag.created_at,
-          assignments,
-        };
+        
+        if (tagEntityTags.length === 0) {
+          // Tag without assignments - show one row with empty module/entity
+          result.push({
+            id: `${tag.id}-unassigned`,
+            tag_id: tag.id,
+            tag_name: tag.name,
+            tag_color: tag.color || 'blue',
+            company_name: tag.companies?.name || '',
+            entity_type: '' as TagEntityType,
+            entity_id: '',
+            entity_name: '',
+            created_at: tag.created_at,
+          });
+        } else {
+          // One row per assignment
+          tagEntityTags.forEach((et) => {
+            result.push({
+              id: et.id,
+              tag_id: tag.id,
+              tag_name: tag.name,
+              tag_color: tag.color || 'blue',
+              company_name: tag.companies?.name || '',
+              entity_type: et.entity_type as TagEntityType,
+              entity_id: et.entity_id,
+              entity_name: entityNames[et.entity_id] || et.entity_id,
+              created_at: tag.created_at,
+            });
+          });
+        }
       });
 
       return result;
@@ -227,68 +241,56 @@ export const TagsAuditTab = () => {
   });
 
   // Filter tags
-  const filteredTags = tagsWithAssignments.filter((tag) => {
+  const filteredData = tagAssignments.filter((item) => {
     const matchesCompany =
       companyFilter === '' ||
-      tag.company_name.toLowerCase().includes(companyFilter.toLowerCase());
+      item.company_name.toLowerCase().includes(companyFilter.toLowerCase());
     const matchesTag =
-      tagFilter === '' || tag.name.toLowerCase().includes(tagFilter.toLowerCase());
+      tagFilter === '' || item.tag_name.toLowerCase().includes(tagFilter.toLowerCase());
     return matchesCompany && matchesTag;
   });
 
   const { sortedData, sortState, handleSort } = useSortableData({
-    data: filteredTags,
+    data: filteredData,
     sortFunctions: {
-      name: (a, b) => a.name.localeCompare(b.name, 'hu'),
-      color: (a, b) => a.color.localeCompare(b.color),
+      name: (a, b) => a.tag_name.localeCompare(b.tag_name, 'hu'),
+      color: (a, b) => a.tag_color.localeCompare(b.tag_color),
       company: (a, b) => a.company_name.localeCompare(b.company_name, 'hu'),
-      usage_count: (a, b) => a.assignments.length - b.assignments.length,
+      module: (a, b) => (ENTITY_TYPE_LABELS[a.entity_type] || '').localeCompare(ENTITY_TYPE_LABELS[b.entity_type] || '', 'hu'),
+      entity_name: (a, b) => a.entity_name.localeCompare(b.entity_name, 'hu'),
       created_at: (a, b) =>
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     },
   });
 
-  const renderCellContent = (tag: TagWithAssignments, columnKey: string) => {
+  const renderCellContent = (item: TagAssignment, columnKey: string) => {
     switch (columnKey) {
       case 'name':
-        return <span className="font-medium">{tag.name}</span>;
+        return <span className="text-sm">{item.tag_name}</span>;
       case 'color':
         return (
-          <div className="flex items-center gap-2">
-            <div className={`w-4 h-4 rounded ${TAG_COLORS[tag.color] || 'bg-gray-500'}`} />
-            <span className="text-xs text-muted-foreground">{tag.color}</span>
+          <div className="flex items-center justify-center">
+            <div className={`w-4 h-4 rounded ${TAG_COLORS[item.tag_color] || 'bg-gray-500'}`} />
           </div>
         );
       case 'company':
-        return <span className="text-sm">{tag.company_name}</span>;
-      case 'usage_count':
-        return (
-          <Badge variant={tag.assignments.length > 0 ? 'default' : 'secondary'}>
-            {tag.assignments.length}
-          </Badge>
+        return <span className="text-sm">{item.company_name}</span>;
+      case 'module':
+        return item.entity_type ? (
+          <span className="text-sm">{ENTITY_TYPE_LABELS[item.entity_type]}</span>
+        ) : (
+          <span className="text-muted-foreground text-sm">-</span>
         );
-      case 'assignments':
-        if (tag.assignments.length === 0) {
-          return <span className="text-muted-foreground text-sm">-</span>;
-        }
-        return (
-          <div className="flex flex-wrap gap-1">
-            {tag.assignments.slice(0, 5).map((a, idx) => (
-              <Badge key={idx} variant="outline" className="text-xs">
-                {ENTITY_TYPE_LABELS[a.entity_type]}: {a.entity_name}
-              </Badge>
-            ))}
-            {tag.assignments.length > 5 && (
-              <Badge variant="secondary" className="text-xs">
-                +{tag.assignments.length - 5}
-              </Badge>
-            )}
-          </div>
+      case 'entity_name':
+        return item.entity_name ? (
+          <span className="text-sm">{item.entity_name}</span>
+        ) : (
+          <span className="text-muted-foreground text-sm">-</span>
         );
       case 'created_at':
         return (
-          <span className="font-mono text-xs">
-            {new Date(tag.created_at).toLocaleString('hu-HU')}
+          <span className="text-sm">
+            {new Date(item.created_at).toLocaleString('hu-HU')}
           </span>
         );
       default:
