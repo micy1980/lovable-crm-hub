@@ -593,7 +593,7 @@ export const DocumentFilePreview = ({
     <>
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent 
-        className={`flex flex-col ${
+        className={`flex flex-col z-[100] ${
           isFullscreen 
             ? 'max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh]' 
             : 'max-w-5xl w-[90vw] max-h-[90vh]'
