@@ -19,6 +19,7 @@ export type Database = {
           company_id: string
           content: string
           created_at: string
+          deleted_at: string | null
           entity_id: string
           entity_type: string
           id: string
@@ -29,6 +30,7 @@ export type Database = {
           company_id: string
           content: string
           created_at?: string
+          deleted_at?: string | null
           entity_id: string
           entity_type: string
           id?: string
@@ -39,6 +41,7 @@ export type Database = {
           company_id?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
           entity_id?: string
           entity_type?: string
           id?: string

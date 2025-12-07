@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useComments, EntityType, Comment } from '@/hooks/useComments';
-import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import {
   AlertDialog,
@@ -27,7 +26,6 @@ interface CommentsSectionProps {
 
 export function CommentsSection({ entityType, entityId }: CommentsSectionProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const { 
     comments, 
@@ -85,7 +83,8 @@ export function CommentsSection({ entityType, entityId }: CommentsSectionProps) 
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin';
+  // Only owner can edit/delete their own comments
+  const canModify = (comment: Comment) => comment.user_id === profile?.id;
 
   return (
     <div className="space-y-4">
@@ -132,19 +131,17 @@ export function CommentsSection({ entityType, entityId }: CommentsSectionProps) 
                     )}
                   </div>
 
-                  {/* Actions - only show for own comments or admin */}
-                  {(comment.user_id === user?.id || isAdmin) && !editingId && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {comment.user_id === user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => startEdit(comment)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                      )}
+                  {/* Actions - only show for own comments */}
+                  {canModify(comment) && !editingId && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => startEdit(comment)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
