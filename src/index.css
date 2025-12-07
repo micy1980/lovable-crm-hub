@@ -140,7 +140,6 @@ All colors MUST be HSL.
   right: 0;
   bottom: 0;
   overflow: hidden;
-  opacity: 0.2;
   line-height: 1.0;
   user-select: text;
 }
@@ -154,4 +153,19 @@ All colors MUST be HSL.
 
 .react-pdf__Page__textContent span::selection {
   background: hsl(var(--primary) / 0.3);
+}
+
+/* PDF Search Highlight Styles */
+.react-pdf__Page__textContent .pdf-search-highlight {
+  background-color: #fbbf24 !important;
+  color: #000 !important;
+  padding: 1px 3px !important;
+  border-radius: 3px !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 4px rgba(251, 191, 36, 0.8);
+}
+
+.react-pdf__Page__textContent .pdf-search-highlight.current-result {
+  background-color: #f97316 !important;
+  box-shadow: 0 0 0 3px #f97316, 0 0 8px rgba(249, 115, 22, 0.8) !important;
 }
