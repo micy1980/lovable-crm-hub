@@ -37,6 +37,8 @@ const Reports = lazy(() => import("./pages/Reports"));
 const DocumentTemplates = lazy(() => import("./pages/DocumentTemplates"));
 const Kanban = lazy(() => import("./pages/Kanban"));
 const Gantt = lazy(() => import("./pages/Gantt"));
+const TimeTracking = lazy(() => import("./pages/TimeTracking"));
+const Automation = lazy(() => import("./pages/Automation"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
@@ -100,6 +102,8 @@ const App = () => {
                     <Route path="/templates" element={<MainLayout><DocumentTemplates /></MainLayout>} />
                     <Route path="/kanban" element={<MainLayout><Kanban /></MainLayout>} />
                     <Route path="/gantt" element={<MainLayout><Gantt /></MainLayout>} />
+                    <Route path="/time-tracking" element={<MainLayout><TimeTracking /></MainLayout>} />
+                    <Route path="/automation" element={<MainLayout><Automation /></MainLayout>} />
                     <Route path="/license-generator" element={<LicenseGenerator />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
