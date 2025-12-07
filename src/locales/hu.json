@@ -654,5 +654,24 @@
     "newEvent": "Új esemény",
     "noTasks": "Nincsenek feladatok",
     "noEvents": "Nincsenek események"
+  },
+  "bulk": {
+    "statusChanged": "{{count}} elem státusza módosítva",
+    "ownerChanged": "{{count}} elem felelőse módosítva",
+    "deleted": "{{count}} elem törölve",
+    "selectAll": "Összes kijelölése",
+    "clearSelection": "Kijelölés törlése",
+    "selected": "{{count}} kiválasztva"
+  },
+  "favorites": {
+    "added": "Hozzáadva a kedvencekhez",
+    "removed": "Eltávolítva a kedvencekből",
+    "title": "Kedvencek",
+    "empty": "Nincsenek kedvencek",
+    "partners": "Kedvenc partnerek",
+    "projects": "Kedvenc projektek",
+    "sales": "Kedvenc értékesítések",
+    "contracts": "Kedvenc szerződések",
+    "documents": "Kedvenc dokumentumok"
   }
 }

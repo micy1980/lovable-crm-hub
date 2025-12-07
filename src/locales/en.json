@@ -648,5 +648,24 @@
     "newEvent": "New event",
     "noTasks": "No tasks",
     "noEvents": "No events"
+  },
+  "bulk": {
+    "statusChanged": "{{count}} items status changed",
+    "ownerChanged": "{{count}} items owner changed",
+    "deleted": "{{count}} items deleted",
+    "selectAll": "Select all",
+    "clearSelection": "Clear selection",
+    "selected": "{{count}} selected"
+  },
+  "favorites": {
+    "added": "Added to favorites",
+    "removed": "Removed from favorites",
+    "title": "Favorites",
+    "empty": "No favorites",
+    "partners": "Favorite partners",
+    "projects": "Favorite projects",
+    "sales": "Favorite sales",
+    "contracts": "Favorite contracts",
+    "documents": "Favorite documents"
   }
 }
