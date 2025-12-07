@@ -304,9 +304,9 @@ const Sales = () => {
               selectHeader={
                 <Checkbox
                   checked={bulkSelection.isAllSelected}
+                  indeterminate={bulkSelection.isPartiallySelected}
                   onCheckedChange={bulkSelection.toggleAll}
                   aria-label="Select all"
-                  className={bulkSelection.isPartiallySelected ? 'data-[state=checked]:bg-primary/50' : ''}
                 />
               }
             >
