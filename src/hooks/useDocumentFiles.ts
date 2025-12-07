@@ -273,7 +273,9 @@ export const useDocumentFiles = (documentId: string | undefined) => {
           continue;
         }
 
-        zip.file(file.file_name, data);
+        // Convert Blob to ArrayBuffer for JSZip
+        const arrayBuffer = await data.arrayBuffer();
+        zip.file(file.file_name, arrayBuffer);
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
