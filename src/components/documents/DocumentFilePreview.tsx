@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer, PanelLeftClose, PanelLeft, BookOpen, Grid3X3, RotateCw } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer, PanelLeftClose, PanelLeft, BookOpen, Grid3X3, RotateCw, RotateCcw, FlipHorizontal2, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs, Outline } from 'react-pdf';
 
@@ -58,6 +59,8 @@ export const DocumentFilePreview = ({
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [outline, setOutline] = useState<OutlineItem[] | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [pageRotations, setPageRotations] = useState<Map<number, number>>(new Map());
+  const [showRotationMenu, setShowRotationMenu] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [printMode, setPrintMode] = useState<'all' | 'current' | 'range'>('all');
@@ -101,6 +104,8 @@ export const DocumentFilePreview = ({
       setOutline(null);
       setPdfDocument(null);
       setRotation(0);
+      setPageRotations(new Map());
+      setShowRotationMenu(false);
       pageRefs.current.clear();
     }
 
@@ -252,10 +257,57 @@ export const DocumentFilePreview = ({
     setZoomIndex(DEFAULT_ZOOM_INDEX);
   };
 
-  const rotatePages = () => {
+  const rotateAllRight = () => {
     setRotation((prev) => (prev + 90) % 360);
   };
 
+  const rotateAllLeft = () => {
+    setRotation((prev) => (prev - 90 + 360) % 360);
+  };
+
+  const rotateAll180 = () => {
+    setRotation((prev) => (prev + 180) % 360);
+  };
+
+  const rotateCurrentPageRight = () => {
+    setPageRotations((prev) => {
+      const newMap = new Map(prev);
+      const current = newMap.get(currentPage) || 0;
+      newMap.set(currentPage, (current + 90) % 360);
+      return newMap;
+    });
+  };
+
+  const rotateCurrentPageLeft = () => {
+    setPageRotations((prev) => {
+      const newMap = new Map(prev);
+      const current = newMap.get(currentPage) || 0;
+      newMap.set(currentPage, (current - 90 + 360) % 360);
+      return newMap;
+    });
+  };
+
+  const rotateCurrentPage180 = () => {
+    setPageRotations((prev) => {
+      const newMap = new Map(prev);
+      const current = newMap.get(currentPage) || 0;
+      newMap.set(currentPage, (current + 180) % 360);
+      return newMap;
+    });
+  };
+
+  const resetCurrentPageRotation = () => {
+    setPageRotations((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(currentPage);
+      return newMap;
+    });
+  };
+
+  const getPageRotation = (pageNum: number): number => {
+    const pageSpecificRotation = pageRotations.get(pageNum) || 0;
+    return (rotation + pageSpecificRotation) % 360;
+  };
   const parsePageRange = (range: string, maxPages: number): number[] => {
     const pages: Set<number> = new Set();
     const parts = range.split(',').map(s => s.trim());
@@ -622,9 +674,59 @@ export const DocumentFilePreview = ({
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={rotatePages} title="Forgatás (90°)">
-                <RotateCw className="h-3.5 w-3.5" />
-              </Button>
+              <DropdownMenu open={showRotationMenu} onOpenChange={setShowRotationMenu}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Forgatás">
+                    <RotateCw className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 z-[120]">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <span>Összes oldal forgatása</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="z-[130]">
+                      <DropdownMenuItem onClick={rotateAllRight}>
+                        <RotateCw className="h-4 w-4 mr-2" />
+                        Jobbra 90°
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={rotateAllLeft}>
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Balra 90°
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={rotateAll180}>
+                        <FlipHorizontal2 className="h-4 w-4 mr-2" />
+                        180°
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <span>Aktuális oldal ({currentPage}.) forgatása</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="z-[130]">
+                      <DropdownMenuItem onClick={rotateCurrentPageRight}>
+                        <RotateCw className="h-4 w-4 mr-2" />
+                        Jobbra 90°
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={rotateCurrentPageLeft}>
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Balra 90°
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={rotateCurrentPage180}>
+                        <FlipHorizontal2 className="h-4 w-4 mr-2" />
+                        180°
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={resetCurrentPageRotation}>
+                        <X className="h-4 w-4 mr-2" />
+                        Visszaállítás
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
           
@@ -835,7 +937,7 @@ export const DocumentFilePreview = ({
                             renderAnnotationLayer={true}
                             className="shadow-lg pdf-page-with-annotations select-text"
                             width={getBasePageWidth() * zoom}
-                            rotate={rotation}
+                            rotate={getPageRotation(index + 1)}
                           />
                         </div>
                       ))}
