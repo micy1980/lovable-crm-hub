@@ -667,5 +667,16 @@
     "sales": "Favorite sales",
     "contracts": "Favorite contracts",
     "documents": "Favorite documents"
+  },
+  "tags": {
+    "title": "Tags",
+    "search": "Search tags...",
+    "noTags": "No tags",
+    "available": "Available tags",
+    "createNew": "Create new tag",
+    "newTagName": "Tag name",
+    "created": "Tag created",
+    "updated": "Tag updated",
+    "deleted": "Tag deleted"
   }
 }

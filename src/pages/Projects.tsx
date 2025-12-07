@@ -24,6 +24,7 @@ import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar, StatusOption, UserOption } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -36,6 +37,7 @@ const Projects = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'code', label: 'Kód', defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
@@ -46,7 +48,7 @@ const Projects = () => {
   ], []);
 
   // Columns that should be centered
-  const centeredColumns = ['select', 'status', 'created_at'];
+  const centeredColumns = ['select', 'favorite', 'status', 'created_at'];
 
   const {
     columnStates,
@@ -179,6 +181,8 @@ const Projects = () => {
             onClick={(e) => e.stopPropagation()}
           />
         );
+      case 'favorite':
+        return <FavoriteButton entityType="project" entityId={project.id} />;
       case 'name':
         return <span className="font-medium">{project.name}</span>;
       case 'code':

@@ -22,6 +22,7 @@ import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { useCompany } from '@/contexts/CompanyContext';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -50,6 +51,7 @@ const Partners = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
     { key: 'name', label: t('partners.name'), defaultVisible: true, defaultWidth: 200, required: true },
     { key: 'category', label: t('partners.category'), defaultVisible: true, defaultWidth: 120 },
     { key: 'headquarters', label: t('partners.headquarters'), defaultVisible: true, defaultWidth: 200, sortable: false },
@@ -64,7 +66,7 @@ const Partners = () => {
   ], [t]);
 
   // Columns that should be centered
-  const centeredColumns = ['category', 'currency', 'status'];
+  const centeredColumns = ['favorite', 'category', 'currency', 'status'];
 
   const {
     columnStates,
@@ -193,6 +195,8 @@ const Partners = () => {
             />
           </div>
         );
+      case 'favorite':
+        return <FavoriteButton entityType="partner" entityId={partner.id} />;
       case 'name':
         return (
           <div className="flex items-center gap-2">

@@ -26,6 +26,7 @@ import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -41,6 +42,7 @@ const Sales = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
     { key: 'expected_value', label: 'Várható érték', defaultWidth: 150 },
@@ -52,7 +54,7 @@ const Sales = () => {
   ], []);
 
   // Columns that should be centered or right-aligned
-  const centeredColumns = ['currency', 'expected_close_date', 'status'];
+  const centeredColumns = ['favorite', 'currency', 'expected_close_date', 'status'];
   const rightAlignedColumns = ['expected_value'];
 
   const {
@@ -169,6 +171,8 @@ const Sales = () => {
             />
           </div>
         );
+      case 'favorite':
+        return <FavoriteButton entityType="sales" entityId={sale.id} />;
       case 'name':
         return <span className="font-medium">{sale.name}</span>;
       case 'partner':
