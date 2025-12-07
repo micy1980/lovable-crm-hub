@@ -2,7 +2,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FolderKanban, TrendingUp, Users } from 'lucide-react';
+import { FolderKanban, TrendingUp, Users, GripVertical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LicenseStatusWidget } from '@/components/dashboard/LicenseStatusWidget';
 import { TasksWidget } from '@/components/dashboard/TasksWidget';
@@ -13,11 +13,96 @@ import { WeeklyCalendarWidget } from '@/components/dashboard/WeeklyCalendarWidge
 import { DashboardCustomizer } from '@/components/dashboard/DashboardCustomizer';
 import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  arrayMove,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useState } from 'react';
+
+interface SortableWidgetProps {
+  id: string;
+  width: string;
+  children: React.ReactNode;
+  title: string;
+}
+
+const SortableWidget = ({ id, width, children, title }: SortableWidgetProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const getWidthClass = () => {
+    switch (width) {
+      case 'full': return 'col-span-full';
+      case 'third': return 'col-span-1';
+      default: return 'col-span-1 md:col-span-2';
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        getWidthClass(),
+        isDragging && 'opacity-50 z-50',
+        'relative group'
+      )}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-background/80 rounded p-1"
+        title="Húzd az átrendezéshez"
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </div>
+      {children}
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const { activeCompany } = useCompany();
   const { t } = useTranslation();
-  const { widgets } = useDashboardWidgets();
+  const { widgets, reorderWidgets } = useDashboardWidgets();
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const { data: projectStats } = useQuery({
     queryKey: ['project-stats', activeCompany?.id],
@@ -84,40 +169,48 @@ const Dashboard = () => {
     );
   }
 
-  const getWidthClass = (width: string) => {
-    switch (width) {
-      case 'full': return 'col-span-full';
-      case 'third': return 'col-span-1';
-      default: return 'col-span-1 md:col-span-2';
+  const visibleWidgets = widgets.filter(w => w.is_visible);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (over && active.id !== over.id) {
+      const oldIndex = visibleWidgets.findIndex((w) => w.id === active.id);
+      const newIndex = visibleWidgets.findIndex((w) => w.id === over.id);
+      const newOrder = arrayMove(visibleWidgets, oldIndex, newIndex);
+      reorderWidgets(newOrder.map((w) => w.id));
     }
   };
 
-  const renderWidget = (widgetId: string, width: string) => {
-    const widthClass = getWidthClass(width);
-    
+  const renderWidgetContent = (widgetId: string) => {
     switch (widgetId) {
       case 'license_status':
-        return <LicenseStatusWidget key={widgetId} />;
+        return <LicenseStatusWidget />;
       case 'tasks':
-        return <div key={widgetId} className={widthClass}><TasksWidget /></div>;
+        return <TasksWidget />;
       case 'weekly_calendar':
-        return <div key={widgetId} className={widthClass}><WeeklyCalendarWidget /></div>;
+        return <WeeklyCalendarWidget />;
       case 'projects_chart':
         return projectStats?.byStatus && Object.keys(projectStats.byStatus).length > 0 
-          ? <div key={widgetId} className={widthClass}><ProjectsChart data={projectStats.byStatus} /></div>
-          : null;
+          ? <ProjectsChart data={projectStats.byStatus} />
+          : <Card className="h-full flex items-center justify-center text-muted-foreground">Nincs projekt adat</Card>;
       case 'sales_chart':
         return salesStats?.byStatus && Object.keys(salesStats.byStatus).length > 0
-          ? <div key={widgetId} className={widthClass}><SalesChart data={salesStats.byStatus} /></div>
-          : null;
+          ? <SalesChart data={salesStats.byStatus} />
+          : <Card className="h-full flex items-center justify-center text-muted-foreground">Nincs értékesítés adat</Card>;
       case 'recent_activity':
-        return <div key={widgetId} className={widthClass}><RecentActivityWidget /></div>;
+        return <RecentActivityWidget />;
       default:
         return null;
     }
   };
 
-  const visibleWidgets = widgets.filter(w => w.is_visible);
+  const activeWidget = activeId ? visibleWidgets.find(w => w.id === activeId) : null;
 
   return (
     <div className="space-y-6">
@@ -131,7 +224,7 @@ const Dashboard = () => {
         <DashboardCustomizer />
       </div>
 
-      {/* Summary cards - always visible */}
+      {/* Summary cards - always visible, not draggable */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -163,12 +256,41 @@ const Dashboard = () => {
         {visibleWidgets.find(w => w.id === 'license_status') && <LicenseStatusWidget />}
       </div>
 
-      {/* Customizable widgets */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {visibleWidgets
-          .filter(w => w.id !== 'license_status')
-          .map(widget => renderWidget(widget.id, widget.width))}
-      </div>
+      {/* Customizable widgets with drag-and-drop */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={visibleWidgets.filter(w => w.id !== 'license_status').map(w => w.id)}
+          strategy={rectSortingStrategy}
+        >
+          <div className="grid gap-4 md:grid-cols-4">
+            {visibleWidgets
+              .filter(w => w.id !== 'license_status')
+              .map(widget => (
+                <SortableWidget
+                  key={widget.id}
+                  id={widget.id}
+                  width={widget.width}
+                  title={widget.title}
+                >
+                  {renderWidgetContent(widget.id)}
+                </SortableWidget>
+              ))}
+          </div>
+        </SortableContext>
+
+        <DragOverlay>
+          {activeWidget ? (
+            <div className="opacity-80 shadow-lg">
+              {renderWidgetContent(activeWidget.id)}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 };
