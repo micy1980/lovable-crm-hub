@@ -673,5 +673,16 @@
     "sales": "Kedvenc értékesítések",
     "contracts": "Kedvenc szerződések",
     "documents": "Kedvenc dokumentumok"
+  },
+  "tags": {
+    "title": "Címkék",
+    "search": "Címke keresése...",
+    "noTags": "Nincsenek címkék",
+    "available": "Elérhető címkék",
+    "createNew": "Új címke létrehozása",
+    "newTagName": "Címke neve",
+    "created": "Címke létrehozva",
+    "updated": "Címke módosítva",
+    "deleted": "Címke törölve"
   }
 }

@@ -24,6 +24,7 @@ import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,7 @@ const Documents = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
     { key: 'visibility', label: 'Láthatóság', defaultVisible: true, defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultVisible: true, defaultWidth: 150 },
@@ -65,6 +67,8 @@ const Documents = () => {
     { key: 'uploader', label: 'Feltöltő', defaultVisible: false, defaultWidth: 150 },
     { key: 'actions', label: 'Műveletek', defaultVisible: true, defaultWidth: 100, sortable: false },
   ], []);
+
+  const centeredColumns = ['favorite', 'visibility', 'size', 'uploaded'];
 
   const {
     columnStates,
@@ -182,6 +186,8 @@ const Documents = () => {
             />
           </div>
         );
+      case 'favorite':
+        return <FavoriteButton entityType="document" entityId={doc.id} />;
       case 'title':
         return (
           <div className="flex items-center gap-2">

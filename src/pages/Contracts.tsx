@@ -27,6 +27,7 @@ import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +62,7 @@ const Contracts = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
     { key: 'partner', label: 'Partner', defaultVisible: true, defaultWidth: 180 },
     { key: 'type', label: 'Típus', defaultVisible: true, defaultWidth: 120 },
@@ -71,6 +73,7 @@ const Contracts = () => {
   ], []);
 
   const rightAlignedColumns = ['value'];
+  const centeredColumns = ['favorite', 'status'];
 
   const {
     columnStates,
@@ -210,6 +213,8 @@ const Contracts = () => {
             />
           </div>
         );
+      case 'favorite':
+        return <FavoriteButton entityType="contract" entityId={contract.id} />;
       case 'title':
         return (
           <div className="flex items-center gap-2">
