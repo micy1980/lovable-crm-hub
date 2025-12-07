@@ -20,6 +20,7 @@ import {
   Calendar,
   CheckSquare,
 } from 'lucide-react';
+import { TagSelector, TagDisplay } from '@/components/shared/TagSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePartners } from '@/hooks/usePartners';
@@ -242,9 +243,12 @@ export default function PartnerDetail() {
                   <Lock className="h-5 w-5 text-muted-foreground" />
                 )}
               </div>
-              {partner.category && (
-                <Badge variant="secondary" className="mt-1">{partner.category}</Badge>
-              )}
+              <div className="flex items-center gap-2 mt-1">
+                {partner.category && (
+                  <Badge variant="secondary">{partner.category}</Badge>
+                )}
+                <TagSelector entityType="partner" entityId={partner.id} />
+              </div>
             </div>
           </div>
           <Button 

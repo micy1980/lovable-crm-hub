@@ -25,6 +25,7 @@ import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar, StatusOption, UserOption } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { TagDisplay } from '@/components/shared/TagSelector';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -43,6 +44,7 @@ const Projects = () => {
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
     { key: 'description', label: 'Leírás', defaultWidth: 250, sortable: false },
     { key: 'status', label: 'Státusz', defaultWidth: 120 },
+    { key: 'tags', label: 'Címkék', defaultWidth: 150, sortable: false },
     { key: 'created_at', label: 'Létrehozva', defaultWidth: 150 },
     { key: 'actions', label: 'Műveletek', defaultWidth: 80, sortable: false },
   ], []);
@@ -197,6 +199,8 @@ const Projects = () => {
         return project.status ? (
           <Badge variant="secondary">{getStatusLabel(project.status)}</Badge>
         ) : '-';
+      case 'tags':
+        return <TagDisplay entityType="project" entityId={project.id} />;
       case 'created_at':
         return project.created_at 
           ? new Date(project.created_at).toLocaleDateString('hu-HU')

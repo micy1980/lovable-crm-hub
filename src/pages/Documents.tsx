@@ -25,6 +25,7 @@ import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { TagDisplay } from '@/components/shared/TagSelector';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,6 +66,7 @@ const Documents = () => {
     { key: 'size', label: 'Méret', defaultVisible: true, defaultWidth: 100 },
     { key: 'uploaded', label: 'Feltöltve', defaultVisible: true, defaultWidth: 120 },
     { key: 'uploader', label: 'Feltöltő', defaultVisible: false, defaultWidth: 150 },
+    { key: 'tags', label: 'Címkék', defaultVisible: true, defaultWidth: 150, sortable: false },
     { key: 'actions', label: 'Műveletek', defaultVisible: true, defaultWidth: 100, sortable: false },
   ], []);
 
@@ -224,6 +226,8 @@ const Documents = () => {
         return doc.created_at ? format(parseISO(doc.created_at), 'yyyy.MM.dd', { locale: hu }) : '-';
       case 'uploader':
         return doc.uploader?.full_name || '-';
+      case 'tags':
+        return <TagDisplay entityType="document" entityId={doc.id} />;
       case 'actions':
         return (
           <div className="flex items-center justify-center gap-0.5">

@@ -23,6 +23,7 @@ import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { useCompany } from '@/contexts/CompanyContext';
 import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { TagDisplay } from '@/components/shared/TagSelector';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -63,6 +64,7 @@ const Partners = () => {
     { key: 'euVatNumber', label: t('partners.euVatNumber'), defaultVisible: false, defaultWidth: 150 },
     { key: 'currency', label: t('partners.defaultCurrency'), defaultVisible: false, defaultWidth: 100 },
     { key: 'status', label: t('partners.statusLabel') || 'Státusz', defaultVisible: true, defaultWidth: 100, sortable: false },
+    { key: 'tags', label: t('tags.title') || 'Címkék', defaultVisible: true, defaultWidth: 150, sortable: false },
   ], [t]);
 
   // Columns that should be centered
@@ -239,6 +241,8 @@ const Partners = () => {
         ) : (
           <Badge variant="outline">Inaktív</Badge>
         );
+      case 'tags':
+        return <TagDisplay entityType="partner" entityId={partner.id} />;
       default:
         return '-';
     }

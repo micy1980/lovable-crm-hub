@@ -28,6 +28,7 @@ import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { TagDisplay } from '@/components/shared/TagSelector';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +70,7 @@ const Contracts = () => {
     { key: 'expiry', label: 'Érvényesség', defaultVisible: true, defaultWidth: 180 },
     { key: 'value', label: 'Érték', defaultVisible: true, defaultWidth: 140 },
     { key: 'status', label: 'Státusz', defaultVisible: true, defaultWidth: 100 },
+    { key: 'tags', label: 'Címkék', defaultVisible: true, defaultWidth: 150, sortable: false },
     { key: 'actions', label: 'Műveletek', defaultVisible: true, defaultWidth: 100, sortable: false },
   ], []);
 
@@ -261,6 +263,8 @@ const Contracts = () => {
         return <span className="font-mono">{formatCurrency(contract.total_value, contract.currency, numberFormatSettings)} {contract.currency || 'HUF'}</span>;
       case 'status':
         return getStatusBadge(contract.status);
+      case 'tags':
+        return <TagDisplay entityType="contract" entityId={contract.id} />;
       case 'actions':
         return (
           <div className="flex items-center justify-center gap-0.5">
