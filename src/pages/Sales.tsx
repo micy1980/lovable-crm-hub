@@ -3,7 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Upload } from 'lucide-react';
+import { ImportDialog } from '@/components/import/ImportDialog';
+import { salesImportConfig } from '@/lib/importUtils';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
@@ -37,9 +40,31 @@ const Sales = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
+
+  const handleImport = async (data: any[]) => {
+    if (!activeCompany) return;
+    
+    const salesToInsert = data.map(item => ({
+      ...item,
+      company_id: activeCompany.id,
+    }));
+
+    const { error } = await supabase
+      .from('sales')
+      .insert(salesToInsert);
+
+    if (error) {
+      toast.error('Hiba az importálás során: ' + error.message);
+      throw error;
+    }
+
+    toast.success(`${data.length} értékesítés sikeresen importálva`);
+    queryClient.invalidateQueries({ queryKey: ['sales', activeCompany.id] });
+  };
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: 'Kijelölés', defaultWidth: 40, sortable: false },
@@ -267,6 +292,10 @@ const Sales = () => {
             }))}
             title="Értékesítések"
           />
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)} disabled={!canEdit}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
           <Button onClick={() => setDialogOpen(true)} disabled={!canEdit} className="min-w-[140px]">
             <Plus className="h-4 w-4" />
             {t('sales.newOpportunity')}
@@ -346,6 +375,15 @@ const Sales = () => {
       </div>
 
       <SalesDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <ImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Értékesítések importálása"
+        config={salesImportConfig}
+        templateFilename="ertekesitesek"
+        onImport={handleImport}
+      />
       
       <BulkDeleteDialog
         open={deleteDialogOpen}
