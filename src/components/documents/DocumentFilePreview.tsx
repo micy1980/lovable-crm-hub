@@ -202,17 +202,33 @@ export const DocumentFilePreview = ({
             : 'max-w-5xl w-[90vw] max-h-[90vh]'
         }`}
       >
-        <DialogHeader className="flex flex-row items-center gap-4 pr-12">
-          <DialogTitle className="flex items-center gap-2 text-sm font-medium truncate flex-1">
+        <DialogHeader className="flex flex-row items-center gap-2 pr-10 py-0">
+          <DialogTitle className="flex items-center gap-2 text-sm font-medium truncate flex-1 min-w-0">
             {isImage ? <ImageIcon className="h-4 w-4 flex-shrink-0" /> : <FileText className="h-4 w-4 flex-shrink-0" />}
             <span className="truncate">{fileName}</span>
           </DialogTitle>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="ghost" size="icon" onClick={toggleFullscreen} title={isFullscreen ? 'Kilépés teljes képernyőből' : 'Teljes képernyő'}>
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          
+          {/* Integrated zoom controls for PDF */}
+          {isPdf && pdfUrl && !pdfError && (
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={zoomOut} disabled={zoomIndex <= 0} title="Kicsinyítés">
+                <ZoomOut className="h-3.5 w-3.5" />
+              </Button>
+              <button onClick={resetZoom} className="px-1.5 text-xs font-medium hover:bg-muted rounded min-w-[40px] text-center h-7" title="Eredeti méret">
+                {Math.round(zoom * 100)}%
+              </button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={zoomIn} disabled={zoomIndex >= ZOOM_LEVELS.length - 1} title="Nagyítás">
+                <ZoomIn className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+          
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleFullscreen} title={isFullscreen ? 'Kilépés teljes képernyőből' : 'Teljes képernyő'}>
+              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={onDownload}>
-              <Download className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={onDownload}>
+              <Download className="h-3.5 w-3.5 mr-1" />
               Letöltés
             </Button>
           </div>
@@ -247,59 +263,18 @@ export const DocumentFilePreview = ({
           {/* PDF preview with react-pdf - continuous scroll */}
           {!loading && !error && pdfUrl && isPdf && !pdfError && (
             <>
-              {/* Zoom controls - floating toolbar */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1 shadow-lg border border-border">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={zoomOut}
-                  disabled={zoomIndex <= 0}
-                  title="Kicsinyítés"
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                <button
-                  onClick={resetZoom}
-                  className="px-2 py-1 text-sm font-medium hover:bg-muted rounded min-w-[60px] text-center"
-                  title="Eredeti méret"
-                >
-                  {Math.round(zoom * 100)}%
-                </button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={zoomIn}
-                  disabled={zoomIndex >= ZOOM_LEVELS.length - 1}
-                  title="Nagyítás"
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-                <div className="w-px h-5 bg-border mx-1" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={resetZoom}
-                  title="Visszaállítás"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>
-
               {/* Page indicator - floating */}
               {numPages && numPages > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-background/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-lg border border-border">
-                  <span className="text-sm font-medium">
-                    {currentPage} / {numPages} oldal
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 bg-background/90 backdrop-blur-sm rounded px-3 py-1 shadow-lg border border-border">
+                  <span className="text-xs font-medium">
+                    {currentPage} / {numPages}
                   </span>
                 </div>
               )}
 
-              <div 
+              <div
                 ref={scrollContainerRef}
-                className={`overflow-auto w-full ${isFullscreen ? 'h-[85vh]' : 'h-[70vh]'} flex justify-center pt-12 pb-16`}
+                className={`overflow-auto w-full ${isFullscreen ? 'h-[88vh]' : 'h-[75vh]'} flex justify-center pb-10`}
               >
                 <Document
                   file={pdfUrl}
