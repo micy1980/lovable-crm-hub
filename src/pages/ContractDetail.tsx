@@ -7,8 +7,6 @@ import {
   ArrowLeft, 
   Edit, 
   Trash2, 
-  Upload, 
-  Download, 
   FileText, 
   Calendar, 
   DollarSign, 
@@ -21,7 +19,6 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertDialog, 
@@ -33,9 +30,9 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
-import { useContracts, useContractVersions, Contract } from '@/hooks/useContracts';
+import { useContracts, Contract } from '@/hooks/useContracts';
 import ContractDialog from '@/components/contracts/ContractDialog';
-import ContractVersionDialog from '@/components/contracts/ContractVersionDialog';
+import { ContractFilesTable } from '@/components/contracts/ContractFilesTable';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
@@ -47,11 +44,10 @@ const ContractDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { deleteContract, hardDeleteContract } = useContracts();
-  const { versions, downloadVersion } = useContractVersions(id);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
-  const [versionDialogOpen, setVersionDialogOpen] = useState(false);
+  
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
   const { data: profile } = useUserProfile();
@@ -214,10 +210,16 @@ const ContractDetail = () => {
             )}
           </div>
 
+          {/* Files Table */}
+          <ContractFilesTable 
+            contractId={id!} 
+            contractTitle={contract.title} 
+            isDeleted={isDeleted} 
+          />
+
           <Tabs defaultValue="details" className="space-y-4">
             <TabsList>
               <TabsTrigger value="details">Részletek</TabsTrigger>
-              <TabsTrigger value="versions">Verziók ({versions.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-6">
@@ -343,66 +345,6 @@ const ContractDetail = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="versions" className="space-y-4">
-              <div className="flex justify-end">
-                <Button onClick={() => setVersionDialogOpen(true)}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Új verzió feltöltése
-                </Button>
-              </div>
-
-              {versions.length === 0 ? (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Még nincs verzió feltöltve</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Verzió</TableHead>
-                        <TableHead>Megnevezés</TableHead>
-                        <TableHead>Változás</TableHead>
-                        <TableHead>Méret</TableHead>
-                        <TableHead>Dátum</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {versions.map((version) => (
-                        <TableRow key={version.id}>
-                          <TableCell className="text-center">
-                            <Badge variant="outline">v{version.version_number}</Badge>
-                          </TableCell>
-                          <TableCell>{version.title}</TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            {version.change_summary || '-'}
-                          </TableCell>
-                          <TableCell className="text-center">{formatFileSize(version.file_size)}</TableCell>
-                          <TableCell className="text-center">
-                            {version.created_at && formatDate(version.created_at)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {version.file_path && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => downloadVersion(version.file_path!, `${contract.title}-v${version.version_number}`)}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              )}
-            </TabsContent>
           </Tabs>
         </div>
 
@@ -412,11 +354,6 @@ const ContractDetail = () => {
           contract={contract}
         />
 
-        <ContractVersionDialog
-          open={versionDialogOpen}
-          onOpenChange={setVersionDialogOpen}
-          contractId={id!}
-        />
 
         <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialogContent>
