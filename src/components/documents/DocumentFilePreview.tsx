@@ -71,16 +71,19 @@ export const DocumentFilePreview = ({
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const fileNameLower = fileName.toLowerCase();
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType?.startsWith('application/pdf') || mimeType === 'application/x-pdf';
-  const isWord = mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+  const isWord = mimeType?.includes('word') || 
                  mimeType === 'application/msword' ||
-                 fileName.toLowerCase().endsWith('.docx') ||
-                 fileName.toLowerCase().endsWith('.doc');
-  const isExcel = mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                 !!fileNameLower.match(/\.docx?$/) ||
+                 !!fileNameLower.match(/\.docm$/);
+  const isExcel = mimeType?.includes('spreadsheet') ||
+                  mimeType?.includes('excel') ||
                   mimeType === 'application/vnd.ms-excel' ||
-                  fileName.toLowerCase().endsWith('.xlsx') ||
-                  fileName.toLowerCase().endsWith('.xls');
+                  !!fileNameLower.match(/\.xlsx?$/) ||
+                  !!fileNameLower.match(/\.xlsm$/) ||
+                  !!fileNameLower.match(/\.xlsb$/);
   const canPreview = isImage || isPdf || isWord || isExcel;
   const zoom = ZOOM_LEVELS[zoomIndex];
 
