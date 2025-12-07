@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Download, Loader2, FileText, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,8 +30,8 @@ export const DocumentFilePreview = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
   const [pdfError, setPdfError] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType?.startsWith('application/pdf') || mimeType === 'application/x-pdf';
@@ -56,7 +56,7 @@ export const DocumentFilePreview = ({
       setError(null);
       setPdfError(false);
       setNumPages(null);
-      setPageNumber(1);
+      setIsFullscreen(false);
     }
 
     return () => {
@@ -105,14 +105,13 @@ export const DocumentFilePreview = ({
       setError(null);
       setPdfError(false);
       setNumPages(null);
-      setPageNumber(1);
+      setIsFullscreen(false);
     }
     onOpenChange(nextOpen);
   };
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setPageNumber(1);
   };
 
   const onDocumentLoadError = (err: Error) => {
@@ -120,23 +119,39 @@ export const DocumentFilePreview = ({
     setPdfError(true);
   };
 
-  const goToPrevPage = () => {
-    setPageNumber((prev) => Math.max(prev - 1, 1));
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
-  const goToNextPage = () => {
-    setPageNumber((prev) => Math.min(prev + 1, numPages ?? 1));
+  // Calculate page width based on fullscreen mode
+  const getPageWidth = () => {
+    if (isFullscreen) {
+      return Math.min(1200, window.innerWidth - 80);
+    }
+    return Math.min(800, window.innerWidth - 100);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="flex items-center gap-2 text-sm font-medium truncate pr-4">
-            {isImage ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-            {fileName}
+      <DialogContent 
+        className={`flex flex-col ${
+          isFullscreen 
+            ? 'max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh]' 
+            : 'max-w-5xl w-[90vw] max-h-[90vh]'
+        }`}
+      >
+        <DialogHeader className="flex flex-row items-center gap-4 pr-12">
+          <DialogTitle className="flex items-center gap-2 text-sm font-medium truncate flex-1">
+            {isImage ? <ImageIcon className="h-4 w-4 flex-shrink-0" /> : <FileText className="h-4 w-4 flex-shrink-0" />}
+            <span className="truncate">{fileName}</span>
+            {numPages && (
+              <span className="text-muted-foreground text-xs ml-2">({numPages} oldal)</span>
+            )}
           </DialogTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen} title={isFullscreen ? 'Kilépés teljes képernyőből' : 'Teljes képernyő'}>
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
             <Button variant="outline" size="sm" onClick={onDownload}>
               <Download className="h-4 w-4 mr-2" />
               Letöltés
@@ -161,63 +176,42 @@ export const DocumentFilePreview = ({
 
           {/* Image preview */}
           {!loading && !error && previewUrl && isImage && (
-            <img
-              src={previewUrl}
-              alt={fileName}
-              className="max-w-full max-h-[70vh] object-contain"
-            />
+            <div className="overflow-auto w-full h-full flex items-center justify-center p-4">
+              <img
+                src={previewUrl}
+                alt={fileName}
+                className={`object-contain ${isFullscreen ? 'max-h-[85vh]' : 'max-h-[70vh]'} max-w-full`}
+              />
+            </div>
           )}
 
-          {/* PDF preview with react-pdf */}
+          {/* PDF preview with react-pdf - continuous scroll */}
           {!loading && !error && pdfUrl && isPdf && !pdfError && (
-            <div className="flex flex-col items-center w-full h-full">
-              {/* PDF navigation */}
-              {numPages && numPages > 1 && (
-                <div className="flex items-center gap-2 py-2 bg-background/80 backdrop-blur-sm rounded-lg px-4 mb-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={goToPrevPage}
-                    disabled={pageNumber <= 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {pageNumber} / {numPages}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={goToNextPage}
-                    disabled={pageNumber >= numPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+            <div className={`overflow-auto w-full ${isFullscreen ? 'h-[85vh]' : 'h-[70vh]'} flex justify-center`}>
+              <Document
+                file={pdfUrl}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                loading={
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground p-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span>PDF betöltése...</span>
+                  </div>
+                }
+              >
+                <div className="flex flex-col items-center gap-4 py-4">
+                  {numPages && Array.from({ length: numPages }, (_, index) => (
+                    <Page 
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1} 
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      className="shadow-lg"
+                      width={getPageWidth()}
+                    />
+                  ))}
                 </div>
-              )}
-              
-              {/* PDF Document */}
-              <div className="overflow-auto max-h-[65vh] w-full flex justify-center">
-                <Document
-                  file={pdfUrl}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  onLoadError={onDocumentLoadError}
-                  loading={
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground p-8">
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                      <span>PDF betöltése...</span>
-                    </div>
-                  }
-                >
-                  <Page 
-                    pageNumber={pageNumber} 
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                    className="shadow-lg"
-                    width={Math.min(800, window.innerWidth - 100)}
-                  />
-                </Document>
-              </div>
+              </Document>
             </div>
           )}
 
