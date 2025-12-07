@@ -250,30 +250,43 @@ export const DocumentFilePreview = ({
     setRotation((prev) => (prev + 90) % 360);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!pdfUrl) return;
     
-    // Create a hidden iframe for printing
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = 'none';
-    iframe.src = pdfUrl;
-    
-    document.body.appendChild(iframe);
-    
-    iframe.onload = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.print();
-        // Remove iframe after printing
+    try {
+      // Fetch the blob from the URL
+      const response = await fetch(pdfUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Open in new window and print
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${fileName}</title>
+              <style>
+                body { margin: 0; padding: 0; }
+                embed { width: 100%; height: 100vh; }
+              </style>
+            </head>
+            <body>
+              <embed src="${blobUrl}" type="application/pdf" width="100%" height="100%" />
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        
+        // Wait for PDF to load then print
         setTimeout(() => {
-          document.body.removeChild(iframe);
+          printWindow.print();
         }, 1000);
-      }, 500);
-    };
+      }
+    } catch (err) {
+      console.error('Print error:', err);
+    }
   };
 
   const goToPage = (page: number) => {
