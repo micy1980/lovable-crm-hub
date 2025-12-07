@@ -131,3 +131,27 @@ All colors MUST be HSL.
     background-size: 100% 100%;
   }
 }
+
+/* React-PDF Text Layer Styles */
+.react-pdf__Page__textContent {
+  position: absolute !important;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0.2;
+  line-height: 1.0;
+  user-select: text;
+}
+
+.react-pdf__Page__textContent span {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0% 0%;
+}
+
+.react-pdf__Page__textContent span::selection {
+  background: hsl(var(--primary) / 0.3);
+}
