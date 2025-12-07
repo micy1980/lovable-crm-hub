@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import JSZip from 'jszip';
 
 export interface DocumentFile {
   id: string;
@@ -20,6 +22,7 @@ export interface DocumentFile {
 
 export const useDocumentFiles = (documentId: string | undefined) => {
   const queryClient = useQueryClient();
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['document-files', documentId],
@@ -142,16 +145,57 @@ export const useDocumentFiles = (documentId: string | undefined) => {
   const downloadMultipleFiles = async (fileIds: string[]) => {
     const filesToDownload = files.filter(f => fileIds.includes(f.id));
     
-    for (const file of filesToDownload) {
-      await downloadFile(file.file_path, file.file_name);
-      // Small delay between downloads to prevent browser issues
-      await new Promise(resolve => setTimeout(resolve, 200));
+    if (filesToDownload.length === 0) {
+      toast.error('Nincs kiválasztott fájl');
+      return;
+    }
+
+    // If only one file, download directly
+    if (filesToDownload.length === 1) {
+      await downloadFile(filesToDownload[0].file_path, filesToDownload[0].file_name);
+      return;
+    }
+
+    // Multiple files - create ZIP
+    setIsDownloadingZip(true);
+    try {
+      const zip = new JSZip();
+      
+      for (const file of filesToDownload) {
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .download(file.file_path);
+
+        if (error) {
+          console.error(`Failed to download ${file.file_name}:`, error);
+          continue;
+        }
+
+        zip.file(file.file_name, data);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dokumentumok_${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`${filesToDownload.length} fájl letöltve ZIP formátumban`);
+    } catch (error: any) {
+      toast.error('Hiba a ZIP létrehozása során: ' + error.message);
+    } finally {
+      setIsDownloadingZip(false);
     }
   };
 
   return {
     files,
     isLoading,
+    isDownloadingZip,
     uploadFiles,
     deleteFile,
     downloadFile,

@@ -96,7 +96,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   const { activeCompany } = useCompany();
   const { data: profile } = useUserProfile();
   const isAdmin = isAdminOrAbove(profile);
-  const { files, isLoading, uploadFiles, deleteFile, downloadFile, downloadMultipleFiles } = useDocumentFiles(documentId);
+  const { files, isLoading, isDownloadingZip, uploadFiles, deleteFile, downloadFile, downloadMultipleFiles } = useDocumentFiles(documentId);
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -245,9 +245,23 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
           </CardTitle>
           <div className="flex gap-2">
             {selectedFiles.size > 0 && (
-              <Button variant="outline" size="sm" onClick={handleDownloadSelected}>
-                <Download className="mr-2 h-4 w-4" />
-                Letöltés ({selectedFiles.size})
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDownloadSelected}
+                disabled={isDownloadingZip}
+              >
+                {isDownloadingZip ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ZIP készítése...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    {selectedFiles.size > 1 ? `Letöltés ZIP-ben (${selectedFiles.size})` : `Letöltés (${selectedFiles.size})`}
+                  </>
+                )}
               </Button>
             )}
             {!isDeleted && (
