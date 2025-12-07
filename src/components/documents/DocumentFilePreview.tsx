@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer, PanelLeftClose, PanelLeft, BookOpen, Grid3X3, RotateCw } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,6 +59,9 @@ export const DocumentFilePreview = ({
   const [outline, setOutline] = useState<OutlineItem[] | null>(null);
   const [rotation, setRotation] = useState(0);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [printMode, setPrintMode] = useState<'all' | 'current' | 'range'>('all');
+  const [printRange, setPrintRange] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -251,16 +256,61 @@ export const DocumentFilePreview = ({
     setRotation((prev) => (prev + 90) % 360);
   };
 
+  const parsePageRange = (range: string, maxPages: number): number[] => {
+    const pages: Set<number> = new Set();
+    const parts = range.split(',').map(s => s.trim());
+    
+    for (const part of parts) {
+      if (part.includes('-')) {
+        const [start, end] = part.split('-').map(s => parseInt(s.trim(), 10));
+        if (!isNaN(start) && !isNaN(end)) {
+          for (let i = Math.max(1, start); i <= Math.min(end, maxPages); i++) {
+            pages.add(i);
+          }
+        }
+      } else {
+        const pageNum = parseInt(part, 10);
+        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= maxPages) {
+          pages.add(pageNum);
+        }
+      }
+    }
+    
+    return Array.from(pages).sort((a, b) => a - b);
+  };
+
+  const handlePrintClick = () => {
+    setShowPrintDialog(true);
+    setPrintMode('all');
+    setPrintRange('');
+  };
+
   const handlePrint = async () => {
     if (!pdfDocument || !numPages || isPrinting) return;
     
+    setShowPrintDialog(false);
     setIsPrinting(true);
     
     try {
-      // Render all pages to canvas and create images
+      // Determine which pages to print
+      let pagesToPrint: number[] = [];
+      
+      if (printMode === 'all') {
+        pagesToPrint = Array.from({ length: numPages }, (_, i) => i + 1);
+      } else if (printMode === 'current') {
+        pagesToPrint = [currentPage];
+      } else if (printMode === 'range') {
+        pagesToPrint = parsePageRange(printRange, numPages);
+        if (pagesToPrint.length === 0) {
+          setIsPrinting(false);
+          return;
+        }
+      }
+      
+      // Render selected pages to canvas and create images
       const images: string[] = [];
       
-      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      for (const pageNum of pagesToPrint) {
         const page = await pdfDocument.getPage(pageNum);
         const scale = 2; // Higher scale for better print quality
         const viewport = page.getViewport({ scale });
@@ -540,6 +590,7 @@ export const DocumentFilePreview = ({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent 
         className={`flex flex-col ${
@@ -593,7 +644,7 @@ export const DocumentFilePreview = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-7 w-7" 
-                  onClick={handlePrint} 
+                  onClick={handlePrintClick} 
                   title={isPrinting ? 'Nyomtatás előkészítése...' : 'Nyomtatás'}
                   disabled={isPrinting}
                 >
@@ -823,5 +874,60 @@ export const DocumentFilePreview = ({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Print Dialog */}
+    <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nyomtatás</DialogTitle>
+          <DialogDescription>
+            Válassza ki a nyomtatandó oldalakat
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <RadioGroup value={printMode} onValueChange={(v) => setPrintMode(v as 'all' | 'current' | 'range')}>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="all" id="print-all" />
+              <Label htmlFor="print-all">Összes oldal ({numPages} oldal)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="current" id="print-current" />
+              <Label htmlFor="print-current">Aktuális oldal ({currentPage}. oldal)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="range" id="print-range" />
+              <Label htmlFor="print-range">Oldalak megadása</Label>
+            </div>
+          </RadioGroup>
+          
+          {printMode === 'range' && (
+            <div className="pl-6 space-y-2">
+              <Input
+                placeholder="pl. 1-3, 5, 7-10"
+                value={printRange}
+                onChange={(e) => setPrintRange(e.target.value)}
+                className="max-w-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Oldalszámok vesszővel elválasztva vagy tartomány kötőjellel (pl. 1-3, 5, 7-10)
+              </p>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowPrintDialog(false)}>
+            Mégse
+          </Button>
+          <Button 
+            onClick={handlePrint}
+            disabled={printMode === 'range' && !printRange.trim()}
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Nyomtatás
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </>
   );
 };
