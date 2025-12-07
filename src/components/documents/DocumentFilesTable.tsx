@@ -356,10 +356,10 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="text-center cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('file_name')}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       Fájlnév
                       {getSortIcon('file_name')}
                     </div>
@@ -401,10 +401,10 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="text-center cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('uploader')}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       Feltöltő
                       {getSortIcon('uploader')}
                     </div>
