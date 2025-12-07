@@ -474,6 +474,57 @@ export type Database = {
           },
         ]
       }
+      dashboard_widgets: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          position: number
+          updated_at: string
+          user_id: string
+          widget_id: string
+          width: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          position?: number
+          updated_at?: string
+          user_id: string
+          widget_id: string
+          width?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          position?: number
+          updated_at?: string
+          user_id?: string
+          widget_id?: string
+          width?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_widgets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dashboard_widgets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_files: {
         Row: {
           created_at: string

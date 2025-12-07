@@ -10,29 +10,29 @@ import { ProjectsChart } from '@/components/dashboard/ProjectsChart';
 import { SalesChart } from '@/components/dashboard/SalesChart';
 import { RecentActivityWidget } from '@/components/dashboard/RecentActivityWidget';
 import { WeeklyCalendarWidget } from '@/components/dashboard/WeeklyCalendarWidget';
+import { DashboardCustomizer } from '@/components/dashboard/DashboardCustomizer';
+import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
+import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
   const { activeCompany } = useCompany();
   const { t } = useTranslation();
+  const { widgets } = useDashboardWidgets();
 
   const { data: projectStats } = useQuery({
     queryKey: ['project-stats', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany) return { total: 0, byStatus: {} };
-
       const { data, error } = await supabase
         .from('projects')
         .select('status')
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null);
-
       if (error) throw error;
-
       const byStatus = data.reduce((acc: any, project) => {
         acc[project.status || 'unknown'] = (acc[project.status || 'unknown'] || 0) + 1;
         return acc;
       }, {});
-
       return { total: data.length, byStatus };
     },
     enabled: !!activeCompany,
@@ -42,20 +42,16 @@ const Dashboard = () => {
     queryKey: ['sales-stats', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany) return { total: 0, byStatus: {} };
-
       const { data, error } = await supabase
         .from('sales')
         .select('status')
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null);
-
       if (error) throw error;
-
       const byStatus = data.reduce((acc: any, sale) => {
         acc[sale.status || 'unknown'] = (acc[sale.status || 'unknown'] || 0) + 1;
         return acc;
       }, {});
-
       return { total: data.length, byStatus };
     },
     enabled: !!activeCompany,
@@ -65,13 +61,11 @@ const Dashboard = () => {
     queryKey: ['partners-count', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany) return 0;
-
       const { count, error } = await supabase
         .from('partners')
         .select('*', { count: 'exact', head: true })
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null);
-
       if (error) throw error;
       return count || 0;
     },
@@ -90,15 +84,54 @@ const Dashboard = () => {
     );
   }
 
+  const getWidthClass = (width: string) => {
+    switch (width) {
+      case 'full': return 'col-span-full';
+      case 'third': return 'col-span-1';
+      default: return 'col-span-1 md:col-span-2';
+    }
+  };
+
+  const renderWidget = (widgetId: string, width: string) => {
+    const widthClass = getWidthClass(width);
+    
+    switch (widgetId) {
+      case 'license_status':
+        return <LicenseStatusWidget key={widgetId} />;
+      case 'tasks':
+        return <div key={widgetId} className={widthClass}><TasksWidget /></div>;
+      case 'weekly_calendar':
+        return <div key={widgetId} className={widthClass}><WeeklyCalendarWidget /></div>;
+      case 'projects_chart':
+        return projectStats?.byStatus && Object.keys(projectStats.byStatus).length > 0 
+          ? <div key={widgetId} className={widthClass}><ProjectsChart data={projectStats.byStatus} /></div>
+          : null;
+      case 'sales_chart':
+        return salesStats?.byStatus && Object.keys(salesStats.byStatus).length > 0
+          ? <div key={widgetId} className={widthClass}><SalesChart data={salesStats.byStatus} /></div>
+          : null;
+      case 'recent_activity':
+        return <div key={widgetId} className={widthClass}><RecentActivityWidget /></div>;
+      default:
+        return null;
+    }
+  };
+
+  const visibleWidgets = widgets.filter(w => w.is_visible);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
-        <p className="text-muted-foreground">
-          {t('dashboard.welcome', { companyName: activeCompany.name })}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+          <p className="text-muted-foreground">
+            {t('dashboard.welcome', { companyName: activeCompany.name })}
+          </p>
+        </div>
+        <DashboardCustomizer />
       </div>
 
+      {/* Summary cards - always visible */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -107,12 +140,8 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{projectStats?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.differentStatuses', { count: Object.keys(projectStats?.byStatus || {}).length })}
-            </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.salesOpportunities')}</CardTitle>
@@ -120,12 +149,8 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{salesStats?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.activePipeline')}
-            </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('dashboard.totalPartners')}</CardTitle>
@@ -133,30 +158,17 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{partnersCount || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {t('dashboard.partnersDescription')}
-            </p>
           </CardContent>
         </Card>
-
-        <LicenseStatusWidget />
+        {visibleWidgets.find(w => w.id === 'license_status') && <LicenseStatusWidget />}
       </div>
 
-      <WeeklyCalendarWidget />
-
-      <TasksWidget />
-      
+      {/* Customizable widgets */}
       <div className="grid gap-4 md:grid-cols-4">
-        {projectStats?.byStatus && Object.keys(projectStats.byStatus).length > 0 && (
-          <ProjectsChart data={projectStats.byStatus} />
-        )}
-        
-        {salesStats?.byStatus && Object.keys(salesStats.byStatus).length > 0 && (
-          <SalesChart data={salesStats.byStatus} />
-        )}
+        {visibleWidgets
+          .filter(w => w.id !== 'license_status')
+          .map(widget => renderWidget(widget.id, widget.width))}
       </div>
-      
-      <RecentActivityWidget />
     </div>
   );
 };
