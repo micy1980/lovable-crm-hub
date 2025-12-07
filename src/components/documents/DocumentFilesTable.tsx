@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
-import { format, parseISO } from 'date-fns';
+import { useState, useCallback, useMemo } from 'react';
+import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History } from 'lucide-react';
+import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History, Search, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -112,6 +114,65 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
   const [previewFile, setPreviewFile] = useState<DocumentFile | null>(null);
   const [versionsFile, setVersionsFile] = useState<DocumentFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Filter states
+  const [searchText, setSearchText] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterDateFrom, setFilterDateFrom] = useState<string>('');
+  const [filterDateTo, setFilterDateTo] = useState<string>('');
+
+  // Get unique file types for filter dropdown
+  const fileTypes = useMemo(() => {
+    const types = new Set<string>();
+    files.forEach(f => {
+      const type = getSimpleFileType(f.mime_type);
+      if (type !== '-') types.add(type);
+    });
+    return Array.from(types).sort();
+  }, [files]);
+
+  // Filter logic
+  const filteredFiles = useMemo(() => {
+    return files.filter(file => {
+      // Search text filter
+      if (searchText) {
+        const searchLower = searchText.toLowerCase();
+        const nameMatch = file.file_name.toLowerCase().includes(searchLower);
+        if (!nameMatch) return false;
+      }
+      
+      // Type filter
+      if (filterType !== 'all') {
+        const fileType = getSimpleFileType(file.mime_type);
+        if (fileType !== filterType) return false;
+      }
+      
+      // Date from filter
+      if (filterDateFrom) {
+        const fileDate = parseISO(file.uploaded_at);
+        const fromDate = startOfDay(new Date(filterDateFrom));
+        if (isBefore(fileDate, fromDate)) return false;
+      }
+      
+      // Date to filter
+      if (filterDateTo) {
+        const fileDate = parseISO(file.uploaded_at);
+        const toDate = endOfDay(new Date(filterDateTo));
+        if (isAfter(fileDate, toDate)) return false;
+      }
+      
+      return true;
+    });
+  }, [files, searchText, filterType, filterDateFrom, filterDateTo]);
+
+  const hasActiveFilters = searchText || filterType !== 'all' || filterDateFrom || filterDateTo;
+
+  const clearFilters = () => {
+    setSearchText('');
+    setFilterType('all');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+  };
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return '-';
@@ -142,7 +203,7 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
       : <ArrowDown className="h-4 w-4 ml-1" />;
   };
 
-  const sortedFiles = [...files].sort((a, b) => {
+  const sortedFiles = [...filteredFiles].sort((a, b) => {
     let aVal: any, bVal: any;
     
     switch (sortField) {
@@ -299,7 +360,7 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Fájlok ({files.length})
+            Fájlok ({filteredFiles.length}{hasActiveFilters ? ` / ${files.length}` : ''})
           </CardTitle>
           <div className="flex gap-2">
             {selectedFiles.size > 0 && (
@@ -330,7 +391,78 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Filter bar */}
+          {files.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 p-3 bg-muted/30 rounded-lg border">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              
+              {/* Search text */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Keresés fájlnévben..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-8 h-8"
+                />
+                {searchText && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                    onClick={() => setSearchText('')}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              
+              {/* Type filter */}
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-[130px] h-8">
+                  <SelectValue placeholder="Típus" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Összes típus</SelectItem>
+                  {fileTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Date from */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">-tól:</span>
+                <Input
+                  type="date"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  className="w-[130px] h-8"
+                />
+              </div>
+              
+              {/* Date to */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">-ig:</span>
+                <Input
+                  type="date"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  className="w-[130px] h-8"
+                />
+              </div>
+              
+              {/* Clear filters */}
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                  <X className="h-4 w-4 mr-1" />
+                  Szűrők törlése
+                </Button>
+              )}
+            </div>
+          )}
+
           {isDragging && (
             <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
               <div className="text-lg font-medium text-primary">
@@ -343,6 +475,14 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
               <FileText className="h-12 w-12 mb-2" />
               <p>Még nincs fájl feltöltve</p>
               <p className="text-sm mt-1">Húzza ide a fájlokat vagy kattintson a feltöltés gombra</p>
+            </div>
+          ) : filteredFiles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+              <Search className="h-12 w-12 mb-2" />
+              <p>Nincs a szűrésnek megfelelő fájl</p>
+              <Button variant="link" onClick={clearFilters} className="mt-2">
+                Szűrők törlése
+              </Button>
             </div>
           ) : (
             <Table>
