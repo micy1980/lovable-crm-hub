@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TableRow } from '@/components/ui/table';
 import { useContracts } from '@/hooks/useContracts';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -22,6 +23,10 @@ import { useSortableData } from '@/hooks/useSortableData';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useBulkOperations } from '@/hooks/useBulkOperations';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
+import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,10 +55,12 @@ const Contracts = () => {
   const [contractToDelete, setContractToDelete] = useState<any>(null);
   const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
   const [contractToHardDelete, setContractToHardDelete] = useState<any>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultWidth: 40, sortable: false },
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
     { key: 'partner', label: 'Partner', defaultVisible: true, defaultWidth: 180 },
     { key: 'type', label: 'Típus', defaultVisible: true, defaultWidth: 120 },
@@ -96,6 +103,34 @@ const Contracts = () => {
       status: (a, b) => (a.status || '').localeCompare(b.status || ''),
     },
   });
+
+  // Bulk selection and operations
+  const bulkSelection = useBulkSelection(sortedContracts);
+  const bulkOperations = useBulkOperations({
+    entityType: 'contracts',
+    queryKey: ['contracts', activeCompany?.id || ''],
+    onSuccess: () => bulkSelection.clearSelection(),
+  });
+
+  const contractStatuses = [
+    { value: 'draft', label: 'Tervezet' },
+    { value: 'active', label: 'Aktív' },
+    { value: 'expired', label: 'Lejárt' },
+    { value: 'terminated', label: 'Megszűnt' },
+    { value: 'renewed', label: 'Megújítva' },
+  ];
+
+  const handleBulkStatusChange = (status: string) => {
+    bulkOperations.bulkStatusChange.mutate({
+      ids: Array.from(bulkSelection.selectedIds),
+      status,
+    });
+  };
+
+  const handleBulkDelete = () => {
+    bulkOperations.bulkDelete.mutate(Array.from(bulkSelection.selectedIds));
+    setBulkDeleteDialogOpen(false);
+  };
 
   const getStatusBadge = (status: string | null) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
@@ -166,6 +201,15 @@ const Contracts = () => {
 
   const getCellValue = (contract: any, key: string) => {
     switch (key) {
+      case 'select':
+        return (
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={bulkSelection.selectedIds.has(contract.id)}
+              onCheckedChange={() => bulkSelection.toggleItem(contract.id)}
+            />
+          </div>
+        );
       case 'title':
         return (
           <div className="flex items-center gap-2">
@@ -297,6 +341,14 @@ const Contracts = () => {
           />
         </div>
 
+        <BulkActionsToolbar
+          selectedCount={bulkSelection.selectedCount}
+          onClearSelection={bulkSelection.clearSelection}
+          onBulkStatusChange={handleBulkStatusChange}
+          onBulkDelete={() => setBulkDeleteDialogOpen(true)}
+          statusOptions={contractStatuses}
+        />
+
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -320,6 +372,7 @@ const Contracts = () => {
               renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
               sortState={sortState}
               onSort={handleSort}
+              columnConfigs={columnConfigs}
               renderRow={(contract, columns) => (
                 <TableRow 
                   key={contract.id} 
@@ -375,6 +428,15 @@ const Contracts = () => {
         onConfirm={handleConfirmHardDelete}
         title="Szerződés végleges törlése"
         description={`A "${contractToHardDelete?.title}" szerződés és minden kapcsolódó adat véglegesen törlődik. Ez a művelet NEM vonható vissza.`}
+      />
+
+      <BulkDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={handleBulkDelete}
+        count={bulkSelection.selectedCount}
+        entityName="szerződés"
+        isLoading={bulkOperations.bulkDelete.isPending}
       />
     </LicenseGuard>
   );

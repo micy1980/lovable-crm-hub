@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TableRow } from '@/components/ui/table';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -19,6 +20,10 @@ import { useSortableData } from '@/hooks/useSortableData';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useBulkOperations } from '@/hooks/useBulkOperations';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
+import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,8 +51,10 @@ const Documents = () => {
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
   const [documentToHardDelete, setDocumentToHardDelete] = useState<any>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultWidth: 40, sortable: false },
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
     { key: 'visibility', label: 'Láthatóság', defaultVisible: true, defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultVisible: true, defaultWidth: 150 },
@@ -93,6 +100,19 @@ const Documents = () => {
       uploader: (a, b) => (a.uploader?.full_name || '').localeCompare(b.uploader?.full_name || '', 'hu'),
     },
   });
+
+  // Bulk selection and operations
+  const bulkSelection = useBulkSelection(sortedDocuments);
+  const bulkOperations = useBulkOperations({
+    entityType: 'documents',
+    queryKey: ['documents', activeCompany?.id || ''],
+    onSuccess: () => bulkSelection.clearSelection(),
+  });
+
+  const handleBulkDelete = () => {
+    bulkOperations.bulkDelete.mutate(Array.from(bulkSelection.selectedIds));
+    setBulkDeleteDialogOpen(false);
+  };
 
   const getVisibilityBadge = (visibility: string) => {
     const variants: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
@@ -153,6 +173,15 @@ const Documents = () => {
 
   const getCellValue = (doc: any, key: string) => {
     switch (key) {
+      case 'select':
+        return (
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={bulkSelection.selectedIds.has(doc.id)}
+              onCheckedChange={() => bulkSelection.toggleItem(doc.id)}
+            />
+          </div>
+        );
       case 'title':
         return (
           <div className="flex items-center gap-2">
@@ -281,6 +310,12 @@ const Documents = () => {
           />
         </div>
 
+        <BulkActionsToolbar
+          selectedCount={bulkSelection.selectedCount}
+          onClearSelection={bulkSelection.clearSelection}
+          onBulkDelete={() => setBulkDeleteDialogOpen(true)}
+        />
+
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -304,6 +339,7 @@ const Documents = () => {
               renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
               sortState={sortState}
               onSort={handleSort}
+              columnConfigs={columnConfigs}
               renderRow={(doc, columns) => (
                 <TableRow 
                   key={doc.id} 
@@ -358,6 +394,15 @@ const Documents = () => {
         onConfirm={handleConfirmHardDelete}
         title="Dokumentum végleges törlése"
         description={`A "${documentToHardDelete?.title}" dokumentum és a hozzá tartozó fájl véglegesen törlődik. Ez a művelet NEM vonható vissza.`}
+      />
+
+      <BulkDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={handleBulkDelete}
+        count={bulkSelection.selectedCount}
+        entityName="dokumentum"
+        isLoading={bulkOperations.bulkDelete.isPending}
       />
     </LicenseGuard>
   );
