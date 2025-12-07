@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -149,9 +150,12 @@ const DocumentDetail = () => {
                   </Badge>
                 )}
               </div>
-              {document.description && (
-                <p className="text-muted-foreground mt-1">{document.description}</p>
-              )}
+              <div className="flex items-center gap-2 mt-1">
+                {document.description && (
+                  <span className="text-muted-foreground">{document.description}</span>
+                )}
+                <TagSelector entityType="document" entityId={document.id} />
+              </div>
             </div>
           </div>
           <div className="flex gap-2">

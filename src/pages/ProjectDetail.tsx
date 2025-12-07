@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { ProjectTasks } from '@/components/projects/ProjectTasks';
 import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { useState } from 'react';
@@ -106,9 +107,12 @@ const ProjectDetail = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
-            {project.code && (
-              <p className="text-muted-foreground">{project.code}</p>
-            )}
+            <div className="flex items-center gap-2 mt-1">
+              {project.code && (
+                <span className="text-muted-foreground">{project.code}</span>
+              )}
+              <TagSelector entityType="project" entityId={project.id} />
+            </div>
           </div>
         </div>
         <div className="flex gap-2">

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit } from 'lucide-react';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { useState } from 'react';
 import { SalesDialog } from '@/components/sales/SalesDialog';
 import { ProjectTasks } from '@/components/projects/ProjectTasks';
@@ -87,9 +88,12 @@ const SalesDetail = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">{sale.name}</h1>
-          {partner && (
-            <p className="text-muted-foreground">Partner: {partner.name}</p>
-          )}
+            <div className="flex items-center gap-2 mt-1">
+              {partner && (
+                <span className="text-muted-foreground">Partner: {partner.name}</span>
+              )}
+              <TagSelector entityType="sales" entityId={sale.id} />
+            </div>
           </div>
           <Button onClick={() => setEditDialogOpen(true)} disabled={!canEdit}>
             <Edit className="mr-2 h-4 w-4" />

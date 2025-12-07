@@ -27,6 +27,7 @@ import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { TagDisplay } from '@/components/shared/TagSelector';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -49,6 +50,7 @@ const Sales = () => {
     { key: 'currency', label: 'Pénznem', defaultWidth: 100 },
     { key: 'expected_close_date', label: 'Várható lezárás', defaultWidth: 140 },
     { key: 'status', label: 'Státusz', defaultWidth: 120 },
+    { key: 'tags', label: 'Címkék', defaultWidth: 150, sortable: false },
     { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false, sortable: false },
     { key: 'actions', label: 'Műveletek', defaultWidth: 80, sortable: false },
   ], []);
@@ -189,6 +191,8 @@ const Sales = () => {
         return sale.status ? (
           <Badge variant="secondary">{getStatusLabel(sale.status)}</Badge>
         ) : '-';
+      case 'tags':
+        return <TagDisplay entityType="sales" entityId={sale.id} />;
       case 'description':
         return sale.description ? (
           <span className="line-clamp-2">{sale.description}</span>

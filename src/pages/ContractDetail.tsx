@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Lock
 } from 'lucide-react';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -162,9 +163,12 @@ const ContractDetail = () => {
                     </Badge>
                   )}
                 </div>
-                {contract.contract_number && (
-                  <p className="text-muted-foreground">{contract.contract_number}</p>
-                )}
+                <div className="flex items-center gap-2 mt-1">
+                  {contract.contract_number && (
+                    <span className="text-muted-foreground">{contract.contract_number}</span>
+                  )}
+                  <TagSelector entityType="contract" entityId={contract.id} />
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
