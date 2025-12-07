@@ -75,9 +75,12 @@ export const DocumentFilePreview = ({
       if (downloadError) throw downloadError;
 
       if (isPdf) {
-        // For PDF, convert to ArrayBuffer for react-pdf
+        // For PDF, convert to ArrayBuffer and copy it to avoid detached buffer issues
         const arrayBuffer = await data.arrayBuffer();
-        setPdfData(arrayBuffer);
+        // Create a copy of the ArrayBuffer to prevent detachment
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const copiedBuffer = uint8Array.slice().buffer;
+        setPdfData(copiedBuffer);
       } else {
         // For images, create blob URL
         const blob = new Blob([data], {
