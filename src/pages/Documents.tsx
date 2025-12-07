@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, FileText, Download, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, FileText, Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TableRow, TableCell } from '@/components/ui/table';
+import { TableRow } from '@/components/ui/table';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
@@ -192,20 +192,19 @@ const Documents = () => {
       case 'actions':
         return (
           <div className="flex items-center justify-center gap-0.5">
-            {doc.file_path && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadDocument(doc.file_path, doc.title);
-                }}
-                title="Letöltés"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedDocument(doc);
+                setDialogOpen(true);
+              }}
+              title="Szerkesztés"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
             {isAdmin && !doc.deleted_at && (
               <Button
                 variant="ghost"
