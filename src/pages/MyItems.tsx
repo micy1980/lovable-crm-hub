@@ -17,6 +17,11 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useBulkOperations } from '@/hooks/useBulkOperations';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
+import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { useMyItems } from '@/hooks/useEvents';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -108,6 +113,7 @@ export default function MyItems() {
 
   // Task column settings
   const taskColumnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultVisible: true, defaultWidth: 50, required: true },
     { key: 'title', label: t('tasks.title'), defaultVisible: true, defaultWidth: 200, required: true, sortable: true },
     { key: 'status', label: t('tasks.statusLabel'), defaultVisible: true, defaultWidth: 120, sortable: true },
     { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150, sortable: true },
@@ -119,6 +125,7 @@ export default function MyItems() {
 
   // Event column settings
   const eventColumnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultVisible: true, defaultWidth: 50, required: true },
     { key: 'title', label: t('events.title'), defaultVisible: true, defaultWidth: 200, required: true, sortable: true },
     { key: 'type', label: t('myItems.type'), defaultVisible: true, defaultWidth: 150, sortable: true },
     { key: 'partner', label: t('partners.title'), defaultVisible: true, defaultWidth: 150, sortable: true },
@@ -178,6 +185,50 @@ export default function MyItems() {
     data: preFilteredEvents,
     sortFunctions: eventSortFunctions,
   });
+
+  // Bulk selection for tasks and events (must be after filteredTasks/Events are defined)
+  const taskBulkSelection = useBulkSelection(filteredTasks);
+  const eventBulkSelection = useBulkSelection(filteredEvents);
+
+  // Bulk operations for tasks and events
+  const taskBulkOps = useBulkOperations({
+    entityType: 'tasks',
+    queryKey: ['my-items'],
+    onSuccess: () => taskBulkSelection.clearSelection(),
+  });
+
+  const eventBulkOps = useBulkOperations({
+    entityType: 'events',
+    queryKey: ['my-items'],
+    onSuccess: () => eventBulkSelection.clearSelection(),
+  });
+
+  const [bulkDeleteTasksOpen, setBulkDeleteTasksOpen] = useState(false);
+  const [bulkDeleteEventsOpen, setBulkDeleteEventsOpen] = useState(false);
+
+  const taskStatusOptions = useMemo(() => [
+    { value: 'pending', label: t('tasks.status.pending') },
+    { value: 'in_progress', label: t('tasks.status.in_progress') },
+    { value: 'completed', label: t('tasks.status.completed') },
+    { value: 'cancelled', label: t('tasks.status.cancelled') },
+  ], [t]);
+
+  const handleBulkTaskStatusChange = (status: string) => {
+    taskBulkOps.bulkStatusChange.mutate({
+      ids: Array.from(taskBulkSelection.selectedIds),
+      status,
+    });
+  };
+
+  const handleBulkTaskDelete = () => {
+    taskBulkOps.bulkDelete.mutate(Array.from(taskBulkSelection.selectedIds));
+    setBulkDeleteTasksOpen(false);
+  };
+
+  const handleBulkEventDelete = () => {
+    eventBulkOps.bulkDelete.mutate(Array.from(eventBulkSelection.selectedIds));
+    setBulkDeleteEventsOpen(false);
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -241,6 +292,14 @@ export default function MyItems() {
     const taskColor = getItemColor(task, 'task');
 
     switch (key) {
+      case 'select':
+        return (
+          <Checkbox
+            checked={taskBulkSelection.selectedIds.has(task.id)}
+            onCheckedChange={() => taskBulkSelection.toggleItem(task.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        );
       case 'title':
         return (
           <div className="flex items-center gap-2">
@@ -296,6 +355,14 @@ export default function MyItems() {
     const eventColor = getItemColor(event, 'event');
 
     switch (key) {
+      case 'select':
+        return (
+          <Checkbox
+            checked={eventBulkSelection.selectedIds.has(event.id)}
+            onCheckedChange={() => eventBulkSelection.toggleItem(event.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        );
       case 'title':
         return (
           <div className="flex items-center gap-2">
@@ -414,6 +481,15 @@ export default function MyItems() {
                 </div>
               </CardHeader>
               <CardContent>
+                <BulkActionsToolbar
+                  selectedCount={taskBulkSelection.selectedCount}
+                  onClearSelection={taskBulkSelection.clearSelection}
+                  onBulkDelete={() => setBulkDeleteTasksOpen(true)}
+                  onBulkStatusChange={handleBulkTaskStatusChange}
+                  statusOptions={taskStatusOptions}
+                  showStatusChange={true}
+                  showDelete={true}
+                />
                 {isLoading ? (
                   <div className="flex items-center justify-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -434,6 +510,13 @@ export default function MyItems() {
                       sortState={taskSortState}
                       onSort={handleTaskSort}
                       columnConfigs={taskColumnConfigs}
+                      selectHeader={
+                        <Checkbox
+                          checked={taskBulkSelection.isAllSelected}
+                          onCheckedChange={taskBulkSelection.toggleAll}
+                          aria-label="Select all tasks"
+                        />
+                      }
                       renderHeader={(col) => taskColumns.getColumnConfig(col.key)?.label || col.key}
                       renderRow={(task, columns) => (
                         <TableRow key={task.id}>
@@ -487,6 +570,13 @@ export default function MyItems() {
                 </div>
               </CardHeader>
               <CardContent>
+                <BulkActionsToolbar
+                  selectedCount={eventBulkSelection.selectedCount}
+                  onClearSelection={eventBulkSelection.clearSelection}
+                  onBulkDelete={() => setBulkDeleteEventsOpen(true)}
+                  showStatusChange={false}
+                  showDelete={true}
+                />
                 {isLoading ? (
                   <div className="flex items-center justify-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -507,6 +597,13 @@ export default function MyItems() {
                       sortState={eventSortState}
                       onSort={handleEventSort}
                       columnConfigs={eventColumnConfigs}
+                      selectHeader={
+                        <Checkbox
+                          checked={eventBulkSelection.isAllSelected}
+                          onCheckedChange={eventBulkSelection.toggleAll}
+                          aria-label="Select all events"
+                        />
+                      }
                       renderHeader={(col) => eventColumns.getColumnConfig(col.key)?.label || col.key}
                       renderRow={(event, columns) => (
                         <TableRow key={event.id}>
@@ -567,6 +664,24 @@ export default function MyItems() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <BulkDeleteDialog
+          open={bulkDeleteTasksOpen}
+          onOpenChange={setBulkDeleteTasksOpen}
+          onConfirm={handleBulkTaskDelete}
+          count={taskBulkSelection.selectedCount}
+          entityName={t('myItems.tasks')}
+          isLoading={taskBulkOps.isProcessing}
+        />
+
+        <BulkDeleteDialog
+          open={bulkDeleteEventsOpen}
+          onOpenChange={setBulkDeleteEventsOpen}
+          onConfirm={handleBulkEventDelete}
+          count={eventBulkSelection.selectedCount}
+          entityName={t('myItems.events')}
+          isLoading={eventBulkOps.isProcessing}
+        />
       </div>
     </LicenseGuard>
   );
