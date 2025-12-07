@@ -347,8 +347,8 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]">
-                    <div className="flex items-center justify-center">
+                  <TableHead className="w-[40px] text-center">
+                    <div className="flex items-center justify-center w-full">
                       <Checkbox
                         checked={selectedFiles.size === files.length && files.length > 0}
                         onCheckedChange={handleSelectAll}
