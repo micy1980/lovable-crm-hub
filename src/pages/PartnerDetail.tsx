@@ -19,6 +19,8 @@ import {
   Plus,
   Calendar,
   CheckSquare,
+  Users,
+  Network,
 } from 'lucide-react';
 import { TagSelector, TagDisplay } from '@/components/shared/TagSelector';
 import { CommentsSection } from '@/components/shared/CommentsSection';
@@ -33,6 +35,8 @@ import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { EventDialog } from '@/components/events/EventDialog';
 import { DocumentDialog } from '@/components/documents/DocumentDialog';
 import { SalesDialog } from '@/components/sales/SalesDialog';
+import PartnerContactsTab from '@/components/partners/PartnerContactsTab';
+import PartnerRelationshipsTab from '@/components/partners/PartnerRelationshipsTab';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -351,8 +355,16 @@ export default function PartnerDetail() {
         )}
 
         {/* Related Items Tabs */}
-        <Tabs defaultValue="projects" className="space-y-4">
-          <TabsList>
+        <Tabs defaultValue="contacts" className="space-y-4">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="contacts" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Kapcsolattartók
+            </TabsTrigger>
+            <TabsTrigger value="relationships" className="flex items-center gap-2">
+              <Network className="h-4 w-4" />
+              Kapcsolatok
+            </TabsTrigger>
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <FolderOpen className="h-4 w-4" />
               {t('projects.title')} ({projects.length})
@@ -374,6 +386,20 @@ export default function PartnerDetail() {
               {t('documents.title')} ({documents.length})
             </TabsTrigger>
           </TabsList>
+
+          {/* Contacts Tab */}
+          <TabsContent value="contacts">
+            <Card>
+              <CardContent className="pt-6">
+                <PartnerContactsTab partnerId={id!} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Relationships Tab */}
+          <TabsContent value="relationships">
+            <PartnerRelationshipsTab partnerId={id!} />
+          </TabsContent>
 
           {/* Projects Tab */}
           <TabsContent value="projects">
