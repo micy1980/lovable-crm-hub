@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, Tag as TagIcon } from 'lucide-react';
+import { Plus, X, Check, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,13 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import { useTags, useEntityTags, TagEntityType, Tag } from '@/hooks/useTags';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useTags, useEntityTags, TagEntityType, Tag, TagWithUsage } from '@/hooks/useTags';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { isAdminOrAbove } from '@/lib/roleUtils';
@@ -56,12 +62,17 @@ export function TagSelector({
   const { t } = useTranslation();
   const { data: profile } = useUserProfile();
   const isAdmin = isAdminOrAbove(profile);
-  const { tags, createTag } = useTags();
+  const { tags, createTag, deleteTag } = useTags();
   const { entityTags, hasTag, toggleTag, removeTag } = useEntityTags(entityType, entityId);
   const [open, setOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('blue');
   const [showNewTagForm, setShowNewTagForm] = useState(false);
+
+  const handleDeleteTag = (tagId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteTag.mutate(tagId);
+  };
 
   const handleCreateTag = async () => {
     if (!newTagName.trim()) return;
@@ -128,6 +139,7 @@ export function TagSelector({
                 {tags.map(tag => {
                   const color = getTagColor(tag.color);
                   const isAssigned = hasTag(tag.id);
+                  const canDelete = isAdmin && tag.usageCount === 0;
                   return (
                     <CommandItem
                       key={tag.id}
@@ -137,6 +149,36 @@ export function TagSelector({
                       <div className={cn('w-3 h-3 rounded-full', color.bg)} />
                       <span className="flex-1">{tag.name}</span>
                       {isAssigned && <Check className="h-4 w-4" />}
+                      {isAdmin && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (canDelete) handleDeleteTag(tag.id, e);
+                                }}
+                                className={cn(
+                                  'p-0.5 rounded hover:bg-muted transition-colors',
+                                  canDelete 
+                                    ? 'text-destructive hover:text-destructive cursor-pointer' 
+                                    : 'text-muted-foreground/40 cursor-not-allowed'
+                                )}
+                                disabled={!canDelete}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {canDelete 
+                                ? t('tags.deleteTag')
+                                : t('tags.cannotDelete', { count: tag.usageCount })
+                              }
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </CommandItem>
                   );
                 })}

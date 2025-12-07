@@ -16,6 +16,10 @@ export interface Tag {
   created_by: string | null;
 }
 
+export interface TagWithUsage extends Tag {
+  usageCount: number;
+}
+
 export interface EntityTag {
   id: string;
   tag_id: string;
@@ -31,20 +35,43 @@ export function useTags() {
   const { activeCompany } = useCompany();
   const queryClient = useQueryClient();
 
-  // Fetch all tags for the company
+  // Fetch all tags for the company with usage count
   const { data: tags = [], isLoading } = useQuery({
     queryKey: ['tags', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
       
-      const { data, error } = await supabase
+      // Get tags
+      const { data: tagsData, error: tagsError } = await supabase
         .from('tags')
         .select('*')
         .eq('company_id', activeCompany.id)
         .order('name');
       
-      if (error) throw error;
-      return data as Tag[];
+      if (tagsError) throw tagsError;
+      
+      // Get usage counts for each tag
+      const tagIds = tagsData.map(t => t.id);
+      if (tagIds.length === 0) return [];
+      
+      const { data: usageCounts, error: usageError } = await supabase
+        .from('entity_tags')
+        .select('tag_id')
+        .in('tag_id', tagIds);
+      
+      if (usageError) throw usageError;
+      
+      // Count usages per tag
+      const usageMap = new Map<string, number>();
+      usageCounts?.forEach(item => {
+        usageMap.set(item.tag_id, (usageMap.get(item.tag_id) || 0) + 1);
+      });
+      
+      // Enrich tags with usage count
+      return tagsData.map(tag => ({
+        ...tag,
+        usageCount: usageMap.get(tag.id) || 0,
+      })) as TagWithUsage[];
     },
     enabled: !!activeCompany?.id,
   });
