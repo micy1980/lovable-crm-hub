@@ -350,6 +350,14 @@ const Documents = () => {
               sortState={sortState}
               onSort={handleSort}
               columnConfigs={columnConfigs}
+              selectHeader={
+                <Checkbox
+                  checked={bulkSelection.isAllSelected}
+                  indeterminate={bulkSelection.isPartiallySelected}
+                  onCheckedChange={bulkSelection.toggleAll}
+                  aria-label="Select all"
+                />
+              }
               renderRow={(doc, columns) => (
                 <TableRow 
                   key={doc.id} 

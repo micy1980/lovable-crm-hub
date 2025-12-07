@@ -25,6 +25,7 @@ interface ResizableTableWithRenderProps extends ResizableTableBaseProps {
   actionColumnWidth?: number;
   actionColumnHeader?: string;
   columnConfigs?: ColumnConfig[];
+  selectHeader?: React.ReactNode;
   children?: never;
 }
 
@@ -197,7 +198,7 @@ export function ResizableTable(props: ResizableTableProps) {
     );
   }
 
-  const { renderHeader, renderRow, data, actionColumnWidth = 80, actionColumnHeader = '', columnConfigs } = props as ResizableTableWithRenderProps;
+  const { renderHeader, renderRow, data, actionColumnWidth = 80, actionColumnHeader = '', columnConfigs, selectHeader } = props as ResizableTableWithRenderProps;
 
   const isColumnSortable = (key: string): boolean => {
     if (!onSort) return false;
@@ -223,7 +224,7 @@ export function ResizableTable(props: ResizableTableProps) {
                   draggedIndex === index && 'opacity-50',
                   sortable && 'cursor-pointer hover:bg-muted/50'
                 )}
-                draggable={!!onColumnReorder}
+                draggable={!!onColumnReorder && col.key !== 'select'}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragLeave={handleDragLeave}
@@ -232,10 +233,14 @@ export function ResizableTable(props: ResizableTableProps) {
                 onClick={() => sortable && onSort && onSort(col.key)}
               >
                 <div className="flex items-center justify-center gap-1 w-full">
-                  {onColumnReorder && (
+                  {onColumnReorder && col.key !== 'select' && (
                     <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
                   )}
-                  <span className="truncate">{renderHeader(col)}</span>
+                  {col.key === 'select' && selectHeader ? (
+                    selectHeader
+                  ) : (
+                    <span className="truncate">{renderHeader(col)}</span>
+                  )}
                   {sortable && (
                     <SortIndicator columnKey={col.key} sortState={sortState} />
                   )}

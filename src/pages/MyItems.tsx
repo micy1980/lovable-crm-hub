@@ -513,6 +513,7 @@ export default function MyItems() {
                       selectHeader={
                         <Checkbox
                           checked={taskBulkSelection.isAllSelected}
+                          indeterminate={taskBulkSelection.isPartiallySelected}
                           onCheckedChange={taskBulkSelection.toggleAll}
                           aria-label="Select all tasks"
                         />
@@ -600,6 +601,7 @@ export default function MyItems() {
                       selectHeader={
                         <Checkbox
                           checked={eventBulkSelection.isAllSelected}
+                          indeterminate={eventBulkSelection.isPartiallySelected}
                           onCheckedChange={eventBulkSelection.toggleAll}
                           aria-label="Select all events"
                         />

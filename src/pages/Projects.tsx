@@ -245,12 +245,9 @@ const Projects = () => {
   const renderSelectHeader = () => (
     <Checkbox
       checked={isAllSelected}
-      ref={(el) => {
-        if (el) {
-          (el as any).indeterminate = isPartiallySelected;
-        }
-      }}
+      indeterminate={isPartiallySelected}
       onCheckedChange={toggleAll}
+      aria-label="Select all"
     />
   );
 

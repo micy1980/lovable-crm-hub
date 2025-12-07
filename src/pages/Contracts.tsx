@@ -382,6 +382,14 @@ const Contracts = () => {
               sortState={sortState}
               onSort={handleSort}
               columnConfigs={columnConfigs}
+              selectHeader={
+                <Checkbox
+                  checked={bulkSelection.isAllSelected}
+                  indeterminate={bulkSelection.isPartiallySelected}
+                  onCheckedChange={bulkSelection.toggleAll}
+                  aria-label="Select all"
+                />
+              }
               renderRow={(contract, columns) => (
                 <TableRow 
                   key={contract.id} 

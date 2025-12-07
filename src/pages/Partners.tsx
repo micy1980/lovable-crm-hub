@@ -308,6 +308,14 @@ const Partners = () => {
                 sortState={sortState}
                 onSort={handleSort}
                 columnConfigs={columnConfigs}
+                selectHeader={
+                  <Checkbox
+                    checked={bulkSelection.isAllSelected}
+                    indeterminate={bulkSelection.isPartiallySelected}
+                    onCheckedChange={bulkSelection.toggleAll}
+                    aria-label="Select all"
+                  />
+                }
                 renderRow={(partner, columns) => (
                   <TableRow 
                     key={partner.id} 
