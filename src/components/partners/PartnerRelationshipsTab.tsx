@@ -130,18 +130,24 @@ const PartnerRelationshipsTab = ({ partnerId }: PartnerRelationshipsTabProps) =>
               <div className="text-sm text-muted-foreground">
                 Nincs anyavállalat beállítva
               </div>
-              {!isReadOnly && availableParents.length > 0 && (
+              {!isReadOnly && (
                 <div className="flex gap-2">
                   <Select value={selectedParent} onValueChange={setSelectedParent}>
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Válassz anyavállalatot..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableParents.map((partner) => (
-                        <SelectItem key={partner.id} value={partner.id}>
-                          {partner.name}
-                        </SelectItem>
-                      ))}
+                      {availableParents.length === 0 ? (
+                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                          Nincs más partner a cégen belül
+                        </div>
+                      ) : (
+                        availableParents.map((partner) => (
+                          <SelectItem key={partner.id} value={partner.id}>
+                            {partner.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <Button 
