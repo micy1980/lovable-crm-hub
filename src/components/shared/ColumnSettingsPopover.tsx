@@ -28,8 +28,10 @@ export function ColumnSettingsPopover({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const draggedItemRef = useRef<string | null>(null);
 
-  // Sort by order for display
-  const sortedStates = [...columnStates].sort((a, b) => a.order - b.order);
+  // Sort by order for display, filter out select and favorite columns from menu
+  const sortedStates = [...columnStates]
+    .filter((s) => s.key !== 'select' && s.key !== 'favorite')
+    .sort((a, b) => a.order - b.order);
 
   const getColumnLabel = (key: string) => {
     return columns.find((c) => c.key === key)?.label || key;

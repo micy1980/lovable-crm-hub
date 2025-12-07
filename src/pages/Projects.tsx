@@ -286,7 +286,7 @@ const Projects = () => {
         <div className="flex gap-2">
           <ColumnSettingsPopover
             columnStates={columnStates}
-            columns={columnConfigs.filter(c => c.key !== 'select')}
+            columns={columnConfigs}
             onToggleVisibility={toggleVisibility}
             onReorder={reorderColumns}
             onReset={resetToDefaults}
