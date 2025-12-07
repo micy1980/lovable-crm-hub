@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Download, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +24,7 @@ export const DocumentFilePreview = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSignedUrl, setIsSignedUrl] = useState(false);
 
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType === 'application/pdf';
@@ -35,7 +36,7 @@ export const DocumentFilePreview = ({
     }
     
     return () => {
-      if (previewUrl) {
+      if (previewUrl && !isSignedUrl) {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -46,14 +47,28 @@ export const DocumentFilePreview = ({
     setError(null);
     
     try {
-      const { data, error: downloadError } = await supabase.storage
-        .from('documents')
-        .download(filePath);
+      if (isPdf) {
+        // For PDFs, use signed URL to allow browser's PDF viewer to work
+        const { data, error: signedUrlError } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(filePath, 3600); // 1 hour expiry
 
-      if (downloadError) throw downloadError;
+        if (signedUrlError) throw signedUrlError;
+        
+        setPreviewUrl(data.signedUrl);
+        setIsSignedUrl(true);
+      } else {
+        // For images, use blob URL
+        const { data, error: downloadError } = await supabase.storage
+          .from('documents')
+          .download(filePath);
 
-      const url = URL.createObjectURL(data);
-      setPreviewUrl(url);
+        if (downloadError) throw downloadError;
+
+        const url = URL.createObjectURL(data);
+        setPreviewUrl(url);
+        setIsSignedUrl(false);
+      }
     } catch (err: any) {
       setError('Nem sikerült betölteni az előnézetet: ' + err.message);
     } finally {
@@ -62,11 +77,12 @@ export const DocumentFilePreview = ({
   };
 
   const handleClose = () => {
-    if (previewUrl) {
+    if (previewUrl && !isSignedUrl) {
       URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
     }
+    setPreviewUrl(null);
     setError(null);
+    setIsSignedUrl(false);
     onOpenChange(false);
   };
 
@@ -110,19 +126,14 @@ export const DocumentFilePreview = ({
           )}
           
           {!loading && !error && previewUrl && isPdf && (
-            <object
-              data={previewUrl}
-              type="application/pdf"
+            <iframe
+              src={previewUrl}
+              title={fileName}
               className="w-full h-[70vh] border-0"
               style={{ minHeight: '500px' }}
-            >
-              <embed 
-                src={previewUrl} 
-                type="application/pdf"
-                className="w-full h-[70vh]"
-              />
-            </object>
+            />
           )}
+          
           {!canPreview && (
             <div className="flex flex-col items-center gap-4 text-muted-foreground p-8">
               <FileText className="h-16 w-16" />
