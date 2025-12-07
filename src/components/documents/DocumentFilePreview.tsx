@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,64 +24,68 @@ export const DocumentFilePreview = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const currentBlobUrl = useRef<string | null>(null);
 
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType === 'application/pdf';
   const canPreview = isImage || isPdf;
 
-  // Cleanup function to revoke blob URL
-  const cleanupBlobUrl = () => {
-    if (currentBlobUrl.current) {
-      URL.revokeObjectURL(currentBlobUrl.current);
-      currentBlobUrl.current = null;
+  const revokePreviewUrl = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
     }
   };
 
   useEffect(() => {
     if (open && canPreview) {
-      loadPreview();
+      void loadPreview();
+    } else {
+      revokePreviewUrl();
+      setPreviewUrl(null);
+      setError(null);
     }
-    
+
     return () => {
-      cleanupBlobUrl();
+      revokePreviewUrl();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, filePath, mimeType]);
 
   const loadPreview = async () => {
-    // Clean up previous blob URL before loading new one
-    cleanupBlobUrl();
-    setPreviewUrl(null);
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Use download + blob URL for both images and PDFs
       const { data, error: downloadError } = await supabase.storage
         .from('documents')
         .download(filePath);
 
       if (downloadError) throw downloadError;
 
-      const url = URL.createObjectURL(data);
-      currentBlobUrl.current = url;
+      // Create blob with explicit MIME type - this is crucial for PDF rendering
+      const blob = new Blob([data], {
+        type: mimeType ?? 'application/octet-stream',
+      });
+
+      const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
     } catch (err: any) {
-      setError('Nem sikerült betölteni az előnézetet: ' + err.message);
+      setError('Nem sikerült betölteni az előnézetet: ' + (err?.message ?? 'ismeretlen hiba'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    cleanupBlobUrl();
-    setPreviewUrl(null);
-    setError(null);
-    onOpenChange(false);
+  const handleDialogChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      revokePreviewUrl();
+      setPreviewUrl(null);
+      setError(null);
+    }
+    onOpenChange(nextOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="flex items-center gap-2 text-sm font-medium truncate pr-4">
@@ -95,7 +99,7 @@ export const DocumentFilePreview = ({
             </Button>
           </div>
         </DialogHeader>
-        
+
         <div className="flex-1 min-h-0 flex items-center justify-center bg-muted/30 rounded-lg overflow-hidden">
           {loading && (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -103,14 +107,14 @@ export const DocumentFilePreview = ({
               <span>Betöltés...</span>
             </div>
           )}
-          
+
           {error && (
             <div className="flex flex-col items-center gap-2 text-destructive p-4 text-center">
               <FileText className="h-12 w-12" />
               <span>{error}</span>
             </div>
           )}
-          
+
           {!loading && !error && previewUrl && isImage && (
             <img
               src={previewUrl}
@@ -118,26 +122,23 @@ export const DocumentFilePreview = ({
               className="max-w-full max-h-[70vh] object-contain"
             />
           )}
-          
+
           {!loading && !error && previewUrl && isPdf && (
             <object
               data={previewUrl}
               type="application/pdf"
-              className="w-full h-[70vh] border-0"
-              style={{ minHeight: '500px' }}
+              className="w-full h-[70vh]"
             >
-              <div className="flex flex-col items-center gap-4 text-muted-foreground p-8">
-                <FileText className="h-16 w-16" />
-                <span>A PDF előnézet nem elérhető a böngészőben</span>
-                <Button onClick={onDownload}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Letöltés
+              <p className="p-4 text-center text-sm text-muted-foreground">
+                A böngésző nem tudta közvetlenül megjeleníteni a PDF-et.
+                <Button variant="link" onClick={onDownload} className="ml-2">
+                  Töltse le a fájlt
                 </Button>
-              </div>
+              </p>
             </object>
           )}
-          
-          {!canPreview && (
+
+          {!canPreview && !loading && !error && (
             <div className="flex flex-col items-center gap-4 text-muted-foreground p-8">
               <FileText className="h-16 w-16" />
               <span>Az előnézet nem elérhető ehhez a fájltípushoz</span>
