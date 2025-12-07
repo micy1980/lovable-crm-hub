@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer, PanelLeftClose, PanelLeft, BookOpen, Grid3X3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page, pdfjs, Outline } from 'react-pdf';
+
+interface OutlineItem {
+  title: string;
+  dest: string | any[] | null;
+  items?: OutlineItem[];
+}
 
 // Configure pdf.js worker from CDN
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -43,8 +51,12 @@ export const DocumentFilePreview = ({
   const [showSearch, setShowSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<{ pageNum: number; index: number }[]>([]);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<'thumbnails' | 'bookmarks'>('thumbnails');
+  const [pdfDocument, setPdfDocument] = useState<any>(null);
+  const [outline, setOutline] = useState<OutlineItem[] | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isImage = mimeType?.startsWith('image/');
@@ -78,6 +90,9 @@ export const DocumentFilePreview = ({
       setShowSearch(false);
       setSearchResults([]);
       setCurrentSearchIndex(0);
+      setShowSidebar(false);
+      setOutline(null);
+      setPdfDocument(null);
       pageRefs.current.clear();
     }
 
@@ -195,8 +210,17 @@ export const DocumentFilePreview = ({
     onOpenChange(nextOpen);
   };
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
+  const onDocumentLoadSuccess = async (pdf: any) => {
+    setNumPages(pdf.numPages);
+    setPdfDocument(pdf);
+    
+    // Try to load outline/bookmarks
+    try {
+      const outlineData = await pdf.getOutline();
+      setOutline(outlineData);
+    } catch (e) {
+      setOutline(null);
+    }
   };
 
   const onDocumentLoadError = (err: Error) => {
@@ -245,11 +269,45 @@ export const DocumentFilePreview = ({
     }
   };
 
+  const handleOutlineItemClick = async (item: OutlineItem) => {
+    if (!pdfDocument || !item.dest) return;
+    
+    try {
+      let destArray = item.dest;
+      if (typeof item.dest === 'string') {
+        destArray = await pdfDocument.getDestination(item.dest);
+      }
+      
+      if (destArray && destArray[0]) {
+        const pageIndex = await pdfDocument.getPageIndex(destArray[0]);
+        goToPage(pageIndex + 1);
+      }
+    } catch (e) {
+      console.error('Error navigating to bookmark:', e);
+    }
+  };
+
+  const renderOutlineItems = (items: OutlineItem[], depth = 0): React.ReactNode => {
+    return items.map((item, index) => (
+      <div key={index}>
+        <button
+          onClick={() => handleOutlineItemClick(item)}
+          className="w-full text-left px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors truncate"
+          style={{ paddingLeft: `${8 + depth * 12}px` }}
+          title={item.title}
+        >
+          {item.title}
+        </button>
+        {item.items && item.items.length > 0 && renderOutlineItems(item.items, depth + 1)}
+      </div>
+    ));
+  };
+
   const getBasePageWidth = () => {
     if (isFullscreen) {
-      return Math.min(900, window.innerWidth - 80);
+      return Math.min(900, window.innerWidth - (showSidebar ? 280 : 80));
     }
-    return Math.min(700, window.innerWidth - 100);
+    return Math.min(700, window.innerWidth - (showSidebar ? 300 : 100));
   };
 
   const setPageRef = (pageNum: number) => (el: HTMLDivElement | null) => {
@@ -440,9 +498,20 @@ export const DocumentFilePreview = ({
           
           <div className="flex items-center gap-1 flex-shrink-0">
             {isPdf && pdfUrl && !pdfError && (
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrint} title="Nyomtatás">
-                <Printer className="h-3.5 w-3.5" />
-              </Button>
+              <>
+                <Button 
+                  variant={showSidebar ? "secondary" : "ghost"} 
+                  size="icon" 
+                  className="h-7 w-7" 
+                  onClick={() => setShowSidebar(!showSidebar)} 
+                  title={showSidebar ? 'Oldalsáv elrejtése' : 'Oldalsáv megjelenítése'}
+                >
+                  {showSidebar ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeft className="h-3.5 w-3.5" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrint} title="Nyomtatás">
+                  <Printer className="h-3.5 w-3.5" />
+                </Button>
+              </>
             )}
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleFullscreen} title={isFullscreen ? 'Kilépés teljes képernyőből' : 'Teljes képernyő'}>
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
@@ -517,59 +586,124 @@ export const DocumentFilePreview = ({
 
           {/* PDF preview with react-pdf - continuous scroll */}
           {!loading && !error && pdfUrl && isPdf && !pdfError && (
-            <>
-              {/* Page indicator with jump input - floating */}
-              {numPages && numPages > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 bg-background/90 backdrop-blur-sm rounded px-3 py-1.5 shadow-lg border border-border flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={numPages}
-                    value={pageInput}
-                    onChange={(e) => setPageInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        goToPage(parseInt(pageInput, 10));
-                      }
-                    }}
-                    onBlur={() => goToPage(parseInt(pageInput, 10))}
-                    className="w-12 h-6 text-xs text-center bg-muted border border-border rounded px-1 focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <span className="text-xs font-medium text-muted-foreground">/ {numPages}</span>
+            <div className="flex w-full h-full">
+              {/* Sidebar with thumbnails and bookmarks */}
+              {showSidebar && (
+                <div className="w-48 flex-shrink-0 border-r border-border bg-background flex flex-col">
+                  <Tabs value={sidebarTab} onValueChange={(v) => setSidebarTab(v as 'thumbnails' | 'bookmarks')} className="flex flex-col h-full">
+                    <TabsList className="grid w-full grid-cols-2 h-8 rounded-none border-b">
+                      <TabsTrigger value="thumbnails" className="text-xs h-7 gap-1">
+                        <Grid3X3 className="h-3 w-3" />
+                        Oldalak
+                      </TabsTrigger>
+                      <TabsTrigger value="bookmarks" className="text-xs h-7 gap-1" disabled={!outline || outline.length === 0}>
+                        <BookOpen className="h-3 w-3" />
+                        Könyvjelzők
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="thumbnails" className="flex-1 m-0 overflow-hidden">
+                      <ScrollArea className={`${isFullscreen ? 'h-[82vh]' : showSearch ? 'h-[62vh]' : 'h-[69vh]'}`}>
+                        <div className="flex flex-col gap-2 p-2">
+                          <Document file={pdfUrl}>
+                            {numPages && Array.from({ length: numPages }, (_, index) => (
+                              <button
+                                key={`thumb_${index + 1}`}
+                                onClick={() => goToPage(index + 1)}
+                                className={`relative p-1 rounded border transition-all ${
+                                  currentPage === index + 1 
+                                    ? 'border-primary ring-2 ring-primary/30' 
+                                    : 'border-border hover:border-primary/50'
+                                }`}
+                              >
+                                <Page
+                                  pageNumber={index + 1}
+                                  width={140}
+                                  renderTextLayer={false}
+                                  renderAnnotationLayer={false}
+                                />
+                                <div className="absolute bottom-2 right-2 bg-background/80 text-xs px-1.5 py-0.5 rounded">
+                                  {index + 1}
+                                </div>
+                              </button>
+                            ))}
+                          </Document>
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+                    
+                    <TabsContent value="bookmarks" className="flex-1 m-0 overflow-hidden">
+                      <ScrollArea className={`${isFullscreen ? 'h-[82vh]' : showSearch ? 'h-[62vh]' : 'h-[69vh]'}`}>
+                        <div className="py-2">
+                          {outline && outline.length > 0 ? (
+                            renderOutlineItems(outline)
+                          ) : (
+                            <div className="p-4 text-xs text-muted-foreground text-center">
+                              Nincsenek könyvjelzők
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
 
-              <div
-                ref={scrollContainerRef}
-                className={`overflow-auto w-full ${isFullscreen ? 'h-[88vh]' : showSearch ? 'h-[68vh]' : 'h-[75vh]'} flex justify-center pb-10`}
-              >
-                <Document
-                  file={pdfUrl}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  onLoadError={onDocumentLoadError}
-                  loading={
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground p-8">
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                      <span>PDF betöltése...</span>
-                    </div>
-                  }
-                >
-                  <div className="flex flex-col items-center gap-4 py-4">
-                    {numPages && Array.from({ length: numPages }, (_, index) => (
-                      <div key={`page_${index + 1}`} ref={setPageRef(index + 1)}>
-                        <Page 
-                          pageNumber={index + 1} 
-                          renderTextLayer={true}
-                          renderAnnotationLayer={false}
-                          className="shadow-lg"
-                          width={getBasePageWidth() * zoom}
-                        />
-                      </div>
-                    ))}
+              {/* Main PDF view */}
+              <div className="flex-1 relative flex flex-col">
+                {/* Page indicator with jump input - floating */}
+                {numPages && numPages > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 bg-background/90 backdrop-blur-sm rounded px-3 py-1.5 shadow-lg border border-border flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={numPages}
+                      value={pageInput}
+                      onChange={(e) => setPageInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          goToPage(parseInt(pageInput, 10));
+                        }
+                      }}
+                      onBlur={() => goToPage(parseInt(pageInput, 10))}
+                      className="w-12 h-6 text-xs text-center bg-muted border border-border rounded px-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <span className="text-xs font-medium text-muted-foreground">/ {numPages}</span>
                   </div>
-                </Document>
+                )}
+
+                <div
+                  ref={scrollContainerRef}
+                  className={`overflow-auto w-full ${isFullscreen ? 'h-[88vh]' : showSearch ? 'h-[68vh]' : 'h-[75vh]'} flex justify-center pb-10`}
+                >
+                  <Document
+                    file={pdfUrl}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    onLoadError={onDocumentLoadError}
+                    loading={
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground p-8">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                        <span>PDF betöltése...</span>
+                      </div>
+                    }
+                  >
+                    <div className="flex flex-col items-center gap-4 py-4">
+                      {numPages && Array.from({ length: numPages }, (_, index) => (
+                        <div key={`page_${index + 1}`} ref={setPageRef(index + 1)}>
+                          <Page 
+                            pageNumber={index + 1} 
+                            renderTextLayer={true}
+                            renderAnnotationLayer={false}
+                            className="shadow-lg"
+                            width={getBasePageWidth() * zoom}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </Document>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* PDF error fallback */}
