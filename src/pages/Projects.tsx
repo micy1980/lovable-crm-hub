@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
@@ -35,6 +35,7 @@ const Projects = () => {
     { key: 'description', label: 'Leírás', defaultWidth: 250, sortable: false },
     { key: 'status', label: 'Státusz', defaultWidth: 120 },
     { key: 'created_at', label: 'Létrehozva', defaultWidth: 150 },
+    { key: 'actions', label: 'Műveletek', defaultWidth: 80, sortable: false },
   ], []);
 
   // Columns that should be centered
@@ -117,6 +118,23 @@ const Projects = () => {
         return project.created_at 
           ? new Date(project.created_at).toLocaleDateString('hu-HU')
           : '-';
+      case 'actions':
+        return (
+          <div className="flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/projects/${project.id}`);
+              }}
+              title="Szerkesztés"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+        );
       default:
         return '-';
     }

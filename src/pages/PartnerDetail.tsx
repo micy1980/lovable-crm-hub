@@ -394,10 +394,10 @@ export default function PartnerDetail() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('projects.name')}</TableHead>
-                        <TableHead>{t('projects.code')}</TableHead>
-                        <TableHead>{t('projects.status')}</TableHead>
-                        <TableHead>{t('projects.owner')}</TableHead>
+                        <TableHead>Név</TableHead>
+                        <TableHead>Kód</TableHead>
+                        <TableHead>Státusz</TableHead>
+                        <TableHead>Tulajdonos</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -446,10 +446,10 @@ export default function PartnerDetail() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('sales.name')}</TableHead>
-                        <TableHead>{t('sales.status')}</TableHead>
-                        <TableHead>{t('sales.expectedValue')}</TableHead>
-                        <TableHead>{t('sales.expectedCloseDate')}</TableHead>
+                        <TableHead>Név</TableHead>
+                        <TableHead>Státusz</TableHead>
+                        <TableHead>Várható érték</TableHead>
+                        <TableHead>Várható lezárás</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

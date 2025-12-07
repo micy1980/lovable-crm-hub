@@ -60,6 +60,7 @@ const Contracts = () => {
     { key: 'expiry', label: 'Érvényesség', defaultVisible: true, defaultWidth: 180 },
     { key: 'value', label: 'Érték', defaultVisible: true, defaultWidth: 140 },
     { key: 'status', label: 'Státusz', defaultVisible: true, defaultWidth: 100 },
+    { key: 'actions', label: 'Műveletek', defaultVisible: true, defaultWidth: 100, sortable: false },
   ], []);
 
   const rightAlignedColumns = ['value'];

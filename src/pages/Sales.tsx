@@ -2,7 +2,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
@@ -40,6 +40,7 @@ const Sales = () => {
     { key: 'expected_close_date', label: 'Várható lezárás', defaultWidth: 140 },
     { key: 'status', label: 'Státusz', defaultWidth: 120 },
     { key: 'description', label: 'Leírás', defaultWidth: 200, defaultVisible: false, sortable: false },
+    { key: 'actions', label: 'Műveletek', defaultWidth: 80, sortable: false },
   ], []);
 
   // Columns that should be centered or right-aligned
@@ -142,6 +143,23 @@ const Sales = () => {
         return sale.description ? (
           <span className="line-clamp-2">{sale.description}</span>
         ) : '-';
+      case 'actions':
+        return (
+          <div className="flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/sales/${sale.id}`);
+              }}
+              title="Szerkesztés"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+        );
       default:
         return '-';
     }
