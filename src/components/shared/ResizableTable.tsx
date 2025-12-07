@@ -31,6 +31,7 @@ interface ResizableTableWithRenderProps extends ResizableTableBaseProps {
 interface ResizableTableWithChildrenProps extends ResizableTableBaseProps {
   getColumnConfig: (key: string) => ColumnConfig | undefined;
   children: React.ReactNode;
+  selectHeader?: React.ReactNode;
   renderHeader?: never;
   renderRow?: never;
   data?: never;
@@ -135,7 +136,7 @@ export function ResizableTable(props: ResizableTableProps) {
 
   // Children-based version (new)
   if ('children' in props && props.children && 'getColumnConfig' in props) {
-    const { getColumnConfig, children } = props as ResizableTableWithChildrenProps;
+    const { getColumnConfig, children, selectHeader } = props as ResizableTableWithChildrenProps;
     
     return (
       <div className={cn('overflow-x-auto rounded-md border', className)}>
@@ -165,10 +166,14 @@ export function ResizableTable(props: ResizableTableProps) {
                     onClick={() => handleHeaderClick(col.key, config?.sortable)}
                   >
                     <div className="flex items-center justify-center gap-1 w-full">
-                      {onColumnReorder && (
+                      {onColumnReorder && col.key !== 'select' && (
                         <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
                       )}
-                      <span className="truncate">{config?.label || col.key}</span>
+                      {col.key === 'select' && selectHeader ? (
+                        selectHeader
+                      ) : (
+                        <span className="truncate">{config?.label || col.key}</span>
+                      )}
                       {isSortable && (
                         <SortIndicator columnKey={col.key} sortState={sortState} />
                       )}

@@ -19,6 +19,11 @@ import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover
 import { ResizableTable } from '@/components/shared/ResizableTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useSortableData } from '@/hooks/useSortableData';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useBulkOperations } from '@/hooks/useBulkOperations';
+import { BulkActionsToolbar, StatusOption, UserOption } from '@/components/shared/BulkActionsToolbar';
+import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 
 const Projects = () => {
   const { activeCompany } = useCompany();
@@ -27,8 +32,10 @@ const Projects = () => {
   const { canEdit } = useReadOnlyMode();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultWidth: 40, sortable: false },
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'code', label: 'Kód', defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
@@ -39,7 +46,7 @@ const Projects = () => {
   ], []);
 
   // Columns that should be centered
-  const centeredColumns = ['status', 'created_at'];
+  const centeredColumns = ['select', 'status', 'created_at'];
 
   const {
     columnStates,
@@ -75,6 +82,20 @@ const Projects = () => {
     enabled: !!activeCompany,
   });
 
+  // Fetch users for owner change
+  const { data: companyUsers } = useQuery({
+    queryKey: ['company-users', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany) return [];
+      const { data, error } = await supabase.rpc('get_company_users_for_assignment', {
+        _company_id: activeCompany.id,
+      });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeCompany,
+  });
+
   const { sortedData: sortedProjects, sortState, handleSort } = useSortableData({
     data: projects || [],
     sortFunctions: {
@@ -85,6 +106,56 @@ const Projects = () => {
       created_at: (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime(),
     },
   });
+
+  // Bulk selection
+  const {
+    selectedIds,
+    isAllSelected,
+    isPartiallySelected,
+    toggleItem,
+    toggleAll,
+    clearSelection,
+    selectedCount,
+    hasSelection,
+  } = useBulkSelection(sortedProjects);
+
+  // Bulk operations
+  const { bulkStatusChange, bulkOwnerChange, bulkDelete, isProcessing } = useBulkOperations({
+    entityType: 'projects',
+    queryKey: ['projects', activeCompany?.id || ''],
+    onSuccess: clearSelection,
+  });
+
+  // Status options
+  const statusOptions: StatusOption[] = useMemo(() => [
+    { value: 'planning', label: 'Tervezés' },
+    { value: 'in_progress', label: 'Folyamatban' },
+    { value: 'on_hold', label: 'Felfüggesztve' },
+    { value: 'completed', label: 'Befejezett' },
+    { value: 'cancelled', label: 'Törölve' },
+  ], []);
+
+  // User options for owner change
+  const userOptions: UserOption[] = useMemo(() => 
+    (companyUsers || []).map((u: any) => ({
+      id: u.id,
+      name: u.full_name || u.email,
+    })),
+    [companyUsers]
+  );
+
+  const handleBulkStatusChange = (status: string) => {
+    bulkStatusChange.mutate({ ids: Array.from(selectedIds), status });
+  };
+
+  const handleBulkOwnerChange = (userId: string) => {
+    bulkOwnerChange.mutate({ ids: Array.from(selectedIds), userId, field: 'owner_user_id' });
+  };
+
+  const handleBulkDelete = () => {
+    bulkDelete.mutate(Array.from(selectedIds));
+    setBulkDeleteDialogOpen(false);
+  };
 
   const getStatusLabel = (status: string | null) => {
     if (!status) return '-';
@@ -100,6 +171,14 @@ const Projects = () => {
 
   const renderCellContent = (project: any, columnKey: string) => {
     switch (columnKey) {
+      case 'select':
+        return (
+          <Checkbox
+            checked={selectedIds.has(project.id)}
+            onCheckedChange={() => toggleItem(project.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        );
       case 'name':
         return <span className="font-medium">{project.name}</span>;
       case 'code':
@@ -140,6 +219,33 @@ const Projects = () => {
     }
   };
 
+  // Custom getColumnConfig to handle select checkbox
+  const getColumnConfigWithCheckbox = (key: string): ColumnConfig | undefined => {
+    if (key === 'select') {
+      return {
+        key: 'select',
+        label: '',
+        defaultWidth: 40,
+        sortable: false,
+        // Custom render will be handled in the cell
+      };
+    }
+    return getColumnConfig(key);
+  };
+
+  // Render select header cell manually in the table
+  const renderSelectHeader = () => (
+    <Checkbox
+      checked={isAllSelected}
+      ref={(el) => {
+        if (el) {
+          (el as any).indeterminate = isPartiallySelected;
+        }
+      }}
+      onCheckedChange={toggleAll}
+    />
+  );
+
   if (!activeCompany) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -175,14 +281,14 @@ const Projects = () => {
         <div className="flex gap-2">
           <ColumnSettingsPopover
             columnStates={columnStates}
-            columns={columnConfigs}
+            columns={columnConfigs.filter(c => c.key !== 'select')}
             onToggleVisibility={toggleVisibility}
             onReorder={reorderColumns}
             onReset={resetToDefaults}
           />
           <ExportMenu
             data={projects || []}
-            columns={visibleColumns.map(col => ({
+            columns={visibleColumns.filter(c => c.key !== 'select' && c.key !== 'actions').map(col => ({
               header: getColumnConfig(col.key)?.label || col.key,
               key: col.key === 'partner' ? 'partner.name' : col.key,
             }))}
@@ -194,6 +300,20 @@ const Projects = () => {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedCount={selectedCount}
+        onClearSelection={clearSelection}
+        onBulkDelete={() => setBulkDeleteDialogOpen(true)}
+        onBulkStatusChange={handleBulkStatusChange}
+        onBulkOwnerChange={handleBulkOwnerChange}
+        statusOptions={statusOptions}
+        userOptions={userOptions}
+        showDelete={canEdit}
+        showStatusChange={canEdit}
+        showOwnerChange={canEdit}
+      />
 
       <Card>
         <CardHeader>
@@ -210,17 +330,18 @@ const Projects = () => {
           ) : sortedProjects.length > 0 ? (
             <ResizableTable
               visibleColumns={visibleColumns}
-              getColumnConfig={getColumnConfig}
+              getColumnConfig={getColumnConfigWithCheckbox}
               onColumnResize={setColumnWidth}
               onColumnReorder={reorderColumns}
               sortState={sortState}
               onSort={handleSort}
+              selectHeader={renderSelectHeader()}
             >
               <TableBody>
                 {sortedProjects.map((project) => (
                   <TableRow
                     key={project.id}
-                    className="cursor-pointer hover:bg-accent/50"
+                    className={`cursor-pointer hover:bg-accent/50 ${selectedIds.has(project.id) ? 'bg-primary/5' : ''}`}
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     {visibleColumns.map((col) => (
@@ -246,6 +367,15 @@ const Projects = () => {
       </div>
 
       <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <BulkDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={handleBulkDelete}
+        count={selectedCount}
+        entityName="projekt"
+        isLoading={isProcessing}
+      />
     </LicenseGuard>
   );
 };
