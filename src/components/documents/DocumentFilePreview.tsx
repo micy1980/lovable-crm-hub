@@ -111,9 +111,10 @@ export const DocumentFilePreview = ({
           
           {!loading && !error && previewUrl && isPdf && (
             <iframe
-              src={previewUrl}
+              src={`${previewUrl}#toolbar=1&navpanes=0&view=FitH`}
               title={fileName}
               className="w-full h-[70vh] border-0"
+              style={{ minHeight: '500px' }}
             />
           )}
           
