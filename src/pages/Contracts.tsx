@@ -63,7 +63,7 @@ const Contracts = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
-    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: 'Kedvencek', defaultWidth: 40, sortable: false },
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
     { key: 'partner', label: 'Partner', defaultVisible: true, defaultWidth: 180 },
     { key: 'type', label: 'Típus', defaultVisible: true, defaultWidth: 120 },

@@ -52,7 +52,7 @@ const Partners = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
-    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: 'Kedvencek', defaultWidth: 40, sortable: false },
     { key: 'name', label: t('partners.name'), defaultVisible: true, defaultWidth: 200, required: true },
     { key: 'category', label: t('partners.category'), defaultVisible: true, defaultWidth: 120 },
     { key: 'headquarters', label: t('partners.headquarters'), defaultVisible: true, defaultWidth: 200, sortable: false },

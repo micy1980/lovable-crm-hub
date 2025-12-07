@@ -43,7 +43,7 @@ const Sales = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
-    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: 'Kedvencek', defaultWidth: 40, sortable: false },
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
     { key: 'expected_value', label: 'Várható érték', defaultWidth: 150 },
