@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 // Configure pdf.js worker from CDN
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -37,8 +39,13 @@ export const DocumentFilePreview = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchText, setSearchText] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ pageNum: number; index: number }[]>([]);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType?.startsWith('application/pdf') || mimeType === 'application/x-pdf';
@@ -67,6 +74,10 @@ export const DocumentFilePreview = ({
       setIsFullscreen(false);
       setZoomIndex(DEFAULT_ZOOM_INDEX);
       setCurrentPage(1);
+      setSearchText('');
+      setShowSearch(false);
+      setSearchResults([]);
+      setCurrentSearchIndex(0);
       pageRefs.current.clear();
     }
 
@@ -105,6 +116,33 @@ export const DocumentFilePreview = ({
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [numPages]);
+
+  // Focus search input when search is opened
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
+
+  // Handle Ctrl+F to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f' && isPdf && pdfUrl && !pdfError) {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+      if (e.key === 'Escape' && showSearch) {
+        setShowSearch(false);
+        setSearchText('');
+        clearHighlights();
+      }
+    };
+
+    if (open) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [open, isPdf, pdfUrl, pdfError, showSearch]);
 
   const loadPreview = async () => {
     setLoading(true);
@@ -147,6 +185,10 @@ export const DocumentFilePreview = ({
       setIsFullscreen(false);
       setZoomIndex(DEFAULT_ZOOM_INDEX);
       setCurrentPage(1);
+      setSearchText('');
+      setShowSearch(false);
+      setSearchResults([]);
+      setCurrentSearchIndex(0);
       pageRefs.current.clear();
     }
     onOpenChange(nextOpen);
@@ -193,6 +235,120 @@ export const DocumentFilePreview = ({
     }
   };
 
+  const clearHighlights = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const highlights = container.querySelectorAll('.pdf-search-highlight');
+    highlights.forEach(el => {
+      const parent = el.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+        parent.normalize();
+      }
+    });
+  };
+
+  const performSearch = () => {
+    if (!searchText.trim()) {
+      clearHighlights();
+      setSearchResults([]);
+      setCurrentSearchIndex(0);
+      return;
+    }
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Clear previous highlights
+    clearHighlights();
+
+    const results: { pageNum: number; index: number }[] = [];
+    const searchLower = searchText.toLowerCase();
+
+    // Find all text layer spans
+    pageRefs.current.forEach((pageEl, pageNum) => {
+      const textLayer = pageEl.querySelector('.react-pdf__Page__textContent');
+      if (!textLayer) return;
+
+      const spans = textLayer.querySelectorAll('span');
+      spans.forEach((span) => {
+        const text = span.textContent || '';
+        const textLower = text.toLowerCase();
+        
+        if (textLower.includes(searchLower)) {
+          // Highlight the matching text
+          const regex = new RegExp(`(${searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          const parts = text.split(regex);
+          
+          if (parts.length > 1) {
+            span.innerHTML = '';
+            parts.forEach(part => {
+              if (part.toLowerCase() === searchLower) {
+                const mark = document.createElement('mark');
+                mark.className = 'pdf-search-highlight bg-yellow-300 text-black rounded px-0.5';
+                mark.textContent = part;
+                span.appendChild(mark);
+                results.push({ pageNum, index: results.length });
+              } else {
+                span.appendChild(document.createTextNode(part));
+              }
+            });
+          }
+        }
+      });
+    });
+
+    setSearchResults(results);
+    setCurrentSearchIndex(0);
+
+    // Scroll to first result
+    if (results.length > 0) {
+      scrollToResult(0);
+    }
+  };
+
+  const scrollToResult = (index: number) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const highlights = container.querySelectorAll('.pdf-search-highlight');
+    if (highlights[index]) {
+      // Remove current highlight
+      highlights.forEach(el => el.classList.remove('ring-2', 'ring-primary'));
+      
+      // Add current highlight
+      highlights[index].classList.add('ring-2', 'ring-primary');
+      highlights[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const goToNextResult = () => {
+    if (searchResults.length === 0) return;
+    const nextIndex = (currentSearchIndex + 1) % searchResults.length;
+    setCurrentSearchIndex(nextIndex);
+    scrollToResult(nextIndex);
+  };
+
+  const goToPrevResult = () => {
+    if (searchResults.length === 0) return;
+    const prevIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+    setCurrentSearchIndex(prevIndex);
+    scrollToResult(prevIndex);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        goToPrevResult();
+      } else if (searchResults.length > 0) {
+        goToNextResult();
+      } else {
+        performSearch();
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent 
@@ -211,6 +367,10 @@ export const DocumentFilePreview = ({
           {/* Integrated zoom controls for PDF */}
           {isPdf && pdfUrl && !pdfError && (
             <div className="flex items-center gap-0.5 flex-shrink-0">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSearch(!showSearch)} title="Keresés (Ctrl+F)">
+                <Search className="h-3.5 w-3.5" />
+              </Button>
+              <div className="w-px h-4 bg-border mx-1" />
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={zoomOut} disabled={zoomIndex <= 0} title="Kicsinyítés">
                 <ZoomOut className="h-3.5 w-3.5" />
               </Button>
@@ -233,6 +393,41 @@ export const DocumentFilePreview = ({
             </Button>
           </div>
         </DialogHeader>
+
+        {/* Search bar */}
+        {showSearch && isPdf && (
+          <div className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded-lg">
+            <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Keresés a dokumentumban..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="h-7 text-sm flex-1"
+            />
+            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={performSearch}>
+              Keresés
+            </Button>
+            {searchResults.length > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {currentSearchIndex + 1} / {searchResults.length}
+                </span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={goToPrevResult} title="Előző">
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={goToNextResult} title="Következő">
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowSearch(false); setSearchText(''); clearHighlights(); setSearchResults([]); }}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
 
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/30 rounded-lg overflow-hidden relative">
           {loading && (
@@ -274,7 +469,7 @@ export const DocumentFilePreview = ({
 
               <div
                 ref={scrollContainerRef}
-                className={`overflow-auto w-full ${isFullscreen ? 'h-[88vh]' : 'h-[75vh]'} flex justify-center pb-10`}
+                className={`overflow-auto w-full ${isFullscreen ? 'h-[88vh]' : showSearch ? 'h-[68vh]' : 'h-[75vh]'} flex justify-center pb-10`}
               >
                 <Document
                   file={pdfUrl}
@@ -292,7 +487,7 @@ export const DocumentFilePreview = ({
                       <div key={`page_${index + 1}`} ref={setPageRef(index + 1)}>
                         <Page 
                           pageNumber={index + 1} 
-                          renderTextLayer={false}
+                          renderTextLayer={true}
                           renderAnnotationLayer={false}
                           className="shadow-lg"
                           width={getBasePageWidth() * zoom}
