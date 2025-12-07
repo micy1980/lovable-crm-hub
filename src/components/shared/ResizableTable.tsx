@@ -246,9 +246,6 @@ export function ResizableTable(props: ResizableTableProps) {
               </TableHead>
               );
             })}
-            <TableHead style={{ width: actionColumnWidth }} className="text-center">
-              {actionColumnHeader}
-            </TableHead>
           </TableRow>
         </TableHeader>
         {data.map((item) => renderRow(item, visibleColumns))}
