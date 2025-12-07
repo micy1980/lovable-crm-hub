@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,7 @@ import {
 import { DocumentFile, useDocumentFiles } from '@/hooks/useDocumentFiles';
 import { DocumentFileUpload } from './DocumentFileUpload';
 import { DocumentFilePreview } from './DocumentFilePreview';
+import { DocumentFileVersionsDialog } from './DocumentFileVersionsDialog';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isAdminOrAbove } from '@/lib/roleUtils';
@@ -36,7 +38,7 @@ interface DocumentFilesTableProps {
   isDeleted: boolean;
 }
 
-type SortField = 'file_name' | 'file_size' | 'mime_type' | 'uploaded_at' | 'uploader';
+type SortField = 'file_name' | 'file_size' | 'mime_type' | 'uploaded_at' | 'uploader' | 'version';
 type SortDirection = 'asc' | 'desc';
 
 // Map MIME types to simple Windows-like file type names
@@ -44,7 +46,6 @@ const getSimpleFileType = (mimeType: string | null): string => {
   if (!mimeType) return '-';
   
   const mimeMap: Record<string, string> = {
-    // Documents
     'application/pdf': 'PDF',
     'application/msword': 'Word',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
@@ -56,8 +57,6 @@ const getSimpleFileType = (mimeType: string | null): string => {
     'text/plain': 'Szöveg',
     'text/csv': 'CSV',
     'application/rtf': 'RTF',
-    
-    // Images
     'image/jpeg': 'Kép',
     'image/jpg': 'Kép',
     'image/png': 'Kép',
@@ -66,22 +65,16 @@ const getSimpleFileType = (mimeType: string | null): string => {
     'image/svg+xml': 'SVG',
     'image/bmp': 'Kép',
     'image/tiff': 'Kép',
-    
-    // Archives
     'application/zip': 'ZIP',
     'application/x-rar-compressed': 'RAR',
     'application/x-7z-compressed': '7Z',
     'application/x-tar': 'TAR',
     'application/gzip': 'GZIP',
-    
-    // Audio/Video
     'audio/mpeg': 'MP3',
     'audio/wav': 'WAV',
     'video/mp4': 'MP4',
     'video/avi': 'AVI',
     'video/quicktime': 'MOV',
-    
-    // Other
     'application/json': 'JSON',
     'application/xml': 'XML',
     'text/html': 'HTML',
@@ -96,7 +89,17 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   const { activeCompany } = useCompany();
   const { data: profile } = useUserProfile();
   const isAdmin = isAdminOrAbove(profile);
-  const { files, isLoading, isDownloadingZip, uploadFiles, deleteFile, downloadFile, downloadMultipleFiles } = useDocumentFiles(documentId);
+  const { 
+    files, 
+    isLoading, 
+    isDownloadingZip, 
+    uploadFiles, 
+    deleteFile, 
+    downloadFile, 
+    downloadMultipleFiles,
+    getFileVersions,
+    restoreVersion,
+  } = useDocumentFiles(documentId);
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -106,6 +109,8 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [previewFile, setPreviewFile] = useState<DocumentFile | null>(null);
+  const [versionsFile, setVersionsFile] = useState<DocumentFile | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return '-';
@@ -159,6 +164,10 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
       case 'uploader':
         aVal = a.uploader?.full_name?.toLowerCase() || '';
         bVal = b.uploader?.full_name?.toLowerCase() || '';
+        break;
+      case 'version':
+        aVal = a.version || 1;
+        bVal = b.version || 1;
         break;
       default:
         return 0;
@@ -225,6 +234,48 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
     setFilesToUpload(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDeleted) {
+      setIsDragging(true);
+    }
+  }, [isDeleted]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (isDeleted || !activeCompany) return;
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      await uploadFiles.mutateAsync({
+        documentId,
+        files: droppedFiles,
+        companyId: activeCompany.id,
+      });
+    }
+  }, [isDeleted, activeCompany, documentId, uploadFiles]);
+
+  const handleRestoreVersion = (versionId: string) => {
+    restoreVersion.mutate(versionId);
+    setVersionsFile(null);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -237,7 +288,13 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
 
   return (
     <>
-      <Card>
+      <Card
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className={`transition-colors ${isDragging ? 'border-primary border-2 bg-primary/5' : ''}`}
+      >
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -273,10 +330,18 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
           </div>
         </CardHeader>
         <CardContent>
+          {isDragging && (
+            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
+              <div className="text-lg font-medium text-primary">
+                Húzza ide a fájlokat a feltöltéshez
+              </div>
+            </div>
+          )}
           {files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
               <FileText className="h-12 w-12 mb-2" />
               <p>Még nincs fájl feltöltve</p>
+              <p className="text-sm mt-1">Húzza ide a fájlokat vagy kattintson a feltöltés gombra</p>
             </div>
           ) : (
             <Table>
@@ -295,6 +360,15 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                     <div className="flex items-center">
                       Fájlnév
                       {getSortIcon('file_name')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center cursor-pointer hover:bg-muted/50 w-[80px]"
+                    onClick={() => handleSort('version')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Verzió
+                      {getSortIcon('version')}
                     </div>
                   </TableHead>
                   <TableHead 
@@ -333,7 +407,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                       {getSortIcon('uploader')}
                     </div>
                   </TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
+                  <TableHead className="w-[140px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -350,6 +424,11 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">{file.file_name}</span>
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-xs">
+                        v{file.version || 1}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">{formatFileSize(file.file_size)}</TableCell>
                     <TableCell className="text-center text-sm">
@@ -369,6 +448,14 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                             <Eye className="h-4 w-4" />
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setVersionsFile(file)}
+                          title="Verzióelőzmények"
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -403,7 +490,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
           <DialogHeader>
             <DialogTitle>Fájlok feltöltése</DialogTitle>
             <DialogDescription>
-              Válassza ki a feltölteni kívánt fájlokat.
+              Válassza ki a feltölteni kívánt fájlokat. Ha azonos nevű fájl már létezik, új verzióként kerül feltöltésre.
             </DialogDescription>
           </DialogHeader>
           
@@ -458,6 +545,16 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
           onDownload={() => downloadFile(previewFile.file_path, previewFile.file_name)}
         />
       )}
+
+      <DocumentFileVersionsDialog
+        open={!!versionsFile}
+        onOpenChange={(open) => !open && setVersionsFile(null)}
+        file={versionsFile}
+        getVersions={getFileVersions}
+        onDownload={downloadFile}
+        onRestore={handleRestoreVersion}
+        isAdmin={isAdmin}
+      />
     </>
   );
 };

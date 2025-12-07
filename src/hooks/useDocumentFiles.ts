@@ -14,6 +14,9 @@ export interface DocumentFile {
   uploaded_by: string | null;
   uploaded_at: string;
   created_at: string;
+  version: number;
+  original_file_id: string | null;
+  is_current: boolean;
   uploader?: {
     id: string;
     full_name: string | null;
@@ -24,6 +27,7 @@ export const useDocumentFiles = (documentId: string | undefined) => {
   const queryClient = useQueryClient();
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
 
+  // Query for current files only
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['document-files', documentId],
     queryFn: async () => {
@@ -36,6 +40,7 @@ export const useDocumentFiles = (documentId: string | undefined) => {
           uploader:profiles!document_files_uploaded_by_fkey(id, full_name)
         `)
         .eq('document_id', documentId)
+        .eq('is_current', true)
         .order('uploaded_at', { ascending: false });
       
       if (error) throw error;
@@ -44,14 +49,39 @@ export const useDocumentFiles = (documentId: string | undefined) => {
     enabled: !!documentId,
   });
 
+  // Query for all versions of a specific file
+  const getFileVersions = async (fileId: string): Promise<DocumentFile[]> => {
+    // Find the original file ID
+    const file = files.find(f => f.id === fileId);
+    if (!file) return [];
+
+    const originalId = file.original_file_id || file.id;
+
+    const { data, error } = await supabase
+      .from('document_files')
+      .select(`
+        *,
+        uploader:profiles!document_files_uploaded_by_fkey(id, full_name)
+      `)
+      .or(`id.eq.${originalId},original_file_id.eq.${originalId}`)
+      .order('version', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching versions:', error);
+      return [];
+    }
+
+    return data as DocumentFile[];
+  };
+
   const uploadFiles = useMutation({
-    mutationFn: async ({ documentId, files, companyId }: { documentId: string; files: File[]; companyId: string }) => {
+    mutationFn: async ({ documentId, files: filesToUpload, companyId }: { documentId: string; files: File[]; companyId: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Nem azonosított felhasználó');
 
       const uploadedFiles = [];
 
-      for (const file of files) {
+      for (const file of filesToUpload) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `${companyId}/${documentId}/${fileName}`;
@@ -62,21 +92,59 @@ export const useDocumentFiles = (documentId: string | undefined) => {
 
         if (uploadError) throw uploadError;
 
-        const { data: fileRecord, error: insertError } = await supabase
-          .from('document_files')
-          .insert({
-            document_id: documentId,
-            file_name: file.name,
-            file_path: filePath,
-            file_size: file.size,
-            mime_type: file.type,
-            uploaded_by: user.id,
-          })
-          .select()
-          .single();
+        // Check if a file with the same name already exists
+        const existingFile = files.find(f => f.file_name === file.name && f.is_current);
 
-        if (insertError) throw insertError;
-        uploadedFiles.push(fileRecord);
+        if (existingFile) {
+          // Create new version
+          const originalId = existingFile.original_file_id || existingFile.id;
+          const newVersion = existingFile.version + 1;
+
+          // Mark old file as not current
+          await supabase
+            .from('document_files')
+            .update({ is_current: false })
+            .eq('id', existingFile.id);
+
+          // Insert new version
+          const { data: fileRecord, error: insertError } = await supabase
+            .from('document_files')
+            .insert({
+              document_id: documentId,
+              file_name: file.name,
+              file_path: filePath,
+              file_size: file.size,
+              mime_type: file.type,
+              uploaded_by: user.id,
+              version: newVersion,
+              original_file_id: originalId,
+              is_current: true,
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          uploadedFiles.push(fileRecord);
+        } else {
+          // New file
+          const { data: fileRecord, error: insertError } = await supabase
+            .from('document_files')
+            .insert({
+              document_id: documentId,
+              file_name: file.name,
+              file_path: filePath,
+              file_size: file.size,
+              mime_type: file.type,
+              uploaded_by: user.id,
+              version: 1,
+              is_current: true,
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          uploadedFiles.push(fileRecord);
+        }
       }
 
       return uploadedFiles;
@@ -118,6 +186,40 @@ export const useDocumentFiles = (documentId: string | undefined) => {
     },
     onError: (error: any) => {
       toast.error('Hiba a törlés során: ' + error.message);
+    },
+  });
+
+  const restoreVersion = useMutation({
+    mutationFn: async (versionId: string) => {
+      // Get the version to restore
+      const { data: versionToRestore, error: fetchError } = await supabase
+        .from('document_files')
+        .select('*')
+        .eq('id', versionId)
+        .single();
+
+      if (fetchError || !versionToRestore) throw new Error('Verzió nem található');
+
+      const originalId = versionToRestore.original_file_id || versionToRestore.id;
+
+      // Mark all versions as not current
+      await supabase
+        .from('document_files')
+        .update({ is_current: false })
+        .or(`id.eq.${originalId},original_file_id.eq.${originalId}`);
+
+      // Mark the selected version as current
+      await supabase
+        .from('document_files')
+        .update({ is_current: true })
+        .eq('id', versionId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-files', documentId] });
+      toast.success('Verzió visszaállítva');
+    },
+    onError: (error: any) => {
+      toast.error('Hiba a verzió visszaállítása során: ' + error.message);
     },
   });
 
@@ -200,5 +302,7 @@ export const useDocumentFiles = (documentId: string | undefined) => {
     deleteFile,
     downloadFile,
     downloadMultipleFiles,
+    getFileVersions,
+    restoreVersion,
   };
 };

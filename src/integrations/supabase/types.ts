@@ -411,9 +411,12 @@ export type Database = {
           file_path: string
           file_size: number | null
           id: string
+          is_current: boolean
           mime_type: string | null
+          original_file_id: string | null
           uploaded_at: string
           uploaded_by: string | null
+          version: number
         }
         Insert: {
           created_at?: string
@@ -422,9 +425,12 @@ export type Database = {
           file_path: string
           file_size?: number | null
           id?: string
+          is_current?: boolean
           mime_type?: string | null
+          original_file_id?: string | null
           uploaded_at?: string
           uploaded_by?: string | null
+          version?: number
         }
         Update: {
           created_at?: string
@@ -433,9 +439,12 @@ export type Database = {
           file_path?: string
           file_size?: number | null
           id?: string
+          is_current?: boolean
           mime_type?: string | null
+          original_file_id?: string | null
           uploaded_at?: string
           uploaded_by?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -443,6 +452,13 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_files_original_file_id_fkey"
+            columns: ["original_file_id"]
+            isOneToOne: false
+            referencedRelation: "document_files"
             referencedColumns: ["id"]
           },
           {
