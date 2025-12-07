@@ -585,24 +585,7 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                         {(() => {
                           const isImage = file.mime_type?.startsWith('image/');
                           const isPdf = file.mime_type === 'application/pdf' || file.mime_type === 'application/x-pdf';
-                          const fileName = file.file_name.toLowerCase();
-                          const isWord = file.mime_type?.includes('word') ||
-                                        file.mime_type === 'application/msword' ||
-                                        fileName.match(/\.docx?$/) ||
-                                        fileName.match(/\.docm$/);
-                          const isExcel = file.mime_type?.includes('spreadsheet') ||
-                                         file.mime_type?.includes('excel') ||
-                                         file.mime_type === 'application/vnd.ms-excel' ||
-                                         fileName.match(/\.xlsx?$/) ||
-                                         fileName.match(/\.xlsm$/) ||
-                                         fileName.match(/\.xlsb$/);
-                          const isPowerPoint = file.mime_type?.includes('presentation') ||
-                                              file.mime_type?.includes('powerpoint') ||
-                                              file.mime_type === 'application/vnd.ms-powerpoint' ||
-                                              fileName.match(/\.pptx?$/) ||
-                                              fileName.match(/\.pptm$/) ||
-                                              fileName.match(/\.ppsx?$/);
-                          const canPreview = isImage || isPdf || isWord || isExcel || isPowerPoint;
+                          const canPreview = isImage || isPdf;
                           
                           return canPreview ? (
                             <Button

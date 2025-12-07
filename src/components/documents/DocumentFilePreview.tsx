@@ -10,9 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs, Outline } from 'react-pdf';
-import { WordPreview } from './WordPreview';
-import { ExcelPreview } from './ExcelPreview';
-import { PowerPointPreview } from './PowerPointPreview';
 
 interface OutlineItem {
   title: string;
@@ -72,26 +69,9 @@ export const DocumentFilePreview = ({
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const fileNameLower = fileName.toLowerCase();
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType?.startsWith('application/pdf') || mimeType === 'application/x-pdf';
-  const isWord = mimeType?.includes('word') || 
-                 mimeType === 'application/msword' ||
-                 !!fileNameLower.match(/\.docx?$/) ||
-                 !!fileNameLower.match(/\.docm$/);
-  const isExcel = mimeType?.includes('spreadsheet') ||
-                  mimeType?.includes('excel') ||
-                  mimeType === 'application/vnd.ms-excel' ||
-                  !!fileNameLower.match(/\.xlsx?$/) ||
-                  !!fileNameLower.match(/\.xlsm$/) ||
-                  !!fileNameLower.match(/\.xlsb$/);
-  const isPowerPoint = mimeType?.includes('presentation') ||
-                       mimeType?.includes('powerpoint') ||
-                       mimeType === 'application/vnd.ms-powerpoint' ||
-                       !!fileNameLower.match(/\.pptx?$/) ||
-                       !!fileNameLower.match(/\.pptm$/) ||
-                       !!fileNameLower.match(/\.ppsx?$/);
-  const canPreview = isImage || isPdf || isWord || isExcel || isPowerPoint;
+  const canPreview = isImage || isPdf;
   const zoom = ZOOM_LEVELS[zoomIndex];
 
   const revokeUrls = useCallback(() => {
@@ -661,42 +641,7 @@ export const DocumentFilePreview = ({
     }
   };
 
-  // Delegate to specialized viewers for Word and Excel
-  if (isWord) {
-    return (
-      <WordPreview
-        open={open}
-        onOpenChange={onOpenChange}
-        filePath={filePath}
-        fileName={fileName}
-        onDownload={onDownload}
-      />
-    );
-  }
-
-  if (isExcel) {
-    return (
-      <ExcelPreview
-        open={open}
-        onOpenChange={onOpenChange}
-        filePath={filePath}
-        fileName={fileName}
-        onDownload={onDownload}
-      />
-    );
-  }
-
-  if (isPowerPoint) {
-    return (
-      <PowerPointPreview
-        open={open}
-        onOpenChange={onOpenChange}
-        filePath={filePath}
-        fileName={fileName}
-        onDownload={onDownload}
-      />
-    );
-  }
+  // Only PDF and images are supported for preview
 
   return (
     <>
