@@ -4,10 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
 
-// Configure pdf.js worker
+// Configure pdf.js worker from CDN
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface DocumentFilePreviewProps {
@@ -209,8 +207,8 @@ export const DocumentFilePreview = ({
                 >
                   <Page 
                     pageNumber={pageNumber} 
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
                     className="shadow-lg"
                     width={Math.min(800, window.innerWidth - 100)}
                   />
