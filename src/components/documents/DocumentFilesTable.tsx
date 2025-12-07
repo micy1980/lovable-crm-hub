@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History, Search, X, Filter } from 'lucide-react';
+import { Download, Trash2, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History, Search, X, Filter, FileText } from 'lucide-react';
+import { getFileTypeIcon } from '@/lib/fileTypeIcons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -563,10 +564,15 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{file.file_name}</span>
-                      </div>
+                      {(() => {
+                        const { icon: FileIcon, className: iconClass } = getFileTypeIcon(file.mime_type);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <FileIcon className={`h-4 w-4 ${iconClass}`} />
+                            <span className="font-medium">{file.file_name}</span>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="text-xs">
