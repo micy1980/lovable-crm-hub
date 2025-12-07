@@ -14,6 +14,7 @@ import {
   ListTodo,
   FolderOpen,
   BarChart3,
+  FileStack,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -70,7 +71,7 @@ export function AppSidebar() {
   const isSettingsActive = location.pathname === '/settings' || location.pathname === '/account-management' || location.pathname === '/companies';
   
   // Check if we're in the document storage area
-  const isDocumentStorageActive = location.pathname === '/documents' || location.pathname === '/contracts' || location.pathname.startsWith('/contracts/');
+  const isDocumentStorageActive = location.pathname === '/documents' || location.pathname === '/contracts' || location.pathname.startsWith('/contracts/') || location.pathname === '/templates';
   
   // Check if documents feature is available
   const hasDocumentsAccess = hasFeatureAccess('documents');
@@ -150,6 +151,19 @@ export function AppSidebar() {
                             >
                               <FileText className="h-4 w-4" />
                               <span>{t('nav.documents')}</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <NavLink
+                              to="/templates"
+                              end
+                              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-sidebar-accent"
+                              activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                            >
+                              <FileStack className="h-4 w-4" />
+                              <span>Sablonok</span>
                             </NavLink>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
