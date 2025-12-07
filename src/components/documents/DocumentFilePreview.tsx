@@ -38,6 +38,7 @@ export const DocumentFilePreview = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState('1');
   const [searchText, setSearchText] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<{ pageNum: number; index: number }[]>([]);
@@ -110,6 +111,7 @@ export const DocumentFilePreview = ({
       });
 
       setCurrentPage(closestPage);
+      setPageInput(String(closestPage));
     };
 
     container.addEventListener('scroll', handleScroll);
@@ -229,7 +231,20 @@ export const DocumentFilePreview = ({
     }
   };
 
-  // Calculate base page width
+  const goToPage = (page: number) => {
+    if (!numPages || isNaN(page)) {
+      setPageInput(String(currentPage));
+      return;
+    }
+    const targetPage = Math.max(1, Math.min(page, numPages));
+    setPageInput(String(targetPage));
+    
+    const pageEl = pageRefs.current.get(targetPage);
+    if (pageEl) {
+      pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const getBasePageWidth = () => {
     if (isFullscreen) {
       return Math.min(900, window.innerWidth - 80);
@@ -503,12 +518,24 @@ export const DocumentFilePreview = ({
           {/* PDF preview with react-pdf - continuous scroll */}
           {!loading && !error && pdfUrl && isPdf && !pdfError && (
             <>
-              {/* Page indicator - floating */}
+              {/* Page indicator with jump input - floating */}
               {numPages && numPages > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 bg-background/90 backdrop-blur-sm rounded px-3 py-1 shadow-lg border border-border">
-                  <span className="text-xs font-medium">
-                    {currentPage} / {numPages}
-                  </span>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 bg-background/90 backdrop-blur-sm rounded px-3 py-1.5 shadow-lg border border-border flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={numPages}
+                    value={pageInput}
+                    onChange={(e) => setPageInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        goToPage(parseInt(pageInput, 10));
+                      }
+                    }}
+                    onBlur={() => goToPage(parseInt(pageInput, 10))}
+                    className="w-12 h-6 text-xs text-center bg-muted border border-border rounded px-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <span className="text-xs font-medium text-muted-foreground">/ {numPages}</span>
                 </div>
               )}
 
