@@ -57,7 +57,7 @@ const Documents = () => {
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: '', defaultWidth: 40, sortable: false },
-    { key: 'favorite', label: '', defaultWidth: 40, sortable: false },
+    { key: 'favorite', label: 'Kedvencek', defaultWidth: 40, sortable: false },
     { key: 'title', label: 'Megnevezés', defaultVisible: true, defaultWidth: 250, required: true },
     { key: 'visibility', label: 'Láthatóság', defaultVisible: true, defaultWidth: 120 },
     { key: 'partner', label: 'Partner', defaultVisible: true, defaultWidth: 150 },
