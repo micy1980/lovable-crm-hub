@@ -253,12 +253,27 @@ export const DocumentFilePreview = ({
   const handlePrint = () => {
     if (!pdfUrl) return;
     
-    const printWindow = window.open(pdfUrl, '_blank');
-    if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        printWindow.print();
-      });
-    }
+    // Create a hidden iframe for printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.src = pdfUrl;
+    
+    document.body.appendChild(iframe);
+    
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        // Remove iframe after printing
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+    };
   };
 
   const goToPage = (page: number) => {
