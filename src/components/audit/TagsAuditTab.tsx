@@ -75,7 +75,8 @@ export const TagsAuditTab = () => {
   });
 
   const { data: tagsWithAssignments = [], isLoading } = useQuery({
-    queryKey: ['tags-with-assignments'],
+    queryKey: ['tags-with-assignments-audit'],
+    staleTime: 0,
     queryFn: async () => {
       // Fetch all tags with company info
       const { data: tags, error: tagsError } = await supabase
