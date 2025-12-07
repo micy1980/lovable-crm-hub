@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Download, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,11 +24,19 @@ export const DocumentFilePreview = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSignedUrl, setIsSignedUrl] = useState(false);
+  const currentBlobUrl = useRef<string | null>(null);
 
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType === 'application/pdf';
   const canPreview = isImage || isPdf;
+
+  // Cleanup function to revoke blob URL
+  const cleanupBlobUrl = () => {
+    if (currentBlobUrl.current) {
+      URL.revokeObjectURL(currentBlobUrl.current);
+      currentBlobUrl.current = null;
+    }
+  };
 
   useEffect(() => {
     if (open && canPreview) {
@@ -36,39 +44,28 @@ export const DocumentFilePreview = ({
     }
     
     return () => {
-      if (previewUrl && !isSignedUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      cleanupBlobUrl();
     };
-  }, [open, filePath]);
+  }, [open, filePath, mimeType]);
 
   const loadPreview = async () => {
+    // Clean up previous blob URL before loading new one
+    cleanupBlobUrl();
+    setPreviewUrl(null);
     setLoading(true);
     setError(null);
     
     try {
-      if (isPdf) {
-        // For PDFs, use signed URL to allow browser's PDF viewer to work
-        const { data, error: signedUrlError } = await supabase.storage
-          .from('documents')
-          .createSignedUrl(filePath, 3600); // 1 hour expiry
+      // Use download + blob URL for both images and PDFs
+      const { data, error: downloadError } = await supabase.storage
+        .from('documents')
+        .download(filePath);
 
-        if (signedUrlError) throw signedUrlError;
-        
-        setPreviewUrl(data.signedUrl);
-        setIsSignedUrl(true);
-      } else {
-        // For images, use blob URL
-        const { data, error: downloadError } = await supabase.storage
-          .from('documents')
-          .download(filePath);
+      if (downloadError) throw downloadError;
 
-        if (downloadError) throw downloadError;
-
-        const url = URL.createObjectURL(data);
-        setPreviewUrl(url);
-        setIsSignedUrl(false);
-      }
+      const url = URL.createObjectURL(data);
+      currentBlobUrl.current = url;
+      setPreviewUrl(url);
     } catch (err: any) {
       setError('Nem sikerült betölteni az előnézetet: ' + err.message);
     } finally {
@@ -77,12 +74,9 @@ export const DocumentFilePreview = ({
   };
 
   const handleClose = () => {
-    if (previewUrl && !isSignedUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    cleanupBlobUrl();
     setPreviewUrl(null);
     setError(null);
-    setIsSignedUrl(false);
     onOpenChange(false);
   };
 
@@ -126,12 +120,21 @@ export const DocumentFilePreview = ({
           )}
           
           {!loading && !error && previewUrl && isPdf && (
-            <iframe
-              src={previewUrl}
-              title={fileName}
+            <object
+              data={previewUrl}
+              type="application/pdf"
               className="w-full h-[70vh] border-0"
               style={{ minHeight: '500px' }}
-            />
+            >
+              <div className="flex flex-col items-center gap-4 text-muted-foreground p-8">
+                <FileText className="h-16 w-16" />
+                <span>A PDF előnézet nem elérhető a böngészőben</span>
+                <Button onClick={onDownload}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Letöltés
+                </Button>
+              </div>
+            </object>
           )}
           
           {!canPreview && (
