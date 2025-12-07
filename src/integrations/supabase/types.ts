@@ -1212,6 +1212,70 @@ export type Database = {
           },
         ]
       }
+      partner_contacts: {
+        Row: {
+          company_id: string
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean | null
+          name: string
+          notes: string | null
+          partner_id: string
+          phone: string | null
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          notes?: string | null
+          partner_id: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          notes?: string | null
+          partner_id?: string
+          phone?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_contacts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_user_access: {
         Row: {
           company_id: string
@@ -1278,6 +1342,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          parent_partner_id: string | null
           phone: string | null
           restrict_access: boolean | null
           tax_id: string | null
@@ -1295,6 +1360,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          parent_partner_id?: string | null
           phone?: string | null
           restrict_access?: boolean | null
           tax_id?: string | null
@@ -1312,6 +1378,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          parent_partner_id?: string | null
           phone?: string | null
           restrict_access?: boolean | null
           tax_id?: string | null
@@ -1330,6 +1397,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partners_parent_partner_id_fkey"
+            columns: ["parent_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
         ]
