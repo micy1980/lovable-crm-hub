@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Download, Trash2, FileText, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { DocumentFile, useDocumentFiles } from '@/hooks/useDocumentFiles';
 import { DocumentFileUpload } from './DocumentFileUpload';
+import { DocumentFilePreview } from './DocumentFilePreview';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isAdminOrAbove } from '@/lib/roleUtils';
@@ -104,6 +105,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   const [fileToDelete, setFileToDelete] = useState<DocumentFile | null>(null);
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [previewFile, setPreviewFile] = useState<DocumentFile | null>(null);
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return '-';
@@ -343,10 +345,21 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                     <TableCell>{file.uploader?.full_name || '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        {(file.mime_type?.startsWith('image/') || file.mime_type === 'application/pdf') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPreviewFile(file)}
+                            title="Előnézet"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => downloadFile(file.file_path, file.file_name)}
+                          title="Letöltés"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -356,6 +369,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                             size="sm"
                             onClick={() => handleDeleteClick(file)}
                             className="text-destructive hover:text-destructive"
+                            title="Törlés"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -419,6 +433,17 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {previewFile && (
+        <DocumentFilePreview
+          open={!!previewFile}
+          onOpenChange={(open) => !open && setPreviewFile(null)}
+          filePath={previewFile.file_path}
+          fileName={previewFile.file_name}
+          mimeType={previewFile.mime_type}
+          onDownload={() => downloadFile(previewFile.file_path, previewFile.file_name)}
+        />
+      )}
     </>
   );
 };
