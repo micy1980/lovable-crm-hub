@@ -202,6 +202,8 @@ export function useEntityTags(entityType: TagEntityType, entityId: string | unde
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entity-tags', entityType, entityId] });
+      // Also invalidate tags query to update usage counts
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
     onError: (error: any) => {
       if (!error.message?.includes('duplicate')) {
@@ -226,6 +228,8 @@ export function useEntityTags(entityType: TagEntityType, entityId: string | unde
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entity-tags', entityType, entityId] });
+      // Also invalidate tags query to update usage counts
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
     onError: (error: any) => {
       toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
