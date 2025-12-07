@@ -56,6 +56,7 @@ export const DocumentFilePreview = ({
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [outline, setOutline] = useState<OutlineItem[] | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [isPrinting, setIsPrinting] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -251,7 +252,9 @@ export const DocumentFilePreview = ({
   };
 
   const handlePrint = async () => {
-    if (!pdfDocument || !numPages) return;
+    if (!pdfDocument || !numPages || isPrinting) return;
+    
+    setIsPrinting(true);
     
     try {
       // Render all pages to canvas and create images
@@ -315,6 +318,7 @@ export const DocumentFilePreview = ({
         setTimeout(() => {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
+          setIsPrinting(false);
           
           // Remove iframe after printing
           setTimeout(() => {
@@ -324,6 +328,7 @@ export const DocumentFilePreview = ({
       }
     } catch (err) {
       console.error('Print error:', err);
+      setIsPrinting(false);
     }
   };
 
@@ -584,8 +589,15 @@ export const DocumentFilePreview = ({
                 >
                   {showSidebar ? <PanelLeftClose className="h-3.5 w-3.5" /> : <PanelLeft className="h-3.5 w-3.5" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrint} title="Nyomtatás">
-                  <Printer className="h-3.5 w-3.5" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7" 
+                  onClick={handlePrint} 
+                  title={isPrinting ? 'Nyomtatás előkészítése...' : 'Nyomtatás'}
+                  disabled={isPrinting}
+                >
+                  {isPrinting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
                 </Button>
               </>
             )}
