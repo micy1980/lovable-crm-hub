@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil, Lock } from 'lucide-react';
+import { Plus, Pencil, Lock, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePartners } from '@/hooks/usePartners';
 import { PartnerDialog } from '@/components/partners/PartnerDialog';
@@ -24,6 +25,9 @@ import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 import { useCompany } from '@/contexts/CompanyContext';
 import { FavoriteButton } from '@/components/shared/FavoriteButton';
 import { TagDisplay } from '@/components/shared/TagSelector';
+import { ImportDialog } from '@/components/import/ImportDialog';
+import { partnerImportConfig } from '@/lib/importUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -48,7 +52,18 @@ const Partners = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { canEdit, checkReadOnly } = useReadOnlyMode();
+  
+  const queryClient = useQueryClient();
+  
+  const handleImport = async (data: any[]) => {
+    if (!activeCompany?.id) throw new Error('No company');
+    const records = data.map(row => ({ ...row, company_id: activeCompany.id }));
+    const { error } = await supabase.from('partners').insert(records);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ['partners'] });
+  };
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: 'Kijelölés', defaultWidth: 40, sortable: false },
@@ -259,6 +274,10 @@ const Partners = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setImportDialogOpen(true)} disabled={!canEdit}>
+              <Upload className="h-4 w-4 mr-2" />
+              Import
+            </Button>
             <ExportMenu
               data={exportData}
               columns={exportColumns}
@@ -367,6 +386,15 @@ const Partners = () => {
           count={bulkSelection.selectedCount}
           entityName="partner"
           isLoading={bulkOperations.bulkDelete.isPending}
+        />
+        
+        <ImportDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          title="Partnerek importálása"
+          config={partnerImportConfig}
+          templateFilename="partnerek"
+          onImport={handleImport}
         />
       </div>
     </LicenseGuard>
