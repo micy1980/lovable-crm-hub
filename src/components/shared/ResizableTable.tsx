@@ -175,7 +175,7 @@ export function ResizableTable(props: ResizableTableProps) {
                       ) : (
                         <span className="truncate">{config?.label || col.key}</span>
                       )}
-                      {isSortable && (
+                      {col.key !== 'select' && col.key !== 'favorite' && col.key !== 'actions' && onSort && (
                         <SortIndicator columnKey={col.key} sortState={sortState} />
                       )}
                     </div>
@@ -241,7 +241,7 @@ export function ResizableTable(props: ResizableTableProps) {
                   ) : (
                     <span className="truncate">{renderHeader(col)}</span>
                   )}
-                  {sortable && (
+                  {col.key !== 'select' && col.key !== 'favorite' && col.key !== 'actions' && onSort && (
                     <SortIndicator columnKey={col.key} sortState={sortState} />
                   )}
                 </div>
