@@ -178,12 +178,14 @@ All colors MUST be HSL.
   right: 0;
   bottom: 0;
   overflow: hidden;
-  pointer-events: auto;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .react-pdf__Page__annotations .linkAnnotation {
   position: absolute;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .react-pdf__Page__annotations .linkAnnotation > a {
@@ -192,6 +194,7 @@ All colors MUST be HSL.
   left: 0;
   width: 100%;
   height: 100%;
+  pointer-events: auto;
 }
 
 .react-pdf__Page__annotations .linkAnnotation > a:hover {
@@ -210,11 +213,14 @@ All colors MUST be HSL.
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   cursor: text;
+  pointer-events: auto !important;
+  z-index: 1;
 }
 
 .react-pdf__Page__textContent span {
   user-select: text !important;
   cursor: text;
+  pointer-events: auto !important;
 }
 
 .react-pdf__Page__textContent span::selection {
