@@ -445,14 +445,17 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                         {(() => {
                           const isImage = file.mime_type?.startsWith('image/');
                           const isPdf = file.mime_type === 'application/pdf' || file.mime_type === 'application/x-pdf';
-                          const isWord = file.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                          const fileName = file.file_name.toLowerCase();
+                          const isWord = file.mime_type?.includes('word') ||
                                         file.mime_type === 'application/msword' ||
-                                        file.file_name.toLowerCase().endsWith('.docx') ||
-                                        file.file_name.toLowerCase().endsWith('.doc');
-                          const isExcel = file.mime_type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                                        fileName.match(/\.docx?$/) ||
+                                        fileName.match(/\.docm$/);
+                          const isExcel = file.mime_type?.includes('spreadsheet') ||
+                                         file.mime_type?.includes('excel') ||
                                          file.mime_type === 'application/vnd.ms-excel' ||
-                                         file.file_name.toLowerCase().endsWith('.xlsx') ||
-                                         file.file_name.toLowerCase().endsWith('.xls');
+                                         fileName.match(/\.xlsx?$/) ||
+                                         fileName.match(/\.xlsm$/) ||
+                                         fileName.match(/\.xlsb$/);
                           const canPreview = isImage || isPdf || isWord || isExcel;
                           
                           return canPreview ? (
