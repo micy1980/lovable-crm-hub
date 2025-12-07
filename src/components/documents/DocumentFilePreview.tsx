@@ -26,7 +26,7 @@ export const DocumentFilePreview = ({
   onDownload,
 }: DocumentFilePreviewProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -37,19 +37,22 @@ export const DocumentFilePreview = ({
   const isPdf = mimeType?.startsWith('application/pdf') || mimeType === 'application/x-pdf';
   const canPreview = isImage || isPdf;
 
-  const revokePreviewUrl = useCallback(() => {
+  const revokeUrls = useCallback(() => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-  }, [previewUrl]);
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+    }
+  }, [previewUrl, pdfUrl]);
 
   useEffect(() => {
     if (open && canPreview) {
       void loadPreview();
     } else {
-      revokePreviewUrl();
+      revokeUrls();
       setPreviewUrl(null);
-      setPdfData(null);
+      setPdfUrl(null);
       setError(null);
       setPdfError(false);
       setNumPages(null);
@@ -57,7 +60,7 @@ export const DocumentFilePreview = ({
     }
 
     return () => {
-      revokePreviewUrl();
+      revokeUrls();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, filePath, mimeType]);
@@ -75,12 +78,10 @@ export const DocumentFilePreview = ({
       if (downloadError) throw downloadError;
 
       if (isPdf) {
-        // For PDF, convert to ArrayBuffer and copy it to avoid detached buffer issues
-        const arrayBuffer = await data.arrayBuffer();
-        // Create a copy of the ArrayBuffer to prevent detachment
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const copiedBuffer = uint8Array.slice().buffer;
-        setPdfData(copiedBuffer);
+        // For PDF, create blob URL - react-pdf will fetch from this URL
+        const pdfBlob = new Blob([data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(pdfBlob);
+        setPdfUrl(url);
       } else {
         // For images, create blob URL
         const blob = new Blob([data], {
@@ -98,9 +99,9 @@ export const DocumentFilePreview = ({
 
   const handleDialogChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      revokePreviewUrl();
+      revokeUrls();
       setPreviewUrl(null);
-      setPdfData(null);
+      setPdfUrl(null);
       setError(null);
       setPdfError(false);
       setNumPages(null);
@@ -168,7 +169,7 @@ export const DocumentFilePreview = ({
           )}
 
           {/* PDF preview with react-pdf */}
-          {!loading && !error && pdfData && isPdf && !pdfError && (
+          {!loading && !error && pdfUrl && isPdf && !pdfError && (
             <div className="flex flex-col items-center w-full h-full">
               {/* PDF navigation */}
               {numPages && numPages > 1 && (
@@ -198,7 +199,7 @@ export const DocumentFilePreview = ({
               {/* PDF Document */}
               <div className="overflow-auto max-h-[65vh] w-full flex justify-center">
                 <Document
-                  file={{ data: pdfData }}
+                  file={pdfUrl}
                   onLoadSuccess={onDocumentLoadSuccess}
                   onLoadError={onDocumentLoadError}
                   loading={
