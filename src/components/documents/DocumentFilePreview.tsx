@@ -877,7 +877,7 @@ export const DocumentFilePreview = ({
 
     {/* Print Dialog */}
     <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md z-[110]">
         <DialogHeader>
           <DialogTitle>Nyomtatás</DialogTitle>
           <DialogDescription>
