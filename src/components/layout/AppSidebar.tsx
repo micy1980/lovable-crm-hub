@@ -13,6 +13,7 @@ import {
   UserCog,
   ListTodo,
   FolderOpen,
+  BarChart3,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -52,6 +53,7 @@ export function AppSidebar() {
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
     { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'my_items' },
+    { title: 'Riportok', url: '/reports', icon: BarChart3, feature: null },
   ];
 
   // Add Audit for super_admin

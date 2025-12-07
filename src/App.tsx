@@ -33,6 +33,7 @@ const Companies = lazy(() => import("./pages/Companies"));
 const Logs = lazy(() => import("./pages/Logs"));
 const LicenseGenerator = lazy(() => import("./pages/LicenseGenerator"));
 const AccountManagement = lazy(() => import("./pages/AccountManagement"));
+const Reports = lazy(() => import("./pages/Reports"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
@@ -92,6 +93,7 @@ const App = () => {
                     <Route path="/companies" element={<MainLayout><Companies /></MainLayout>} />
                     <Route path="/logs" element={<MainLayout><Logs /></MainLayout>} />
                     <Route path="/account-management" element={<MainLayout><AccountManagement /></MainLayout>} />
+                    <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />
                     <Route path="/license-generator" element={<LicenseGenerator />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
