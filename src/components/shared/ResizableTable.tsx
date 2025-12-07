@@ -274,7 +274,7 @@ export function ResizableTableCell({ width, children, className }: ResizableTabl
   return (
     <td
       style={{ width, minWidth: width, maxWidth: width }}
-      className={cn('truncate px-3 py-2 align-middle border-r border-border last:border-r-0 [&:has([role=checkbox])]:pr-0', className)}
+      className={cn('truncate px-3 py-2 align-middle border-r border-border last:border-r-0 [&:has([role=checkbox])]:text-center', className)}
     >
       {children}
     </td>
