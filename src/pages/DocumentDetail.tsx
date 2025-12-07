@@ -179,7 +179,7 @@ const DocumentDetail = () => {
         </div>
 
         {/* Files Table */}
-        <DocumentFilesTable documentId={id!} isDeleted={isDeleted} />
+        <DocumentFilesTable documentId={id!} documentTitle={document?.title || 'dokumentum'} isDeleted={isDeleted} />
 
         {/* Details */}
         <div className="grid md:grid-cols-2 gap-6">

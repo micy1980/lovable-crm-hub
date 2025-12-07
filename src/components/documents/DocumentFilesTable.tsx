@@ -35,6 +35,7 @@ import { isAdminOrAbove } from '@/lib/roleUtils';
 
 interface DocumentFilesTableProps {
   documentId: string;
+  documentTitle: string;
   isDeleted: boolean;
 }
 
@@ -85,7 +86,7 @@ const getSimpleFileType = (mimeType: string | null): string => {
   return mimeMap[mimeType.toLowerCase()] || mimeType.split('/')[1]?.toUpperCase().slice(0, 10) || '-';
 };
 
-export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTableProps) => {
+export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: DocumentFilesTableProps) => {
   const { activeCompany } = useCompany();
   const { data: profile } = useUserProfile();
   const isAdmin = isAdminOrAbove(profile);
@@ -197,7 +198,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
   };
 
   const handleDownloadSelected = () => {
-    downloadMultipleFiles(Array.from(selectedFiles));
+    downloadMultipleFiles(Array.from(selectedFiles), documentTitle);
   };
 
   const handleUpload = async () => {
