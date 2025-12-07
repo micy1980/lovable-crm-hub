@@ -4,8 +4,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings2, GripVertical } from 'lucide-react';
-import { DEFAULT_WIDGETS, useDashboardWidgets } from '@/hooks/useDashboardWidgets';
+import { Separator } from '@/components/ui/separator';
+import { Settings2, GripVertical, RotateCcw } from 'lucide-react';
+import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
+import { toast } from 'sonner';
 import {
   DndContext,
   closestCenter,
@@ -93,7 +95,7 @@ const SortableWidgetItem = ({ widget, onToggle, onWidthChange }: SortableWidgetI
 };
 
 export const DashboardCustomizer = () => {
-  const { widgets, updateWidget, reorderWidgets } = useDashboardWidgets();
+  const { widgets, updateWidget, reorderWidgets, resetToDefaults } = useDashboardWidgets();
   const [open, setOpen] = useState(false);
 
   const sensors = useSensors(
@@ -124,6 +126,11 @@ export const DashboardCustomizer = () => {
 
   const handleWidthChange = (widgetId: string, width: string) => {
     updateWidget({ widgetId, width });
+  };
+
+  const handleResetToDefaults = () => {
+    resetToDefaults();
+    toast.success('Alapértelmezett elrendezés visszaállítva');
   };
 
   return (
@@ -162,6 +169,18 @@ export const DashboardCustomizer = () => {
               </div>
             </SortableContext>
           </DndContext>
+
+          <Separator className="my-3" />
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            onClick={handleResetToDefaults}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Alapértelmezett elrendezés
+          </Button>
         </div>
       </PopoverContent>
     </Popover>

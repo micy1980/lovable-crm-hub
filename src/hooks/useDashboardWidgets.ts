@@ -127,11 +127,30 @@ export const useDashboardWidgets = () => {
     },
   });
 
+  const resetToDefaults = useMutation({
+    mutationFn: async () => {
+      if (!user?.id || !activeCompany?.id) throw new Error('No user or company');
+
+      // Delete all saved preferences for this user/company
+      const { error } = await supabase
+        .from('dashboard_widgets')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('company_id', activeCompany.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] });
+    },
+  });
+
   return {
     widgets,
     isLoading,
     updateWidget: updateWidget.mutate,
     reorderWidgets: reorderWidgets.mutate,
-    isUpdating: updateWidget.isPending || reorderWidgets.isPending,
+    resetToDefaults: resetToDefaults.mutate,
+    isUpdating: updateWidget.isPending || reorderWidgets.isPending || resetToDefaults.isPending,
   };
 };
