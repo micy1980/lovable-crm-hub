@@ -8,7 +8,8 @@ import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertCircle, Plus, ListTodo, Calendar } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, startOfDay, endOfDay, subYears } from 'date-fns';
+import { expandRecurringItems } from '@/lib/recurrenceUtils';
 import { hu } from 'date-fns/locale';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { WeekGrid } from '@/components/calendar/WeekGrid';
@@ -89,7 +90,8 @@ const CalendarPage = () => {
     }
   };
 
-  const { data: tasks = [], isLoading: isLoadingTasks } = useQuery({
+  // Fetch tasks - get all recurring tasks from past year to expand them
+  const { data: rawTasks = [], isLoading: isLoadingTasks } = useQuery({
     queryKey: ['calendar-tasks', activeCompany?.id, viewMode, currentDate.toISOString()],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
@@ -98,13 +100,16 @@ const CalendarPage = () => {
       if (!userData.user) return [];
       
       const { start, end } = getDateRange();
+      // For recurring items, we need to fetch from further back
+      const fetchStart = subYears(start, 1);
+      
       const { data, error } = await supabase
         .from('tasks')
         .select(`*, responsible:responsible_user_id(full_name, email), creator:created_by(full_name, email), project:projects(id, name, task_color, event_color), sales:sales(id, name)`)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
-        .gte('deadline', start.toISOString())
+        .or(`deadline.gte.${start.toISOString()},recurrence_type.neq.none`)
         .lte('deadline', end.toISOString())
         .order('deadline', { ascending: true });
       if (error) throw error;
@@ -113,7 +118,8 @@ const CalendarPage = () => {
     enabled: !!activeCompany?.id,
   });
 
-  const { data: events = [], isLoading: isLoadingEvents } = useQuery({
+  // Fetch events - get all recurring events from past year to expand them
+  const { data: rawEvents = [], isLoading: isLoadingEvents } = useQuery({
     queryKey: ['calendar-events', activeCompany?.id, viewMode, currentDate.toISOString()],
     queryFn: async () => {
       if (!activeCompany?.id) return [];
@@ -122,13 +128,14 @@ const CalendarPage = () => {
       if (!userData.user) return [];
       
       const { start, end } = getDateRange();
+      
       const { data, error } = await supabase
         .from('events')
         .select(`*, responsible_user:profiles!events_responsible_user_id_fkey(full_name, email), project:projects(id, name, task_color, event_color), sales:sales(id, name)`)
         .eq('company_id', activeCompany.id)
         .is('deleted_at', null)
         .or(`responsible_user_id.eq.${userData.user.id},created_by.eq.${userData.user.id}`)
-        .gte('start_time', start.toISOString())
+        .or(`start_time.gte.${start.toISOString()},recurrence_type.neq.none`)
         .lte('start_time', end.toISOString())
         .order('start_time', { ascending: true });
       if (error) throw error;
@@ -136,6 +143,17 @@ const CalendarPage = () => {
     },
     enabled: !!activeCompany?.id,
   });
+
+  // Expand recurring items within the current date range
+  const tasks = useMemo(() => {
+    const { start, end } = getDateRange();
+    return expandRecurringItems(rawTasks, start, end);
+  }, [rawTasks, viewMode, currentDate]);
+
+  const events = useMemo(() => {
+    const { start, end } = getDateRange();
+    return expandRecurringItems(rawEvents, start, end);
+  }, [rawEvents, viewMode, currentDate]);
 
   const isLoading = isLoadingTasks || isLoadingEvents;
 
