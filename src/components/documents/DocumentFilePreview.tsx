@@ -294,8 +294,8 @@ export const DocumentFilePreview = ({
                   top: ${rect.top - textLayerRect.top}px;
                   width: ${rect.width}px;
                   height: ${rect.height}px;
-                  background-color: #fbbf24;
-                  opacity: 0.6;
+                  background-color: #93c5fd;
+                  opacity: 0.5;
                   pointer-events: none;
                   border-radius: 2px;
                   z-index: 1;
@@ -330,12 +330,12 @@ export const DocumentFilePreview = ({
     const highlights = container.querySelectorAll('.pdf-highlight-overlay') as NodeListOf<HTMLElement>;
     highlights.forEach((el, i) => {
       if (i === index) {
-        el.style.backgroundColor = '#f97316';
-        el.style.opacity = '0.8';
-        el.style.boxShadow = '0 0 0 2px #f97316';
+        el.style.backgroundColor = '#3b82f6';
+        el.style.opacity = '0.5';
+        el.style.boxShadow = '0 0 0 2px #3b82f6';
       } else {
-        el.style.backgroundColor = '#fbbf24';
-        el.style.opacity = '0.6';
+        el.style.backgroundColor = '#93c5fd';
+        el.style.opacity = '0.5';
         el.style.boxShadow = 'none';
       }
     });
