@@ -145,12 +145,13 @@ export function CompanyList() {
         return company.created_at ? format(new Date(company.created_at), 'yyyy-MM-dd') : '-';
       case 'actions':
         return (
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => handleEdit(company)}
-              className="h-8 w-8"
+              className="h-7 w-7"
+              title="Szerkesztés"
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -159,7 +160,7 @@ export function CompanyList() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setManagingLicenseCompany(company)}
-                className="h-8 w-8"
+                className="h-7 w-7"
                 title="Licensz kezelés"
               >
                 <Key className="h-4 w-4" />
@@ -169,7 +170,8 @@ export function CompanyList() {
               variant="ghost"
               size="icon"
               onClick={() => setDeletingCompany(company)}
-              className="h-8 w-8"
+              className="h-7 w-7"
+              title="Törlés"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

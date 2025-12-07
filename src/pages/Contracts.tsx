@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, FileText, Lock, AlertTriangle, Calendar, Trash2 } from 'lucide-react';
+import { Plus, Search, FileText, Lock, AlertTriangle, Calendar, Trash2, Pencil } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -295,24 +295,27 @@ const Contracts = () => {
                       {getCellValue(contract, col.key)}
                     </ResizableTableCell>
                   ))}
-                  <TableCell className="w-[120px]">
-                    <div className="flex items-center gap-1">
+                  <TableCell className="w-[100px]">
+                    <div className="flex items-center justify-center gap-0.5">
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
+                        className="h-7 w-7"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEdit(contract);
                         }}
+                        title="Szerkesztés"
                       >
-                        Szerkesztés
+                        <Pencil className="h-4 w-4" />
                       </Button>
                       {isAdmin && !contract.deleted_at && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
                           onClick={(e) => handleSoftDeleteClick(contract, e)}
-                          className="text-destructive hover:text-destructive"
+                          title="Törlés"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -320,9 +323,10 @@ const Contracts = () => {
                       {isSuper && contract.deleted_at && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
                           onClick={(e) => handleHardDeleteClick(contract, e)}
-                          className="text-destructive hover:text-destructive"
+                          title="Végleges törlés"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

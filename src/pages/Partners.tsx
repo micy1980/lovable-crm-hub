@@ -278,15 +278,19 @@ const Partners = () => {
                         {getCellValue(partner, col.key)}
                       </ResizableTableCell>
                     ))}
-                    <TableCell className="w-[80px]">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); handleOpenEdit(partner); }}
-                        disabled={!canEdit}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                    <TableCell className="w-[60px]">
+                      <div className="flex items-center justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={(e) => { e.stopPropagation(); handleOpenEdit(partner); }}
+                          disabled={!canEdit}
+                          title="Szerkesztés"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
