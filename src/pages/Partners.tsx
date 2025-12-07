@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Pencil, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePartners } from '@/hooks/usePartners';
@@ -16,6 +17,11 @@ import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable, ResizableTableCell } from '@/components/shared/ResizableTable';
 import { useSortableData } from '@/hooks/useSortableData';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useBulkOperations } from '@/hooks/useBulkOperations';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
+import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const formatAddress = (address: any) => {
   if (!address) return '-';
@@ -35,12 +41,15 @@ const STORAGE_KEY = 'partners-column-settings';
 const Partners = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { activeCompany } = useCompany();
   const { partners, isLoading, createPartner, updatePartner } = usePartners();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { canEdit, checkReadOnly } = useReadOnlyMode();
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultWidth: 40, sortable: false },
     { key: 'name', label: t('partners.name'), defaultVisible: true, defaultWidth: 200, required: true },
     { key: 'category', label: t('partners.category'), defaultVisible: true, defaultWidth: 120 },
     { key: 'headquarters', label: t('partners.headquarters'), defaultVisible: true, defaultWidth: 200, sortable: false },
@@ -79,6 +88,19 @@ const Partners = () => {
       currency: (a, b) => (a.default_currency || '').localeCompare(b.default_currency || ''),
     },
   });
+
+  // Bulk selection and operations
+  const bulkSelection = useBulkSelection(sortedPartners);
+  const bulkOperations = useBulkOperations({
+    entityType: 'partners',
+    queryKey: ['partners', activeCompany?.id || ''],
+    onSuccess: () => bulkSelection.clearSelection(),
+  });
+
+  const handleBulkDelete = () => {
+    bulkOperations.bulkDelete.mutate(Array.from(bulkSelection.selectedIds));
+    setDeleteDialogOpen(false);
+  };
 
   // Export columns - only visible ones
   const exportColumns = useMemo(() => {
@@ -162,6 +184,15 @@ const Partners = () => {
     const mailAddr = partner.partner_addresses?.find((a: any) => a.address_type === 'mailing');
 
     switch (key) {
+      case 'select':
+        return (
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={bulkSelection.selectedIds.has(partner.id)}
+              onCheckedChange={() => bulkSelection.toggleItem(partner.id)}
+            />
+          </div>
+        );
       case 'name':
         return (
           <div className="flex items-center gap-2">
@@ -247,6 +278,11 @@ const Partners = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <BulkActionsToolbar
+              selectedCount={bulkSelection.selectedCount}
+              onClearSelection={bulkSelection.clearSelection}
+              onBulkDelete={() => setDeleteDialogOpen(true)}
+            />
             {isLoading ? (
               <div className="text-center py-8">{t('common.loading')}</div>
             ) : sortedPartners.length === 0 ? (
@@ -263,6 +299,7 @@ const Partners = () => {
                 renderHeader={(col) => getColumnConfig(col.key)?.label || col.key}
                 sortState={sortState}
                 onSort={handleSort}
+                columnConfigs={columnConfigs}
                 renderRow={(partner, columns) => (
                   <TableRow 
                     key={partner.id} 
@@ -305,6 +342,15 @@ const Partners = () => {
           onSubmit={editingPartner ? handleUpdate : handleCreate}
           isSubmitting={createPartner.isPending || updatePartner.isPending}
           initialData={editingPartner}
+        />
+        
+        <BulkDeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleBulkDelete}
+          count={bulkSelection.selectedCount}
+          entityName="partner"
+          isLoading={bulkOperations.bulkDelete.isPending}
         />
       </div>
     </LicenseGuard>

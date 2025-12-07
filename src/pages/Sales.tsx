@@ -2,6 +2,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -10,7 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SalesDialog } from '@/components/sales/SalesDialog';
 import { ExportMenu } from '@/components/shared/ExportMenu';
@@ -21,6 +22,10 @@ import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 import { useSortableData } from '@/hooks/useSortableData';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useBulkOperations } from '@/hooks/useBulkOperations';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
+import { BulkDeleteDialog } from '@/components/shared/BulkDeleteDialog';
 
 const Sales = () => {
   const { activeCompany } = useCompany();
@@ -28,11 +33,14 @@ const Sales = () => {
   const { data: profile } = useUserProfile();
   const { canEdit } = useReadOnlyMode();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
+    { key: 'select', label: '', defaultWidth: 40, sortable: false },
     { key: 'name', label: 'Név', required: true, defaultWidth: 200 },
     { key: 'partner', label: 'Partner', defaultWidth: 180 },
     { key: 'expected_value', label: 'Várható érték', defaultWidth: 150 },
@@ -108,6 +116,26 @@ const Sales = () => {
       status: (a, b) => (a.status || '').localeCompare(b.status || ''),
     },
   });
+
+  // Bulk selection and operations
+  const bulkSelection = useBulkSelection(sortedSales);
+  const bulkOperations = useBulkOperations({
+    entityType: 'sales',
+    queryKey: ['sales', activeCompany?.id || ''],
+    onSuccess: () => bulkSelection.clearSelection(),
+  });
+
+  const handleBulkStatusChange = (status: string) => {
+    bulkOperations.bulkStatusChange.mutate({
+      ids: Array.from(bulkSelection.selectedIds),
+      status,
+    });
+  };
+
+  const handleBulkDelete = () => {
+    bulkOperations.bulkDelete.mutate(Array.from(bulkSelection.selectedIds));
+    setDeleteDialogOpen(false);
+  };
   const getStatusLabel = (status: string | null) => {
     if (!status) return '-';
     switch (status) {
@@ -121,8 +149,26 @@ const Sales = () => {
     }
   };
 
+  const salesStatuses = [
+    { value: 'lead', label: 'Lead' },
+    { value: 'qualified', label: 'Minősített' },
+    { value: 'proposal', label: 'Ajánlat' },
+    { value: 'negotiation', label: 'Tárgyalás' },
+    { value: 'closed_won', label: 'Megnyert' },
+    { value: 'closed_lost', label: 'Elveszett' },
+  ];
+
   const renderCellContent = (sale: any, columnKey: string) => {
     switch (columnKey) {
+      case 'select':
+        return (
+          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={bulkSelection.selectedIds.has(sale.id)}
+              onCheckedChange={() => bulkSelection.toggleItem(sale.id)}
+            />
+          </div>
+        );
       case 'name':
         return <span className="font-medium">{sale.name}</span>;
       case 'partner':
@@ -228,6 +274,13 @@ const Sales = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <BulkActionsToolbar
+            selectedCount={bulkSelection.selectedCount}
+            onClearSelection={bulkSelection.clearSelection}
+            onBulkStatusChange={handleBulkStatusChange}
+            onBulkDelete={() => setDeleteDialogOpen(true)}
+            statusOptions={salesStatuses}
+          />
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Betöltés...
@@ -240,6 +293,14 @@ const Sales = () => {
               onColumnReorder={reorderColumns}
               sortState={sortState}
               onSort={handleSort}
+              selectHeader={
+                <Checkbox
+                  checked={bulkSelection.isAllSelected}
+                  onCheckedChange={bulkSelection.toggleAll}
+                  aria-label="Select all"
+                  className={bulkSelection.isPartiallySelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                />
+              }
             >
               <TableBody>
                 {sortedSales.map((sale) => (
@@ -277,6 +338,15 @@ const Sales = () => {
       </div>
 
       <SalesDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      
+      <BulkDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleBulkDelete}
+        count={bulkSelection.selectedCount}
+        entityName="értékesítés"
+        isLoading={bulkOperations.bulkDelete.isPending}
+      />
     </LicenseGuard>
   );
 };
