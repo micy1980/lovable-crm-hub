@@ -243,7 +243,7 @@ export const useDocumentFiles = (documentId: string | undefined) => {
     }
   };
 
-  const downloadMultipleFiles = async (fileIds: string[]) => {
+  const downloadMultipleFiles = async (fileIds: string[], documentTitle?: string) => {
     console.log('downloadMultipleFiles called with fileIds:', fileIds);
     console.log('Available files:', files);
     
@@ -308,7 +308,11 @@ export const useDocumentFiles = (documentId: string | undefined) => {
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dokumentumok_${new Date().toISOString().slice(0, 10)}.zip`;
+      // Use document title and full timestamp with seconds
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+      const safeName = (documentTitle || 'dokumentum').replace(/[^a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ\s-]/g, '').replace(/\s+/g, '_');
+      a.download = `${safeName}_${timestamp}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
