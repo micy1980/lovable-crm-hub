@@ -16,11 +16,8 @@ interface OutlineItem {
   items?: OutlineItem[];
 }
 
-// Configure pdf.js worker from CDN - using legacy URL format for compatibility
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  `pdfjs-dist/build/pdf.worker.min.mjs`,
-  import.meta.url
-).toString();
+// Configure pdf.js worker from CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface DocumentFilePreviewProps {
   open: boolean;
