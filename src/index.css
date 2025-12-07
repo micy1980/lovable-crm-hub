@@ -169,3 +169,36 @@ All colors MUST be HSL.
   background-color: #f97316 !important;
   box-shadow: 0 0 0 3px #f97316, 0 0 8px rgba(249, 115, 22, 0.8) !important;
 }
+
+/* PDF Annotation Layer Styles */
+.react-pdf__Page__annotations {
+  position: absolute !important;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.react-pdf__Page__annotations .linkAnnotation {
+  position: absolute;
+  cursor: pointer;
+}
+
+.react-pdf__Page__annotations .linkAnnotation > a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.react-pdf__Page__annotations .linkAnnotation > a:hover {
+  background-color: hsl(var(--primary) / 0.15);
+  border-radius: 2px;
+}
+
+.pdf-page-with-annotations {
+  position: relative;
+}

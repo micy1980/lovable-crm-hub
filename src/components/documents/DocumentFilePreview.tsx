@@ -693,8 +693,8 @@ export const DocumentFilePreview = ({
                           <Page 
                             pageNumber={index + 1} 
                             renderTextLayer={true}
-                            renderAnnotationLayer={false}
-                            className="shadow-lg"
+                            renderAnnotationLayer={true}
+                            className="shadow-lg pdf-page-with-annotations"
                             width={getBasePageWidth() * zoom}
                           />
                         </div>
