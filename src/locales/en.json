@@ -677,6 +677,8 @@
     "newTagName": "Tag name",
     "created": "Tag created",
     "updated": "Tag updated",
-    "deleted": "Tag deleted"
+    "deleted": "Tag deleted",
+    "deleteTag": "Delete tag",
+    "cannotDelete": "Cannot delete, assigned to {{count}} items"
   }
 }

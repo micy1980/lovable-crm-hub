@@ -683,6 +683,8 @@
     "newTagName": "Címke neve",
     "created": "Címke létrehozva",
     "updated": "Címke módosítva",
-    "deleted": "Címke törölve"
+    "deleted": "Címke törölve",
+    "deleteTag": "Címke törlése",
+    "cannotDelete": "Nem törölhető, mert {{count}} elemhez van hozzárendelve"
   }
 }
