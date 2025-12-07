@@ -29,6 +29,7 @@ import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
 import { ResizableTable } from '@/components/shared/ResizableTable';
 import { useSortableData } from '@/hooks/useSortableData';
+import { TagsAuditTab } from '@/components/audit/TagsAuditTab';
 
 // User-Company Assignments Component
 const UserCompanyAssignments = () => {
@@ -431,6 +432,7 @@ const Logs = () => {
         <TabsList>
           <TabsTrigger value="logs">{t('logs.auditLog')}</TabsTrigger>
           <TabsTrigger value="assignments">{t('logs.userAssignments')}</TabsTrigger>
+          <TabsTrigger value="tags">Címkék</TabsTrigger>
         </TabsList>
 
         <TabsContent value="logs">
@@ -535,6 +537,18 @@ const Logs = () => {
             </CardHeader>
             <CardContent>
               <UserCompanyAssignments />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tags">
+          <Card>
+            <CardHeader>
+              <CardTitle>Címkék</CardTitle>
+              <CardDescription>Az összes címke és hozzárendeléseik áttekintése</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TagsAuditTab />
             </CardContent>
           </Card>
         </TabsContent>
