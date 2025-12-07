@@ -1,10 +1,10 @@
 import { useCompany } from '@/contexts/CompanyContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin } from '@/lib/roleUtils';
@@ -13,6 +13,9 @@ import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useReadOnlyMode } from '@/hooks/useReadOnlyMode';
 import { ProjectDialog } from '@/components/projects/ProjectDialog';
 import { useMemo, useState } from 'react';
+import { ImportDialog } from '@/components/import/ImportDialog';
+import { projectImportConfig } from '@/lib/importUtils';
+import { toast } from 'sonner';
 import { ExportMenu } from '@/components/shared/ExportMenu';
 import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
@@ -33,8 +36,31 @@ const Projects = () => {
   const { data: profile } = useUserProfile();
   const { canEdit } = useReadOnlyMode();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const handleImport = async (data: any[]) => {
+    if (!activeCompany) return;
+    
+    const projectsToInsert = data.map(item => ({
+      ...item,
+      company_id: activeCompany.id,
+    }));
+
+    const { error } = await supabase
+      .from('projects')
+      .insert(projectsToInsert);
+
+    if (error) {
+      toast.error('Hiba az importálás során: ' + error.message);
+      throw error;
+    }
+
+    toast.success(`${data.length} projekt sikeresen importálva`);
+    queryClient.invalidateQueries({ queryKey: ['projects', activeCompany.id] });
+  };
 
   const columnConfigs: ColumnConfig[] = useMemo(() => [
     { key: 'select', label: 'Kijelölés', defaultWidth: 40, sortable: false },
@@ -299,6 +325,10 @@ const Projects = () => {
             }))}
             title="Projektek"
           />
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)} disabled={!canEdit}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
           <Button onClick={() => setDialogOpen(true)} disabled={!canEdit} className="min-w-[140px]">
             <Plus className="h-4 w-4" />
             {t('projects.newProject')}
@@ -372,6 +402,15 @@ const Projects = () => {
       </div>
 
       <ProjectDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <ImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Projektek importálása"
+        config={projectImportConfig}
+        templateFilename="projektek"
+        onImport={handleImport}
+      />
 
       <BulkDeleteDialog
         open={bulkDeleteDialogOpen}
