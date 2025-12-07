@@ -10,6 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs, Outline } from 'react-pdf';
+import { WordPreview } from './WordPreview';
+import { ExcelPreview } from './ExcelPreview';
 
 interface OutlineItem {
   title: string;
@@ -71,7 +73,15 @@ export const DocumentFilePreview = ({
 
   const isImage = mimeType?.startsWith('image/');
   const isPdf = mimeType?.startsWith('application/pdf') || mimeType === 'application/x-pdf';
-  const canPreview = isImage || isPdf;
+  const isWord = mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                 mimeType === 'application/msword' ||
+                 fileName.toLowerCase().endsWith('.docx') ||
+                 fileName.toLowerCase().endsWith('.doc');
+  const isExcel = mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                  mimeType === 'application/vnd.ms-excel' ||
+                  fileName.toLowerCase().endsWith('.xlsx') ||
+                  fileName.toLowerCase().endsWith('.xls');
+  const canPreview = isImage || isPdf || isWord || isExcel;
   const zoom = ZOOM_LEVELS[zoomIndex];
 
   const revokeUrls = useCallback(() => {
@@ -640,6 +650,31 @@ export const DocumentFilePreview = ({
       }
     }
   };
+
+  // Delegate to specialized viewers for Word and Excel
+  if (isWord) {
+    return (
+      <WordPreview
+        open={open}
+        onOpenChange={onOpenChange}
+        filePath={filePath}
+        fileName={fileName}
+        onDownload={onDownload}
+      />
+    );
+  }
+
+  if (isExcel) {
+    return (
+      <ExcelPreview
+        open={open}
+        onOpenChange={onOpenChange}
+        filePath={filePath}
+        fileName={fileName}
+        onDownload={onDownload}
+      />
+    );
+  }
 
   return (
     <>
