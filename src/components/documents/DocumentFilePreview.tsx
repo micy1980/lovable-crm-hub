@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -218,6 +218,17 @@ export const DocumentFilePreview = ({
     setZoomIndex(DEFAULT_ZOOM_INDEX);
   };
 
+  const handlePrint = () => {
+    if (!pdfUrl) return;
+    
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (printWindow) {
+      printWindow.addEventListener('load', () => {
+        printWindow.print();
+      });
+    }
+  };
+
   // Calculate base page width
   const getBasePageWidth = () => {
     if (isFullscreen) {
@@ -413,6 +424,11 @@ export const DocumentFilePreview = ({
           )}
           
           <div className="flex items-center gap-1 flex-shrink-0">
+            {isPdf && pdfUrl && !pdfError && (
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrint} title="Nyomtatás">
+                <Printer className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleFullscreen} title={isFullscreen ? 'Kilépés teljes képernyőből' : 'Teljes képernyő'}>
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
             </Button>
