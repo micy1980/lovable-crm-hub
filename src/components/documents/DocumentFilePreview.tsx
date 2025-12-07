@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer, PanelLeftClose, PanelLeft, BookOpen, Grid3X3 } from 'lucide-react';
+import { Download, Loader2, FileText, Image as ImageIcon, Maximize2, Minimize2, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown, X, Printer, PanelLeftClose, PanelLeft, BookOpen, Grid3X3, RotateCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,7 @@ export const DocumentFilePreview = ({
   const [sidebarTab, setSidebarTab] = useState<'thumbnails' | 'bookmarks'>('thumbnails');
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [outline, setOutline] = useState<OutlineItem[] | null>(null);
+  const [rotation, setRotation] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +94,7 @@ export const DocumentFilePreview = ({
       setShowSidebar(false);
       setOutline(null);
       setPdfDocument(null);
+      setRotation(0);
       pageRefs.current.clear();
     }
 
@@ -242,6 +244,10 @@ export const DocumentFilePreview = ({
 
   const resetZoom = () => {
     setZoomIndex(DEFAULT_ZOOM_INDEX);
+  };
+
+  const rotatePages = () => {
+    setRotation((prev) => (prev + 90) % 360);
   };
 
   const handlePrint = () => {
@@ -493,6 +499,10 @@ export const DocumentFilePreview = ({
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={zoomIn} disabled={zoomIndex >= ZOOM_LEVELS.length - 1} title="Nagyítás">
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
+              <div className="w-px h-4 bg-border mx-1" />
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={rotatePages} title="Forgatás (90°)">
+                <RotateCw className="h-3.5 w-3.5" />
+              </Button>
             </div>
           )}
           
@@ -694,8 +704,9 @@ export const DocumentFilePreview = ({
                             pageNumber={index + 1} 
                             renderTextLayer={true}
                             renderAnnotationLayer={true}
-                            className="shadow-lg pdf-page-with-annotations"
+                            className="shadow-lg pdf-page-with-annotations select-text"
                             width={getBasePageWidth() * zoom}
+                            rotate={rotation}
                           />
                         </div>
                       ))}
