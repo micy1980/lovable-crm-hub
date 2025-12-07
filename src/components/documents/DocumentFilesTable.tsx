@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { format, parseISO, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Download, Trash2, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History, Search, X, Filter, FileText } from 'lucide-react';
+import { Download, Trash2, Upload, ArrowUpDown, ArrowUp, ArrowDown, Eye, History, Search, X, Filter, FileText, GripVertical } from 'lucide-react';
 import { getFileTypeIcon } from '@/lib/fileTypeIcons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +35,9 @@ import { DocumentFileVersionsDialog } from './DocumentFileVersionsDialog';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isAdminOrAbove } from '@/lib/roleUtils';
+import { useColumnSettings, ColumnConfig } from '@/hooks/useColumnSettings';
+import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover';
+import { cn } from '@/lib/utils';
 
 interface DocumentFilesTableProps {
   documentId: string;
@@ -89,6 +92,18 @@ const getSimpleFileType = (mimeType: string | null): string => {
   return mimeMap[mimeType.toLowerCase()] || mimeType.split('/')[1]?.toUpperCase().slice(0, 10) || '-';
 };
 
+// Column configuration
+const DOCUMENT_FILES_COLUMNS: ColumnConfig[] = [
+  { key: 'select', label: '', defaultWidth: 40, required: true, sortable: false },
+  { key: 'file_name', label: 'Fájlnév', defaultWidth: 250, required: true },
+  { key: 'version', label: 'Verzió', defaultWidth: 80 },
+  { key: 'file_size', label: 'Méret', defaultWidth: 100 },
+  { key: 'mime_type', label: 'Típus', defaultWidth: 100 },
+  { key: 'uploaded_at', label: 'Feltöltve', defaultWidth: 150 },
+  { key: 'uploader', label: 'Feltöltő', defaultWidth: 150 },
+  { key: 'actions', label: 'Műveletek', defaultWidth: 140, required: true, sortable: false },
+];
+
 export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: DocumentFilesTableProps) => {
   const { activeCompany } = useCompany();
   const { data: profile } = useUserProfile();
@@ -105,6 +120,20 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
     restoreVersion,
   } = useDocumentFiles(documentId);
   
+  // Column management
+  const {
+    columnStates,
+    visibleColumns,
+    toggleVisibility,
+    setColumnWidth,
+    reorderColumns,
+    resetToDefaults,
+    getColumnConfig,
+  } = useColumnSettings({
+    storageKey: 'document-files-columns',
+    columns: DOCUMENT_FILES_COLUMNS,
+  });
+  
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
@@ -116,11 +145,42 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
   const [versionsFile, setVersionsFile] = useState<DocumentFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   
+  // Column drag state
+  const [draggedColIndex, setDraggedColIndex] = useState<number | null>(null);
+  const [dragOverColIndex, setDragOverColIndex] = useState<number | null>(null);
+  
   // Filter states
   const [searchText, setSearchText] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterDateFrom, setFilterDateFrom] = useState<string>('');
   const [filterDateTo, setFilterDateTo] = useState<string>('');
+
+  // Column drag handlers
+  const handleColDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedColIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleColDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedColIndex !== index) {
+      setDragOverColIndex(index);
+    }
+  };
+
+  const handleColDrop = (e: React.DragEvent, toIndex: number) => {
+    e.preventDefault();
+    if (draggedColIndex !== null && draggedColIndex !== toIndex) {
+      reorderColumns(draggedColIndex, toIndex);
+    }
+    setDraggedColIndex(null);
+    setDragOverColIndex(null);
+  };
+
+  const handleColDragEnd = () => {
+    setDraggedColIndex(null);
+    setDragOverColIndex(null);
+  };
 
   // Get unique file types for filter dropdown
   const fileTypes = useMemo(() => {
@@ -364,6 +424,13 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
             Fájlok ({filteredFiles.length}{hasActiveFilters ? ` / ${files.length}` : ''})
           </CardTitle>
           <div className="flex gap-2">
+            <ColumnSettingsPopover
+              columnStates={columnStates}
+              columns={DOCUMENT_FILES_COLUMNS}
+              onToggleVisibility={toggleVisibility}
+              onReorder={reorderColumns}
+              onReset={resetToDefaults}
+            />
             {selectedFiles.size > 0 && (
               <Button 
                 variant="outline" 
@@ -486,175 +553,150 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px] text-center">
-                    <div className="flex items-center justify-center w-full">
-                      <Checkbox
-                        checked={selectedFiles.size === files.length && files.length > 0}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleSort('file_name')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Fájlnév
-                      {getSortIcon('file_name')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50 w-[80px]"
-                    onClick={() => handleSort('version')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Verzió
-                      {getSortIcon('version')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleSort('file_size')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Méret
-                      {getSortIcon('file_size')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleSort('mime_type')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Típus
-                      {getSortIcon('mime_type')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleSort('uploaded_at')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Feltöltve
-                      {getSortIcon('uploaded_at')}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="text-center cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleSort('uploader')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Feltöltő
-                      {getSortIcon('uploader')}
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[140px] text-center">Műveletek</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedFiles.map((file) => (
-                  <TableRow key={file.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedFiles.has(file.id)}
-                        onCheckedChange={(checked) => handleSelectFile(file.id, !!checked)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const { icon: FileIcon, className: iconClass } = getFileTypeIcon(file.mime_type);
-                        return (
-                          <div className="flex items-center gap-2">
-                            <FileIcon className={`h-4 w-4 ${iconClass}`} />
-                            <span className="font-medium">{file.file_name}</span>
-                          </div>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="text-xs">
-                        v{file.version || 1}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">{formatFileSize(file.file_size)}</TableCell>
-                    <TableCell className="text-center text-sm">
-                      {getSimpleFileType(file.mime_type)}
-                    </TableCell>
-                    <TableCell className="text-center">{formatDate(file.uploaded_at)}</TableCell>
-                    <TableCell>{file.uploader?.full_name || '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-1">
-                        {/* Preview - always shown, disabled if not supported */}
-                        {(() => {
-                          const isImage = file.mime_type?.startsWith('image/');
-                          const isPdf = file.mime_type === 'application/pdf' || file.mime_type === 'application/x-pdf';
-                          const canPreview = isImage || isPdf;
-                          
-                          return canPreview ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setPreviewFile(file)}
-                              title="Előnézet"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled
-                              className="opacity-30 relative"
-                              title="Előnézet nem elérhető"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="absolute inset-0 flex items-center justify-center">
-                                <span className="w-6 h-0.5 bg-current rotate-45 absolute" />
-                              </span>
-                            </Button>
+            <div className="overflow-x-auto rounded-md border">
+              <Table style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
+                <TableHeader>
+                  <TableRow>
+                    {visibleColumns.map((col, index) => {
+                      const config = getColumnConfig(col.key);
+                      const isSortable = config?.sortable !== false;
+                      
+                      // Render cell content based on column key
+                      const renderHeader = () => {
+                        if (col.key === 'select') {
+                          return (
+                            <Checkbox
+                              checked={selectedFiles.size === files.length && files.length > 0}
+                              onCheckedChange={handleSelectAll}
+                            />
                           );
-                        })()}
-                        {/* Versions */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setVersionsFile(file)}
-                          title="Verzióelőzmények"
+                        }
+                        return (
+                          <>
+                            <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 cursor-grab" />
+                            <span className="truncate">{config?.label || col.key}</span>
+                            {isSortable && getSortIcon(col.key as SortField)}
+                          </>
+                        );
+                      };
+                      
+                      return (
+                        <TableHead
+                          key={col.key}
+                          style={{ width: col.width, minWidth: col.width, maxWidth: col.width }}
+                          className={cn(
+                            'relative select-none text-center',
+                            dragOverColIndex === index && 'bg-accent',
+                            draggedColIndex === index && 'opacity-50',
+                            isSortable && col.key !== 'select' && col.key !== 'actions' && 'cursor-pointer hover:bg-muted/50'
+                          )}
+                          draggable={col.key !== 'select' && col.key !== 'actions'}
+                          onDragStart={(e) => handleColDragStart(e, index)}
+                          onDragOver={(e) => handleColDragOver(e, index)}
+                          onDragLeave={handleColDragEnd}
+                          onDrop={(e) => handleColDrop(e, index)}
+                          onDragEnd={handleColDragEnd}
+                          onClick={() => isSortable && col.key !== 'select' && col.key !== 'actions' && handleSort(col.key as SortField)}
                         >
-                          <History className="h-4 w-4" />
-                        </Button>
-                        {/* Download */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => downloadFile(file.file_path, file.file_name)}
-                          title="Letöltés"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        {/* Delete - only for admins */}
-                        {isAdmin && !isDeleted ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteClick(file)}
-                            className="text-destructive hover:text-destructive"
-                            title="Törlés"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <div className="w-8" />
-                        )}
-                      </div>
-                    </TableCell>
+                          <div className="flex items-center justify-center gap-1 w-full">
+                            {renderHeader()}
+                          </div>
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {sortedFiles.map((file) => (
+                    <TableRow key={file.id}>
+                      {visibleColumns.map((col) => {
+                        const renderCell = () => {
+                          switch (col.key) {
+                            case 'select':
+                              return (
+                                <Checkbox
+                                  checked={selectedFiles.has(file.id)}
+                                  onCheckedChange={(checked) => handleSelectFile(file.id, !!checked)}
+                                />
+                              );
+                            case 'file_name':
+                              const { icon: FileIcon, className: iconClass } = getFileTypeIcon(file.mime_type);
+                              return (
+                                <div className="flex items-center gap-2">
+                                  <FileIcon className={`h-4 w-4 ${iconClass}`} />
+                                  <span className="font-medium truncate">{file.file_name}</span>
+                                </div>
+                              );
+                            case 'version':
+                              return (
+                                <Badge variant="outline" className="text-xs">
+                                  v{file.version || 1}
+                                </Badge>
+                              );
+                            case 'file_size':
+                              return formatFileSize(file.file_size);
+                            case 'mime_type':
+                              return <span className="text-sm">{getSimpleFileType(file.mime_type)}</span>;
+                            case 'uploaded_at':
+                              return formatDate(file.uploaded_at);
+                            case 'uploader':
+                              return file.uploader?.full_name || '-';
+                            case 'actions':
+                              const isImage = file.mime_type?.startsWith('image/');
+                              const isPdf = file.mime_type === 'application/pdf' || file.mime_type === 'application/x-pdf';
+                              const canPreview = isImage || isPdf;
+                              return (
+                                <div className="flex items-center justify-center gap-1">
+                                  {canPreview ? (
+                                    <Button variant="ghost" size="sm" onClick={() => setPreviewFile(file)} title="Előnézet">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <Button variant="ghost" size="sm" disabled className="opacity-30 relative" title="Előnézet nem elérhető">
+                                      <Eye className="h-4 w-4" />
+                                      <span className="absolute inset-0 flex items-center justify-center">
+                                        <span className="w-6 h-0.5 bg-current rotate-45 absolute" />
+                                      </span>
+                                    </Button>
+                                  )}
+                                  <Button variant="ghost" size="sm" onClick={() => setVersionsFile(file)} title="Verzióelőzmények">
+                                    <History className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => downloadFile(file.file_path, file.file_name)} title="Letöltés">
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                  {isAdmin && !isDeleted ? (
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(file)} className="text-destructive hover:text-destructive" title="Törlés">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <div className="w-8" />
+                                  )}
+                                </div>
+                              );
+                            default:
+                              return null;
+                          }
+                        };
+                        
+                        return (
+                          <TableCell 
+                            key={col.key}
+                            style={{ width: col.width, minWidth: col.width, maxWidth: col.width }}
+                            className={cn(
+                              'truncate',
+                              col.key !== 'file_name' && col.key !== 'uploader' && 'text-center'
+                            )}
+                          >
+                            {renderCell()}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
