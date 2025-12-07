@@ -284,8 +284,9 @@ export const DocumentFilePreview = ({
             span.innerHTML = '';
             parts.forEach(part => {
               if (part.toLowerCase() === searchLower) {
-                const mark = document.createElement('mark');
-                mark.className = 'pdf-search-highlight bg-yellow-300 text-black rounded px-0.5';
+              const mark = document.createElement('mark');
+                mark.className = 'pdf-search-highlight';
+                mark.style.cssText = 'background-color: #fbbf24; color: #000; padding: 0 2px; border-radius: 2px;';
                 mark.textContent = part;
                 span.appendChild(mark);
                 results.push({ pageNum, index: results.length });
@@ -313,11 +314,16 @@ export const DocumentFilePreview = ({
 
     const highlights = container.querySelectorAll('.pdf-search-highlight');
     if (highlights[index]) {
-      // Remove current highlight
-      highlights.forEach(el => el.classList.remove('ring-2', 'ring-primary'));
+      // Remove current highlight from all
+      highlights.forEach(el => {
+        (el as HTMLElement).style.backgroundColor = '#fbbf24';
+        (el as HTMLElement).style.boxShadow = 'none';
+      });
       
-      // Add current highlight
-      highlights[index].classList.add('ring-2', 'ring-primary');
+      // Add current highlight - orange background with ring
+      const currentEl = highlights[index] as HTMLElement;
+      currentEl.style.backgroundColor = '#f97316';
+      currentEl.style.boxShadow = '0 0 0 2px #f97316';
       highlights[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
