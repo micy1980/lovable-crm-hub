@@ -442,29 +442,43 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
                         {/* Preview - always shown, disabled if not supported */}
-                        {(file.mime_type?.startsWith('image/') || file.mime_type === 'application/pdf') ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPreviewFile(file)}
-                            title="Előnézet"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled
-                            className="opacity-30 relative"
-                            title="Előnézet nem elérhető"
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span className="absolute inset-0 flex items-center justify-center">
-                              <span className="w-6 h-0.5 bg-current rotate-45 absolute" />
-                            </span>
-                          </Button>
-                        )}
+                        {(() => {
+                          const isImage = file.mime_type?.startsWith('image/');
+                          const isPdf = file.mime_type === 'application/pdf' || file.mime_type === 'application/x-pdf';
+                          const isWord = file.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                                        file.mime_type === 'application/msword' ||
+                                        file.file_name.toLowerCase().endsWith('.docx') ||
+                                        file.file_name.toLowerCase().endsWith('.doc');
+                          const isExcel = file.mime_type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                                         file.mime_type === 'application/vnd.ms-excel' ||
+                                         file.file_name.toLowerCase().endsWith('.xlsx') ||
+                                         file.file_name.toLowerCase().endsWith('.xls');
+                          const canPreview = isImage || isPdf || isWord || isExcel;
+                          
+                          return canPreview ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setPreviewFile(file)}
+                              title="Előnézet"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled
+                              className="opacity-30 relative"
+                              title="Előnézet nem elérhető"
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <span className="w-6 h-0.5 bg-current rotate-45 absolute" />
+                              </span>
+                            </Button>
+                          );
+                        })()}
                         {/* Versions */}
                         <Button
                           variant="ghost"
