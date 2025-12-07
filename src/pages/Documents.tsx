@@ -56,6 +56,7 @@ const Documents = () => {
     { key: 'size', label: 'Méret', defaultVisible: true, defaultWidth: 100 },
     { key: 'uploaded', label: 'Feltöltve', defaultVisible: true, defaultWidth: 120 },
     { key: 'uploader', label: 'Feltöltő', defaultVisible: false, defaultWidth: 150 },
+    { key: 'actions', label: 'Műveletek', defaultVisible: true, defaultWidth: 100, sortable: false },
   ], []);
 
   const {
