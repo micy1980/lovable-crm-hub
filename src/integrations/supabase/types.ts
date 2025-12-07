@@ -2256,6 +2256,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      soft_delete_comment: { Args: { comment_id: string }; Returns: undefined }
       soft_delete_company: { Args: { _company_id: string }; Returns: boolean }
       soft_delete_contract: { Args: { _contract_id: string }; Returns: boolean }
       soft_delete_document: { Args: { _document_id: string }; Returns: boolean }
