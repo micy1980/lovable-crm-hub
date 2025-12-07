@@ -212,6 +212,45 @@ const Contracts = () => {
         return <span className="font-mono">{formatCurrency(contract.total_value, contract.currency, numberFormatSettings)} {contract.currency || 'HUF'}</span>;
       case 'status':
         return getStatusBadge(contract.status);
+      case 'actions':
+        return (
+          <div className="flex items-center justify-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(contract);
+              }}
+              title="Szerkesztés"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            {isAdmin && !contract.deleted_at && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={(e) => handleSoftDeleteClick(contract, e)}
+                title="Törlés"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            {isSuper && contract.deleted_at && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={(e) => handleHardDeleteClick(contract, e)}
+                title="Végleges törlés"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        );
       default:
         return '-';
     }
@@ -296,44 +335,6 @@ const Contracts = () => {
                       {getCellValue(contract, col.key)}
                     </ResizableTableCell>
                   ))}
-                  <TableCell className="w-[100px]">
-                    <div className="flex items-center justify-center gap-0.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(contract);
-                        }}
-                        title="Szerkesztés"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {isAdmin && !contract.deleted_at && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={(e) => handleSoftDeleteClick(contract, e)}
-                          title="Törlés"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {isSuper && contract.deleted_at && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={(e) => handleHardDeleteClick(contract, e)}
-                          title="Végleges törlés"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
                 </TableRow>
               )}
             />
