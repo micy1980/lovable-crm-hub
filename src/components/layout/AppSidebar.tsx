@@ -15,6 +15,8 @@ import {
   FolderOpen,
   BarChart3,
   FileStack,
+  LayoutGrid,
+  GanttChartSquare,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -51,6 +53,8 @@ export function AppSidebar() {
     { title: t('nav.dashboard'), url: '/', icon: LayoutDashboard, feature: null },
     { title: t('nav.partners'), url: '/partners', icon: Users, feature: 'partners' },
     { title: t('nav.projects'), url: '/projects', icon: FolderKanban, feature: 'projects' },
+    { title: 'Kanban tábla', url: '/kanban', icon: LayoutGrid, feature: 'projects' },
+    { title: 'Gantt diagram', url: '/gantt', icon: GanttChartSquare, feature: 'projects' },
     { title: t('nav.sales'), url: '/sales', icon: TrendingUp, feature: 'sales' },
     { title: t('nav.calendar'), url: '/calendar', icon: Calendar, feature: 'calendar' },
     { title: t('nav.myItems'), url: '/my-items', icon: ListTodo, feature: 'my_items' },
