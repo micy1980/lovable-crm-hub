@@ -96,9 +96,16 @@ export function useColumnSettings({
   }, [columns.length]);
 
   const visibleColumns = useMemo(() => {
-    return columnStates
-      .filter((c) => c.visible)
-      .sort((a, b) => a.order - b.order);
+    const visible = columnStates.filter((c) => c.visible);
+    
+    // Ensure select is always first, favorite second
+    return visible.sort((a, b) => {
+      if (a.key === 'select') return -1;
+      if (b.key === 'select') return 1;
+      if (a.key === 'favorite') return -1;
+      if (b.key === 'favorite') return 1;
+      return a.order - b.order;
+    });
   }, [columnStates]);
 
   const toggleVisibility = useCallback((key: string) => {
