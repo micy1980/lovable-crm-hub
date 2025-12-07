@@ -189,6 +189,53 @@ const Documents = () => {
         return doc.created_at ? format(parseISO(doc.created_at), 'yyyy.MM.dd', { locale: hu }) : '-';
       case 'uploader':
         return doc.uploader?.full_name || '-';
+      case 'actions':
+        return (
+          <div className="flex items-center justify-center gap-0.5">
+            {doc.file_path && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadDocument(doc.file_path, doc.title);
+                }}
+                title="Letöltés"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            {isAdmin && !doc.deleted_at && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSoftDeleteClick(doc);
+                }}
+                title="Törlés"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            {isSuper && doc.deleted_at && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleHardDeleteClick(doc);
+                }}
+                title="Végleges törlés"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        );
       default:
         return '-';
     }
@@ -272,52 +319,6 @@ const Documents = () => {
                       {getCellValue(doc, col.key)}
                     </ResizableTableCell>
                   ))}
-                  <TableCell className="w-[100px]">
-                    <div className="flex items-center justify-center gap-0.5">
-                      {doc.file_path && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downloadDocument(doc.file_path, doc.title);
-                          }}
-                          title="Letöltés"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {isAdmin && !doc.deleted_at && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSoftDeleteClick(doc);
-                          }}
-                          title="Törlés"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {isSuper && doc.deleted_at && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleHardDeleteClick(doc);
-                          }}
-                          title="Végleges törlés"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
                 </TableRow>
               )}
             />
