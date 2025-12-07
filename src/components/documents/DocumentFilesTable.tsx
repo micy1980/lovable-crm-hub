@@ -440,8 +440,9 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                     <TableCell className="text-center">{formatDate(file.uploaded_at)}</TableCell>
                     <TableCell>{file.uploader?.full_name || '-'}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        {(file.mime_type?.startsWith('image/') || file.mime_type === 'application/pdf') && (
+                      <div className="flex items-center justify-center gap-1">
+                        {/* Preview - always shown, disabled if not supported */}
+                        {(file.mime_type?.startsWith('image/') || file.mime_type === 'application/pdf') ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -450,7 +451,21 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled
+                            className="opacity-30 relative"
+                            title="Előnézet nem elérhető"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <span className="w-6 h-0.5 bg-current rotate-45 absolute" />
+                            </span>
+                          </Button>
                         )}
+                        {/* Versions */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -459,6 +474,7 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                         >
                           <History className="h-4 w-4" />
                         </Button>
+                        {/* Download */}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -467,7 +483,8 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        {isAdmin && !isDeleted && (
+                        {/* Delete - only for admins */}
+                        {isAdmin && !isDeleted ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -477,6 +494,8 @@ export const DocumentFilesTable = ({ documentId, documentTitle, isDeleted }: Doc
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                        ) : (
+                          <div className="w-8" />
                         )}
                       </div>
                     </TableCell>
