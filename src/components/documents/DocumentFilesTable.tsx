@@ -348,10 +348,12 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={selectedFiles.size === files.length && files.length > 0}
-                      onCheckedChange={handleSelectAll}
-                    />
+                    <div className="flex items-center justify-center">
+                      <Checkbox
+                        checked={selectedFiles.size === files.length && files.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </div>
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer hover:bg-muted/50"
@@ -407,7 +409,7 @@ export const DocumentFilesTable = ({ documentId, isDeleted }: DocumentFilesTable
                       {getSortIcon('uploader')}
                     </div>
                   </TableHead>
-                  <TableHead className="w-[140px]"></TableHead>
+                  <TableHead className="w-[140px] text-center">Műveletek</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
