@@ -251,38 +251,76 @@ export const DocumentFilePreview = ({
   };
 
   const handlePrint = async () => {
-    if (!pdfUrl) return;
+    if (!pdfDocument || !numPages) return;
     
     try {
-      // Fetch the blob from the URL
-      const response = await fetch(pdfUrl);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      // Render all pages to canvas and create images
+      const images: string[] = [];
       
-      // Open in new window and print
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdfDocument.getPage(pageNum);
+        const scale = 2; // Higher scale for better print quality
+        const viewport = page.getViewport({ scale });
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+        }).promise;
+        
+        images.push(canvas.toDataURL('image/png'));
+      }
+      
+      // Create print content
+      const printContent = images.map((img, idx) => 
+        `<img src="${img}" style="width: 100%; page-break-after: ${idx < images.length - 1 ? 'always' : 'auto'}; display: block;" />`
+      ).join('');
+      
+      // Create hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(`
           <!DOCTYPE html>
           <html>
             <head>
               <title>${fileName}</title>
               <style>
-                body { margin: 0; padding: 0; }
-                embed { width: 100%; height: 100vh; }
+                @media print {
+                  body { margin: 0; padding: 0; }
+                  img { max-width: 100%; height: auto; }
+                  @page { margin: 0; }
+                }
               </style>
             </head>
-            <body>
-              <embed src="${blobUrl}" type="application/pdf" width="100%" height="100%" />
-            </body>
+            <body>${printContent}</body>
           </html>
         `);
-        printWindow.document.close();
+        iframeDoc.close();
         
-        // Wait for PDF to load then print
+        // Wait for images to load then print
         setTimeout(() => {
-          printWindow.print();
-        }, 1000);
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          
+          // Remove iframe after printing
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 500);
       }
     } catch (err) {
       console.error('Print error:', err);
