@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { RecurrenceFields, RecurrenceType } from '@/components/shared/RecurrenceFields';
 
 interface EventDialogProps {
   open: boolean;
@@ -70,6 +71,9 @@ interface FormData {
   partner_id: string;
   responsible_user_id: string;
   is_all_day: boolean;
+  recurrence_type: RecurrenceType;
+  recurrence_interval: number;
+  recurrence_end_date: string;
 }
 
 export const EventDialog = ({
@@ -106,6 +110,9 @@ export const EventDialog = ({
       partner_id: '',
       responsible_user_id: '',
       is_all_day: false,
+      recurrence_type: 'none',
+      recurrence_interval: 1,
+      recurrence_end_date: '',
     }
   });
 
@@ -113,6 +120,9 @@ export const EventDialog = ({
   const projectId = watch('project_id');
   const salesId = watch('sales_id');
   const responsibleUserId = watch('responsible_user_id');
+  const recurrenceType = watch('recurrence_type');
+  const recurrenceInterval = watch('recurrence_interval');
+  const recurrenceEndDate = watch('recurrence_end_date');
 
   const { data: users = [] } = useQuery({
     queryKey: ['company-users-for-events', activeCompany?.id],
@@ -193,6 +203,9 @@ export const EventDialog = ({
           partner_id: event.partner_id || '',
           responsible_user_id: event.responsible_user_id || '',
           is_all_day: event.is_all_day || false,
+          recurrence_type: event.recurrence_type || 'none',
+          recurrence_interval: event.recurrence_interval || 1,
+          recurrence_end_date: event.recurrence_end_date || '',
         });
       } else {
         // For new events, get current user ID to set as default responsible
@@ -214,6 +227,9 @@ export const EventDialog = ({
             partner_id: defaultPartnerId || '',
             responsible_user_id: currentUserId,
             is_all_day: false,
+            recurrence_type: 'none',
+            recurrence_interval: 1,
+            recurrence_end_date: '',
           });
           setParticipants([]);
         });
@@ -253,6 +269,9 @@ export const EventDialog = ({
       partner_id: data.partner_id || null,
       responsible_user_id: data.responsible_user_id || null,
       is_all_day: data.is_all_day,
+      recurrence_type: data.recurrence_type || 'none',
+      recurrence_interval: data.recurrence_interval || 1,
+      recurrence_end_date: data.recurrence_end_date || null,
       participants: participants.map(p => ({
         user_id: p.user_id,
         external_email: p.email,
@@ -506,6 +525,16 @@ export const EventDialog = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Recurrence Fields */}
+          <RecurrenceFields
+            recurrenceType={recurrenceType}
+            recurrenceInterval={recurrenceInterval}
+            recurrenceEndDate={recurrenceEndDate}
+            onRecurrenceTypeChange={(v) => setValue('recurrence_type', v)}
+            onRecurrenceIntervalChange={(v) => setValue('recurrence_interval', v)}
+            onRecurrenceEndDateChange={(v) => setValue('recurrence_end_date', v)}
+          />
 
           <div className="space-y-3 border-t pt-4">
             <Label className="flex items-center gap-2">
