@@ -143,14 +143,13 @@ export const useComments = (entityType: EntityType, entityId: string) => {
     },
   });
 
-  // Soft delete comment (only owner can delete their own)
+  // Soft delete comment (only owner can delete their own - enforced by RLS)
   const deleteComment = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('comments')
         .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('user_id', user?.id);
+        .eq('id', id);
 
       if (error) throw error;
     },
