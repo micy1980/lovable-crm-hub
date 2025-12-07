@@ -271,16 +271,18 @@ const Documents = () => {
                       {getCellValue(doc, col.key)}
                     </ResizableTableCell>
                   ))}
-                  <TableCell className="w-[120px]">
-                    <div className="flex items-center gap-1">
+                  <TableCell className="w-[100px]">
+                    <div className="flex items-center justify-center gap-0.5">
                       {doc.file_path && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-7 w-7"
                           onClick={(e) => {
                             e.stopPropagation();
                             downloadDocument(doc.file_path, doc.title);
                           }}
+                          title="Letöltés"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -288,12 +290,13 @@ const Documents = () => {
                       {isAdmin && !doc.deleted_at && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSoftDeleteClick(doc);
                           }}
-                          className="text-destructive hover:text-destructive"
+                          title="Törlés"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -301,12 +304,13 @@ const Documents = () => {
                       {isSuper && doc.deleted_at && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleHardDeleteClick(doc);
                           }}
-                          className="text-destructive hover:text-destructive"
+                          title="Végleges törlés"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

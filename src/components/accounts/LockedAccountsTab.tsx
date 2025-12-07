@@ -102,13 +102,14 @@ export const LockedAccountsTab = () => {
       case 'actions':
         return (
           <Button
-            size="sm"
-            variant="outline"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
             onClick={() => handleUnlock(lock.user_id)}
             disabled={unlockAccount.isPending}
+            title="Feloldás"
           >
-            <LockOpen className="mr-2 h-4 w-4" />
-            Feloldás
+            <LockOpen className="h-4 w-4" />
           </Button>
         );
       default:

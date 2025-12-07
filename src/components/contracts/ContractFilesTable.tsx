@@ -646,25 +646,26 @@ export const ContractFilesTable = ({ contractId, contractTitle, isDeleted }: Con
                               const isPdf = file.mime_type === 'application/pdf' || file.mime_type === 'application/x-pdf';
                               const canPreview = isImage || isPdf;
                               return (
-                                <div className="flex items-center justify-center gap-1">
+                                <div className="flex items-center justify-center gap-0.5">
                                   {canPreview ? (
-                                    <Button variant="ghost" size="sm" onClick={() => setPreviewFile(file)} title="Előnézet">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewFile(file)} title="Előnézet">
                                       <Eye className="h-4 w-4" />
                                     </Button>
                                   ) : (
-                                    <Button variant="ghost" size="sm" disabled className="opacity-30 relative" title="Előnézet nem elérhető">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-30 relative" disabled title="Előnézet nem elérhető">
                                       <Eye className="h-4 w-4" />
                                       <span className="absolute inset-0 flex items-center justify-center">
                                         <span className="w-6 h-0.5 bg-current rotate-45 absolute" />
                                       </span>
                                     </Button>
                                   )}
-                                  <Button variant="ghost" size="sm" onClick={() => setVersionsFile(file)} title="Verzióelőzmények">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setVersionsFile(file)} title="Verzióelőzmények">
                                     <History className="h-4 w-4" />
                                   </Button>
                                   <Button 
                                     variant="ghost" 
-                                    size="sm" 
+                                    size="icon"
+                                    className="h-7 w-7"
                                     onClick={() => file.file_path && downloadFile(file.file_path, file.title)} 
                                     disabled={!file.file_path}
                                     title="Letöltés"
@@ -672,11 +673,11 @@ export const ContractFilesTable = ({ contractId, contractTitle, isDeleted }: Con
                                     <Download className="h-4 w-4" />
                                   </Button>
                                   {isAdmin && !isDeleted ? (
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(file)} className="text-destructive hover:text-destructive" title="Törlés">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteClick(file)} title="Törlés">
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   ) : (
-                                    <div className="w-8" />
+                                    <div className="w-7" />
                                   )}
                                 </div>
                               );

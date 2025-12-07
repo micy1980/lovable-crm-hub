@@ -351,7 +351,7 @@ export function UserList() {
         );
       case 'actions':
         return (
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-0.5">
             {userIsLocked && currentUserIsSA && (
               <TooltipProvider>
                 <Tooltip>
@@ -359,7 +359,7 @@ export function UserList() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      className="h-7 w-7 text-green-600 hover:text-green-700"
                       onClick={() => unlockAccount.mutate(user.id)}
                     >
                       <Unlock className="h-4 w-4" />
@@ -378,7 +378,7 @@ export function UserList() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       onClick={() => setEditingUser(user)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -397,7 +397,7 @@ export function UserList() {
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "h-8 w-8",
+                      "h-7 w-7",
                       (isSA && (isSelf || !currentUserIsSA)) && "opacity-50 cursor-not-allowed"
                     )}
                     onClick={() => {

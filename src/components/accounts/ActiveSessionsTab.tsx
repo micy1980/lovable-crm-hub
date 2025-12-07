@@ -129,13 +129,14 @@ export const ActiveSessionsTab = () => {
       case 'actions':
         return (
           <Button
-            size="sm"
-            variant="outline"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
             onClick={() => handleTerminateSingle(session.user_id)}
             disabled={isCurrentUser || terminateSession.isPending}
+            title="Kijelentkeztetés"
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            Kijelentkeztetés
+            <LogOut className="h-4 w-4" />
           </Button>
         );
       default:
