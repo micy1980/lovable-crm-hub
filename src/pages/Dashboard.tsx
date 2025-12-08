@@ -11,6 +11,7 @@ import { SalesChart } from '@/components/dashboard/SalesChart';
 import { RecentActivityWidget } from '@/components/dashboard/RecentActivityWidget';
 import { WeeklyCalendarWidget } from '@/components/dashboard/WeeklyCalendarWidget';
 import { DashboardCustomizer } from '@/components/dashboard/DashboardCustomizer';
+import { PendingApprovalsWidget } from '@/components/dashboard/PendingApprovalsWidget';
 import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 import { cn } from '@/lib/utils';
 import {
@@ -191,6 +192,8 @@ const Dashboard = () => {
     switch (widgetId) {
       case 'license_status':
         return <LicenseStatusWidget />;
+      case 'pending_approvals':
+        return <PendingApprovalsWidget />;
       case 'tasks':
         return <TasksWidget />;
       case 'weekly_calendar':
