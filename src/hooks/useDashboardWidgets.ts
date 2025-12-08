@@ -21,11 +21,12 @@ interface WidgetConfig {
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'license_status', title: 'Licenc státusz', defaultVisible: true, defaultPosition: 0, defaultWidth: 'half' },
-  { id: 'tasks', title: 'Feladatok', defaultVisible: true, defaultPosition: 1, defaultWidth: 'half' },
-  { id: 'weekly_calendar', title: 'Heti naptár', defaultVisible: true, defaultPosition: 2, defaultWidth: 'full' },
-  { id: 'projects_chart', title: 'Projektek', defaultVisible: true, defaultPosition: 3, defaultWidth: 'half' },
-  { id: 'sales_chart', title: 'Értékesítés', defaultVisible: true, defaultPosition: 4, defaultWidth: 'half' },
-  { id: 'recent_activity', title: 'Legutóbbi aktivitás', defaultVisible: true, defaultPosition: 5, defaultWidth: 'full' },
+  { id: 'pending_approvals', title: 'Függő jóváhagyások', defaultVisible: true, defaultPosition: 1, defaultWidth: 'half' },
+  { id: 'tasks', title: 'Feladatok', defaultVisible: true, defaultPosition: 2, defaultWidth: 'half' },
+  { id: 'weekly_calendar', title: 'Heti naptár', defaultVisible: true, defaultPosition: 3, defaultWidth: 'full' },
+  { id: 'projects_chart', title: 'Projektek', defaultVisible: true, defaultPosition: 4, defaultWidth: 'half' },
+  { id: 'sales_chart', title: 'Értékesítés', defaultVisible: true, defaultPosition: 5, defaultWidth: 'half' },
+  { id: 'recent_activity', title: 'Legutóbbi aktivitás', defaultVisible: true, defaultPosition: 6, defaultWidth: 'full' },
 ];
 
 export const useDashboardWidgets = () => {
