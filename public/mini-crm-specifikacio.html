@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PipeLiT - Teljes Rendszer Specifikáció</title>
+    <title>PipeLiT - Teljes Rendszer Specifikáció v3</title>
     <style>
         * {
             margin: 0;
@@ -160,6 +160,14 @@
             border-radius: 5px;
         }
         
+        .error-box {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
         .section {
             page-break-inside: avoid;
         }
@@ -200,6 +208,11 @@
             color: #dc3545;
         }
         
+        .feature-list li.partial::before {
+            content: "◐";
+            color: #ffc107;
+        }
+        
         .tech-stack {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -235,6 +248,22 @@
         .toc a:hover {
             text-decoration: underline;
         }
+        
+        .decision-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .removed-box {
+            background-color: #ffebee;
+            border-left: 5px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -242,35 +271,105 @@
     
     <div class="info-box">
         <strong>Dokumentum információk:</strong><br>
-        Verzió: 2.0<br>
+        <strong>Verzió: 3.0</strong><br>
         Utolsó frissítés: 2025-12-08<br>
-        Projekt típus: CRM rendszer feladatkezeléssel, projektmenedzsmenttel és automatizációval<br>
-        Technológia: React + TypeScript + Lovable Cloud (Supabase)
+        Projekt típus: Vállalati CRM rendszer feladatkezeléssel, projektmenedzsmenttel és automatizációval<br>
+        Technológia: React + TypeScript + Lovable Cloud (Supabase)<br>
+        Alkalmazás neve: <strong>PipeLiT</strong>
     </div>
 
     <div class="toc">
         <h3>📑 Tartalomjegyzék</h3>
         <ol>
-            <li><a href="#overview">Rendszer Áttekintés</a></li>
-            <li><a href="#database">Adatbázis Struktúra</a></li>
-            <li><a href="#auth">Jogosultsági Modell</a></li>
-            <li><a href="#security">Autentikáció és Biztonság</a></li>
-            <li><a href="#license">Licenckezelés</a></li>
-            <li><a href="#edge-functions">Edge Functions</a></li>
+            <li><a href="#intro">Bevezetés és Scope</a></li>
+            <li><a href="#tech-stack">Technológiai Stack és Környezet</a></li>
+            <li><a href="#architecture">Magas Szintű Architektúra</a></li>
+            <li><a href="#auth-security">Auth és Security Modell</a></li>
+            <li><a href="#database">Adatmodell / Adatbázis Séma</a></li>
             <li><a href="#modules">Funkcionális Modulok</a></li>
+            <li><a href="#flows">Folyamatok / Flow-k</a></li>
+            <li><a href="#edge-functions">Edge Functions</a></li>
             <li><a href="#frontend">Frontend Struktúra</a></li>
-            <li><a href="#i18n">Nemzetköziesítés</a></li>
-            <li><a href="#summary">Összefoglalás</a></li>
+            <li><a href="#non-functional">Nem Funkcionális Követelmények</a></li>
+            <li><a href="#architectural-decisions">Architektúrális Döntések</a></li>
+            <li><a href="#backlog">Roadmap / Backlog</a></li>
         </ol>
     </div>
 
-    <div class="section" id="overview">
-        <h2>1. RENDSZER ÁTTEKINTÉS</h2>
+    <!-- ==================== 1. BEVEZETÉS ==================== -->
+    <div class="section" id="intro">
+        <h2>1. BEVEZETÉS ÉS SCOPE</h2>
         
-        <h3>1.1. Technológiai Stack</h3>
+        <h3>1.1. A PipeLiT Célja</h3>
+        <p>A PipeLiT egy többvállalatú (multi-tenant) CRM és projektmenedzsment rendszer, amely integrált megoldást nyújt:</p>
+        <ul>
+            <li>Partnerek és ügyfelek kezelésére</li>
+            <li>Projektek és feladatok menedzselésére</li>
+            <li>Értékesítési pipeline nyomon követésére</li>
+            <li>Szerződések és dokumentumok tárolására, verziókövetésére</li>
+            <li>Időkövetésre és erőforrás-tervezésre</li>
+            <li>Automatizált munkafolyamatokra és értesítésekre</li>
+        </ul>
+
+        <h3>1.2. Fő Use-Case-ek</h3>
+        <ul>
+            <li><strong>Ügyfélkezelés:</strong> Partnerek, kapcsolattartók, címek nyilvántartása</li>
+            <li><strong>Projektmenedzsment:</strong> Projektek tervezése, feladatok kiosztása, határidők követése</li>
+            <li><strong>Sales Pipeline:</strong> Értékesítési lehetőségek nyomon követése, várható bevétel előrejelzése</li>
+            <li><strong>Dokumentumkezelés:</strong> Szerződések, ajánlatok, jegyzőkönyvek tárolása verziókövetéssel</li>
+            <li><strong>Időkövetés:</strong> Projektekre fordított idő mérése, riportolása</li>
+            <li><strong>Automatizáció:</strong> Trigger-alapú értesítések, státuszváltások, feladat-generálás</li>
+        </ul>
+
+        <h3>1.3. Célfelhasználók</h3>
+        <table>
+            <thead><tr><th>Szerepkör</th><th>Leírás</th><th>Fő funkciók</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Super Admin</strong></td><td>Rendszerszintű adminisztrátor</td><td>Vállalatok, licencek, felhasználók kezelése, rendszerbeállítások, audit</td></tr>
+                <tr><td><strong>Admin</strong></td><td>Vállalati adminisztrátor</td><td>Saját vállalat beállításai, felhasználó-kezelés a licenc limiteken belül, jóváhagyások</td></tr>
+                <tr><td><strong>Normal</strong></td><td>Általános felhasználó</td><td>Projektek, feladatok, értékesítések kezelése a jogosultságok szerint</td></tr>
+                <tr><td><strong>Viewer</strong></td><td>Csak olvasó</td><td>Adatok megtekintése, export (nem fogyaszt licenc seat-et)</td></tr>
+            </tbody>
+        </table>
+
+        <h3>1.4. Implementált Modulok Áttekintése</h3>
+        <ul class="feature-list">
+            <li class="done">Felhasználó- és jogosultságkezelés</li>
+            <li class="done">Vállalatkezelés + licencrendszer (feature flag, seat limit)</li>
+            <li class="done">Partnerkezelés (kapcsolattartók, háromszintű címek, hozzáférés korlátozás)</li>
+            <li class="done">Értékesítések (Sales pipeline)</li>
+            <li class="done">Projektmenedzsment (Kanban, Gantt nézetek)</li>
+            <li class="done">Feladatkezelés (ismétlődő feladatok virtuális generálással)</li>
+            <li class="done">Eseménykezelés (résztvevők - belső/külső, email meghívók)</li>
+            <li class="done">Szerződéskezelés (verziókövetés, lejárat figyelmeztetés, multi-file)</li>
+            <li class="done">Dokumentumkezelés (multi-file, PDF előnézet, verziókövetés)</li>
+            <li class="done">Időkövetés (Time Tracking)</li>
+            <li class="done">Jóváhagyási workflow</li>
+            <li class="done">Automatizáció (szabályok, triggerek, akciók)</li>
+            <li class="done">Dashboard (testreszabható widgetek, drag-drop)</li>
+            <li class="done">Naptár (nap/hét/hónap nézet, drag-drop átütemezés)</li>
+            <li class="done">Értesítések (real-time Supabase Realtime)</li>
+            <li class="done">Törzsadatok (Master Data) kategóriákba rendezve</li>
+            <li class="done">Naplózás (Audit Logs)</li>
+            <li class="done">Rendszerbeállítások (2FA, account lock, email, pénznem formázás)</li>
+            <li class="done">Riportok és export (PDF, Excel, CSV)</li>
+            <li class="done">Globális keresés (projektek, sales, partnerek, dokumentumok)</li>
+            <li class="done">Kedvencek és címkék</li>
+            <li class="done">Bulk műveletek (tömeges törlés, státuszváltás)</li>
+            <li class="done">CSV/Excel import (partnerek, projektek, sales)</li>
+            <li class="done">Dokumentum sablonok (változó helyettesítés)</li>
+            <li class="done">Megjegyzések rendszer (entitásokhoz kapcsolva)</li>
+        </ul>
+    </div>
+
+    <!-- ==================== 2. TECHNOLÓGIAI STACK ==================== -->
+    <div class="section" id="tech-stack">
+        <h2>2. TECHNOLÓGIAI STACK ÉS KÖRNYEZET</h2>
+        
+        <h3>2.1. Frontend</h3>
         <div class="tech-stack">
             <div class="tech-item">
-                <strong>Frontend</strong>
+                <strong>Framework</strong>
                 React 18 + TypeScript + Vite
             </div>
             <div class="tech-item">
@@ -278,1061 +377,1817 @@
                 Tailwind CSS + shadcn/ui
             </div>
             <div class="tech-item">
-                <strong>Backend</strong>
-                Lovable Cloud (Supabase)
+                <strong>State Management</strong>
+                TanStack Query (React Query) v5
             </div>
             <div class="tech-item">
+                <strong>Routing</strong>
+                React Router DOM v6
+            </div>
+            <div class="tech-item">
+                <strong>i18n</strong>
+                i18next + react-i18next (HU/EN)
+            </div>
+            <div class="tech-item">
+                <strong>Forms</strong>
+                React Hook Form + Zod validáció
+            </div>
+            <div class="tech-item">
+                <strong>Drag & Drop</strong>
+                @dnd-kit/core + @dnd-kit/sortable
+            </div>
+            <div class="tech-item">
+                <strong>Charts</strong>
+                Recharts
+            </div>
+            <div class="tech-item">
+                <strong>PDF Viewer</strong>
+                react-pdf + pdfjs-dist
+            </div>
+            <div class="tech-item">
+                <strong>Export</strong>
+                jspdf + jspdf-autotable + xlsx + jszip
+            </div>
+            <div class="tech-item">
+                <strong>Rich Text</strong>
+                TipTap editor
+            </div>
+            <div class="tech-item">
+                <strong>2FA</strong>
+                otpauth + qrcode
+            </div>
+        </div>
+
+        <h3>2.2. Backend (Lovable Cloud / Supabase)</h3>
+        <div class="tech-stack">
+            <div class="tech-item">
                 <strong>Adatbázis</strong>
-                PostgreSQL (Supabase)
+                PostgreSQL 15+
             </div>
             <div class="tech-item">
                 <strong>Autentikáció</strong>
                 Supabase Auth + TOTP 2FA
             </div>
             <div class="tech-item">
-                <strong>Edge Functions</strong>
-                Deno Runtime
+                <strong>API</strong>
+                PostgREST (auto-generated)
             </div>
             <div class="tech-item">
-                <strong>Nyelvi Támogatás</strong>
-                i18next (magyar, angol)
+                <strong>Real-time</strong>
+                Supabase Realtime (postgres_changes + broadcast)
+            </div>
+            <div class="tech-item">
+                <strong>Storage</strong>
+                Supabase Storage (documents, branding buckets)
+            </div>
+            <div class="tech-item">
+                <strong>Edge Functions</strong>
+                Deno Runtime (19 funkció)
             </div>
             <div class="tech-item">
                 <strong>Email</strong>
                 Resend HTTP API
             </div>
         </div>
-        
-        <h3>1.2. Fő Modulok</h3>
-        <ul class="feature-list">
-            <li class="done">Felhasználó- és jogosultságkezelés</li>
-            <li class="done">Vállalatkezelés + licencrendszer</li>
-            <li class="done">Partnerkezelés (kapcsolattartók, címek, korlátozások)</li>
-            <li class="done">Értékesítések (Sales pipeline)</li>
-            <li class="done">Projektmenedzsment (Kanban, Gantt)</li>
-            <li class="done">Feladatkezelés (ismétlődő feladatok)</li>
-            <li class="done">Eseménykezelés (naptár integráció)</li>
-            <li class="done">Szerződéskezelés (verziózás, lejárat figyelmeztetés)</li>
-            <li class="done">Dokumentumkezelés (multi-file, PDF előnézet)</li>
-            <li class="done">Időkövetés (Time Tracking)</li>
-            <li class="done">Jóváhagyási workflow</li>
-            <li class="done">Automatizáció (szabályok, triggerek)</li>
-            <li class="done">Dashboard (testreszabható widgetek)</li>
-            <li class="done">Naptár (nap/hét/hónap nézet, drag-drop)</li>
-            <li class="done">Értesítések (real-time)</li>
-            <li class="done">Törzsadatok (Master Data)</li>
-            <li class="done">Naplózás (Audit Logs)</li>
-            <li class="done">Rendszerbeállítások</li>
-            <li class="done">Riportok és export (PDF, Excel, CSV)</li>
-            <li class="done">Globális keresés</li>
-            <li class="done">Kedvencek és címkék</li>
-        </ul>
-    </div>
 
-    <div class="section" id="database">
-        <h2>2. ADATBÁZIS STRUKTÚRA</h2>
-        
-        <h3>2.1. Felhasználók és Autentikáció</h3>
-        
-        <h4>profiles (felhasználói profilok)</h4>
-        <table>
-            <thead>
-                <tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>→ auth.users</td></tr>
-                <tr><td>email</td><td>text</td><td>Email cím</td></tr>
-                <tr><td>full_name, given_name, family_name</td><td>text</td><td>Név adatok</td></tr>
-                <tr><td>user_code</td><td>text</td><td>Regisztrációs kód (8 karakter)</td></tr>
-                <tr><td>role</td><td>user_role ENUM</td><td>super_admin, admin, normal, viewer</td></tr>
-                <tr><td>is_active</td><td>boolean</td><td>Aktív státusz</td></tr>
-                <tr><td>language</td><td>text</td><td>en/hu</td></tr>
-                <tr><td>default_company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>must_change_password</td><td>boolean</td><td>Kötelező jelszóváltoztatás</td></tr>
-                <tr><td>password_changed_at</td><td>timestamptz</td><td>Jelszó utolsó módosítás (90 napos lejárat)</td></tr>
-                <tr><td>can_delete, can_view_logs</td><td>boolean</td><td>Globális jogosultságok</td></tr>
-                <tr><td>two_factor_enabled</td><td>boolean</td><td>2FA bekapcsolva</td></tr>
-                <tr><td>two_factor_secret</td><td>text</td><td>TOTP titkos kulcs</td></tr>
-                <tr><td>personal_task_color, personal_event_color</td><td>text</td><td>Személyes színek naptárban</td></tr>
-                <tr><td>invitation_sent_at, invitation_expires_at</td><td>timestamptz</td><td>Meghívó állapot</td></tr>
-                <tr><td>registered_at</td><td>timestamptz</td><td>Regisztráció befejezése</td></tr>
-                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Időbélyegzők</td></tr>
-            </tbody>
-        </table>
-
-        <h4>login_attempts (bejelentkezési kísérletek)</h4>
-        <p>Biztonságos rögzítés: <code>record_login_attempt()</code> RPC függvényen keresztül, rate limiting-gel (max 10 sikertelen/perc/IP).</p>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>email</td><td>text</td><td>Email cím</td></tr>
-                <tr><td>user_id</td><td>uuid (nullable)</td><td>→ auth.users</td></tr>
-                <tr><td>success</td><td>boolean</td><td>Sikeres-e</td></tr>
-                <tr><td>attempt_time</td><td>timestamptz</td><td>Kísérlet időpontja</td></tr>
-                <tr><td>ip_address, user_agent</td><td>text</td><td>Kliens információk</td></tr>
-            </tbody>
-        </table>
-
-        <h4>locked_accounts (zárolt fiókok)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>user_id</td><td>uuid (FK)</td><td>→ auth.users</td></tr>
-                <tr><td>locked_at</td><td>timestamptz</td><td>Zárolás időpontja</td></tr>
-                <tr><td>locked_until</td><td>timestamptz (nullable)</td><td>Zárolás vége (NULL = permanent)</td></tr>
-                <tr><td>locked_by_system</td><td>boolean</td><td>Automatikus zárolás-e</td></tr>
-                <tr><td>unlocked_at</td><td>timestamptz</td><td>Feloldás időpontja</td></tr>
-                <tr><td>unlocked_by</td><td>uuid (FK)</td><td>→ profiles (ki oldotta fel)</td></tr>
-                <tr><td>reason</td><td>text</td><td>Zárolás oka</td></tr>
-            </tbody>
-        </table>
-
-        <h3>2.2. Vállalatok és Jogosultságok</h3>
-
-        <h4>companies (vállalatok)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>name</td><td>text</td><td>Vállalat neve</td></tr>
-                <tr><td>tax_id</td><td>text</td><td>Adószám (érzékeny adat - companies_safe view)</td></tr>
-                <tr><td>address</td><td>text</td><td>Cím</td></tr>
-                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Időbélyegzők</td></tr>
-            </tbody>
-        </table>
-
-        <h4>company_licenses (licencek)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK, UNIQUE)</td><td>→ companies</td></tr>
-                <tr><td>license_key</td><td>text</td><td>Titkosított kulcs (12-bit nonce)</td></tr>
-                <tr><td>max_users</td><td>integer</td><td>Licencelt felhasználók száma</td></tr>
-                <tr><td>valid_from, valid_until</td><td>timestamptz</td><td>Érvényességi időszak</td></tr>
-                <tr><td>is_active</td><td>boolean</td><td>Aktív státusz</td></tr>
-                <tr><td>features</td><td>jsonb</td><td>["partners", "projects", "sales", "documents", "calendar", "my_items", "audit"]</td></tr>
-            </tbody>
-        </table>
-
-        <h4>user_companies + user_company_permissions</h4>
-        <p>Felhasználó-vállalat összerendelés és vállalatonkénti jogosultságok (ADMIN, NORMAL, VIEWER szerepkörök).</p>
-
-        <h3>2.3. Üzleti Entitások</h3>
-
-        <h4>partners (partnerek)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies (vállalat scope)</td></tr>
-                <tr><td>name</td><td>text</td><td>Partner neve</td></tr>
-                <tr><td>tax_id</td><td>text</td><td>Magyar adószám (xxxxxxxx-x-xx validációval)</td></tr>
-                <tr><td>eu_vat_number</td><td>text</td><td>EU ÁFA szám</td></tr>
-                <tr><td>default_currency</td><td>text</td><td>Alapértelmezett deviza</td></tr>
-                <tr><td>category</td><td>text</td><td>master_data ref</td></tr>
-                <tr><td>restrict_access</td><td>boolean</td><td>Korlátozott hozzáférés (partner_user_access)</td></tr>
-                <tr><td>parent_partner_id</td><td>uuid (FK)</td><td>Szülő partner (anya-leány funkció ELTÁVOLÍTVA, mező megmaradt)</td></tr>
-                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
-                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Időbélyegzők</td></tr>
-            </tbody>
-        </table>
-
-        <h4>partner_addresses (partner címek)</h4>
-        <p>Háromszintű címrendszer: headquarters (székhely), site (telephely), mailing (levelezési).</p>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners</td></tr>
-                <tr><td>address_type</td><td>text</td><td>headquarters, site, mailing</td></tr>
-                <tr><td>postal_code, city, county, country</td><td>text</td><td>Cím komponensek</td></tr>
-                <tr><td>street_name, street_type, house_number</td><td>text</td><td>Utca adatok</td></tr>
-                <tr><td>building, staircase, floor_door</td><td>text</td><td>Épület részletek</td></tr>
-            </tbody>
-        </table>
-
-        <h4>partner_contacts (kapcsolattartók)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>name</td><td>text</td><td>Kapcsolattartó neve</td></tr>
-                <tr><td>position</td><td>text</td><td>Pozíció</td></tr>
-                <tr><td>email, phone</td><td>text</td><td>Elérhetőségek</td></tr>
-                <tr><td>is_primary</td><td>boolean</td><td>Elsődleges kapcsolat</td></tr>
-                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
-            </tbody>
-        </table>
-
-        <h4>projects (projektek)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>code</td><td>text</td><td>Projekt azonosító</td></tr>
-                <tr><td>name</td><td>text</td><td>Projekt neve</td></tr>
-                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
-                <tr><td>status</td><td>text</td><td>master_data ref</td></tr>
-                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners</td></tr>
-                <tr><td>owner_user_id</td><td>uuid (FK)</td><td>→ profiles (tulajdonos)</td></tr>
-                <tr><td>responsible1_user_id, responsible2_user_id</td><td>uuid (FK)</td><td>→ profiles (felelősök)</td></tr>
-                <tr><td>task_color, event_color</td><td>text</td><td>Projekt színek naptárban</td></tr>
-            </tbody>
-        </table>
-
-        <h4>tasks (feladatok)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>project_id</td><td>uuid (FK, nullable)</td><td>→ projects</td></tr>
-                <tr><td>sales_id</td><td>uuid (FK, nullable)</td><td>→ sales</td></tr>
-                <tr><td>partner_id</td><td>uuid (FK, nullable)</td><td>→ partners</td></tr>
-                <tr><td>title</td><td>text</td><td>Feladat címe</td></tr>
-                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
-                <tr><td>status</td><td>text</td><td>master_data ref</td></tr>
-                <tr><td>responsible_user_id</td><td>uuid (FK)</td><td>→ profiles (felelős)</td></tr>
-                <tr><td>created_by</td><td>uuid (FK)</td><td>→ profiles (létrehozó)</td></tr>
-                <tr><td>deadline</td><td>timestamptz</td><td>Határidő (kötelező)</td></tr>
-                <tr><td>is_all_day</td><td>boolean</td><td>Egész napos feladat</td></tr>
-                <tr><td>recurrence_type</td><td>text</td><td>none, daily, weekly, monthly, yearly</td></tr>
-                <tr><td>recurrence_interval</td><td>integer</td><td>Ismétlődés gyakoriság</td></tr>
-                <tr><td>recurrence_end_date</td><td>date</td><td>Ismétlődés vége</td></tr>
-                <tr><td>parent_task_id, occurrence_date</td><td>uuid/date</td><td>Virtuális előfordulásokhoz</td></tr>
-            </tbody>
-        </table>
-
-        <h4>events (események)</h4>
-        <p>Külön tábla feladatoktól, résztvevőkkel (event_participants - belső és külső email meghívók).</p>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>title</td><td>text</td><td>Esemény címe</td></tr>
-                <tr><td>start_time, end_time</td><td>timestamptz</td><td>Időpontok</td></tr>
-                <tr><td>is_all_day</td><td>boolean</td><td>Egész napos esemény</td></tr>
-                <tr><td>location</td><td>text</td><td>Helyszín</td></tr>
-                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
-                <tr><td>project_id, sales_id, partner_id</td><td>uuid (FK, nullable)</td><td>Kapcsolódó entitások</td></tr>
-                <tr><td>responsible_user_id</td><td>uuid (FK)</td><td>Felelős</td></tr>
-                <tr><td>created_by</td><td>uuid (FK)</td><td>Létrehozó</td></tr>
-                <tr><td>recurrence_type, recurrence_interval, recurrence_end_date</td><td>mixed</td><td>Ismétlődés beállítások</td></tr>
-            </tbody>
-        </table>
-
-        <h4>contracts (szerződések)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>owner_company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>title, contract_number</td><td>text</td><td>Cím és azonosító</td></tr>
-                <tr><td>contract_type</td><td>text</td><td>master_data ref</td></tr>
-                <tr><td>partner_id, project_id, sales_id</td><td>uuid (FK, nullable)</td><td>Kapcsolódó entitások</td></tr>
-                <tr><td>status</td><td>text</td><td>draft, active, expired, terminated</td></tr>
-                <tr><td>signed_date, effective_date, expiry_date</td><td>date</td><td>Dátumok</td></tr>
-                <tr><td>total_value, currency</td><td>numeric/text</td><td>Összeg és deviza</td></tr>
-                <tr><td>payment_frequency, payment_day</td><td>text/integer</td><td>Fizetési ütemezés</td></tr>
-                <tr><td>auto_renewal, renewal_period_months</td><td>boolean/integer</td><td>Automatikus megújítás</td></tr>
-                <tr><td>termination_notice_days</td><td>integer</td><td>Felmondási idő</td></tr>
-                <tr><td>expiry_warning_days, renewal_warning_days, termination_warning_days</td><td>integer</td><td>Figyelmeztetési napok</td></tr>
-                <tr><td>restrict_access</td><td>boolean</td><td>Korlátozott hozzáférés</td></tr>
-            </tbody>
-        </table>
-
-        <h4>contract_versions (szerződés verziók)</h4>
-        <p>Teljes verziókövetés: minden módosítás új verzió, visszaállítási lehetőség (admin only).</p>
-
-        <h4>documents + document_files</h4>
-        <p>Dokumentum metaadat + multi-file támogatás (több fájl/dokumentum, verziókövetés, PDF előnézet).</p>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>owner_company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>title, description</td><td>text</td><td>Cím és leírás</td></tr>
-                <tr><td>visibility</td><td>text</td><td>COMPANY_ONLY, PROJECT_ONLY, SALES_ONLY, PUBLIC</td></tr>
-                <tr><td>partner_id, project_id, sales_id</td><td>uuid (FK, nullable)</td><td>Kapcsolódó entitások</td></tr>
-            </tbody>
-        </table>
-
-        <h4>time_entries (időbejegyzések)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>user_id</td><td>uuid (FK)</td><td>→ profiles</td></tr>
-                <tr><td>task_id</td><td>uuid (FK)</td><td>→ tasks (kötelező)</td></tr>
-                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
-                <tr><td>start_time, end_time</td><td>timestamptz</td><td>Időpontok</td></tr>
-                <tr><td>duration_minutes</td><td>integer</td><td>Időtartam percben (számított)</td></tr>
-                <tr><td>is_running</td><td>boolean</td><td>Aktív timer (egy aktív/felhasználó)</td></tr>
-            </tbody>
-        </table>
-
-        <h4>approval_workflows (jóváhagyási folyamatok)</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>entity_type</td><td>text</td><td>contract, document, project</td></tr>
-                <tr><td>entity_id</td><td>uuid</td><td>Entitás azonosító</td></tr>
-                <tr><td>status</td><td>text</td><td>pending, approved, rejected</td></tr>
-                <tr><td>requested_by</td><td>uuid (FK)</td><td>→ profiles (kérelmező)</td></tr>
-                <tr><td>approved_by</td><td>uuid (FK, nullable)</td><td>→ profiles (jóváhagyó)</td></tr>
-                <tr><td>approved_at</td><td>timestamptz</td><td>Jóváhagyás időpontja</td></tr>
-                <tr><td>rejection_reason</td><td>text</td><td>Elutasítás oka</td></tr>
-                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
-            </tbody>
-        </table>
-
-        <h4>automation_rules + automation_logs</h4>
-        <table>
-            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
-                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
-                <tr><td>name, description</td><td>text</td><td>Név és leírás</td></tr>
-                <tr><td>trigger_type</td><td>text</td><td>task_status_change, task_created, deadline_approaching, project_status_change, sales_status_change, contract_expiring</td></tr>
-                <tr><td>trigger_config</td><td>jsonb</td><td>Trigger beállítások</td></tr>
-                <tr><td>action_type</td><td>text</td><td>send_notification, change_status, assign_user, create_task, send_email</td></tr>
-                <tr><td>action_config</td><td>jsonb</td><td>Akció beállítások</td></tr>
-                <tr><td>is_active</td><td>boolean</td><td>Aktív-e</td></tr>
-            </tbody>
-        </table>
-
-        <h3>2.4. Rendszer Táblák</h3>
-
-        <h4>notifications (értesítések)</h4>
-        <p>Real-time értesítések Supabase Realtime-mal. Típusok: task, deadline, automation, approval.</p>
-
-        <h4>favorites (kedvencek)</h4>
-        <p>Felhasználónkénti kedvencek projektek, értékesítések, szerződések, partnerek, dokumentumokhoz.</p>
-
-        <h4>tags + entity_tags (címkék)</h4>
-        <p>Vállalat-szintű címkék tetszőleges entitásokhoz, színkódolással.</p>
-
-        <h4>comments (megjegyzések)</h4>
-        <p>Entitásokhoz fűzött megjegyzések (entity_type, entity_id). Szerkesztés és soft delete csak szerző által - soft_delete_comment() SECURITY DEFINER RPC-n keresztül.</p>
-
-        <h4>dashboard_widgets (dashboard testreszabás)</h4>
-        <p>Felhasználónkénti widget láthatóság, pozíció és szélesség beállítások.</p>
-
-        <h4>master_data (törzsadatok)</h4>
-        <p>Dinamikus típusok menü kategóriákba rendezve (Settings > Törzsadatok):</p>
-        <ul>
-            <li><strong>Partnerek:</strong> partner_category</li>
-            <li><strong>Projektek:</strong> project_status</li>
-            <li><strong>Értékesítés:</strong> sale_status</li>
-            <li><strong>Szerződések:</strong> contract_type, payment_frequency</li>
-            <li><strong>Feladatok:</strong> task_status</li>
-            <li><strong>Egyéb:</strong> currency, cost_category, country, county, street_type</li>
-        </ul>
-
-        <h4>postal_codes (~4000 rekord)</h4>
-        <p>Magyar irányítószámok, települések, megyék a cím kitöltéshez. Budapest esetén megye = "-" automatikusan.</p>
-
-        <h4>system_settings (rendszerbeállítások)</h4>
+        <h3>2.3. Főbb Konfigurációk</h3>
         <div class="info-box">
-            <strong>Kulcs beállítások:</strong><br>
-            • <code>account_lock_attempts = 5</code><br>
-            • <code>account_lock_auto_unlock_minutes = 1</code><br>
-            • <code>account_lock_failed_attempts_window_minutes = 1</code><br>
-            • <code>two_factor_session_duration_minutes = 720</code><br>
-            • <code>password_expiry_days = 90</code><br>
-            • <code>inactivity_logout_minutes = 5</code><br>
-            • <code>use_browser_locale = true</code><br>
-            • <code>thousand_separator, decimal_separator</code><br>
-            • Email beállítások: resend_api_key, email_from_address, email_from_name, notification togglek
+            <strong>TanStack Query optimalizáció:</strong><br>
+            <code>staleTime: 5 perc</code> - Adatok frissnek tekintése<br>
+            <code>gcTime: 30 perc</code> - Cache megtartása<br>
+            <code>refetchOnWindowFocus: false</code> - Ablak fókuszra nem frissít
         </div>
-
-        <h4>logs (audit napló)</h4>
-        <p>Minden entitás művelet naplózása: create, update, delete + előző/új értékek JSON-ban.</p>
+        
+        <div class="info-box">
+            <strong>Lazy Loading:</strong><br>
+            Minden oldal <code>React.lazy()</code> + <code>Suspense</code> fallback-kel töltődik a gyorsabb initial load érdekében.
+        </div>
     </div>
 
-    <div class="section" id="auth">
-        <h2>3. JOGOSULTSÁGI MODELL</h2>
+    <!-- ==================== 3. ARCHITEKTÚRA ==================== -->
+    <div class="section" id="architecture">
+        <h2>3. MAGAS SZINTŰ ARCHITEKTÚRA</h2>
 
-        <h3>3.1. Globális Szerepkörök (profiles.role)</h3>
+        <h3>3.1. Logikai Architektúra</h3>
+        <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React)                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │   Pages     │  │ Components  │  │       Hooks             │  │
+│  │  (29 oldal) │  │  (shared/ui)│  │ (47 custom hook)        │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
+│                            │                                     │
+│                   ┌────────▼────────┐                           │
+│                   │ Supabase Client │                           │
+│                   └────────┬────────┘                           │
+└────────────────────────────┼────────────────────────────────────┘
+                             │ HTTPS
+┌────────────────────────────▼────────────────────────────────────┐
+│                    LOVABLE CLOUD (Supabase)                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │  PostgREST  │  │  Realtime   │  │   Edge Functions        │  │
+│  │  (Auto API) │  │  (WS)       │  │   (19 Deno function)    │  │
+│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
+│         │                │                     │                 │
+│  ┌──────▼────────────────▼─────────────────────▼─────────────┐  │
+│  │                    PostgreSQL                              │  │
+│  │  ┌────────────────────────────────────────────────────┐   │  │
+│  │  │              RLS Policies (50+)                     │   │  │
+│  │  │              DB Functions (40+)                     │   │  │
+│  │  │              Triggers (15+)                         │   │  │
+│  │  └────────────────────────────────────────────────────┘   │  │
+│  │                                                            │  │
+│  │  Tables: profiles, companies, company_licenses,            │  │
+│  │          user_companies, user_company_permissions,         │  │
+│  │          partners, partner_addresses, partner_contacts,    │  │
+│  │          projects, tasks, events, event_participants,      │  │
+│  │          sales, contracts, contract_versions,              │  │
+│  │          documents, document_files, time_entries,          │  │
+│  │          approval_workflows, automation_rules/logs,        │  │
+│  │          notifications, favorites, tags, entity_tags,      │  │
+│  │          comments, dashboard_widgets, master_data,         │  │
+│  │          postal_codes, system_settings, logs,              │  │
+│  │          login_attempts, locked_accounts,                  │  │
+│  │          session_2fa_verifications, two_factor_attempts,   │  │
+│  │          two_factor_locks, user_recovery_codes             │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    Storage Buckets                       │    │
+│  │  • documents (company/{id}/...)                          │    │
+│  │  • branding (logos)                                      │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │   Resend API    │
+                    │   (Email)       │
+                    └─────────────────┘
+        </pre>
+
+        <h3>3.2. Multi-Tenancy Modell</h3>
+        <p>A rendszer <strong>soft multi-tenancy</strong> modellt használ:</p>
+        <ul>
+            <li>Minden üzleti adat <code>company_id</code> oszloppal van szűrve</li>
+            <li>RLS policy-k biztosítják a vállalatok közötti adatszeparációt</li>
+            <li>Felhasználók több vállalathoz is tartozhatnak (<code>user_companies</code>)</li>
+            <li>Vállalatonként eltérő jogosultságok (<code>user_company_permissions</code>)</li>
+            <li>Super admin minden vállalatot lát, a többi felhasználó csak a sajátjait</li>
+        </ul>
+
+        <h3>3.3. Fő Komponensek</h3>
+        <table>
+            <thead><tr><th>Komponens</th><th>Felelősség</th></tr></thead>
+            <tbody>
+                <tr><td>AuthContext</td><td>Session kezelés, real-time session termination broadcast figyelése</td></tr>
+                <tr><td>CompanyContext</td><td>Aktív vállalat kezelése, váltás</td></tr>
+                <tr><td>MainLayout</td><td>AppSidebar + TopBar wrapper</td></tr>
+                <tr><td>AppSidebar</td><td>Navigáció (role/feature alapú szűrés)</td></tr>
+                <tr><td>TopBar</td><td>Vállalat választó, keresés, értesítések, user menu</td></tr>
+                <tr><td>ResizableTable</td><td>Univerzális táblázat komponens oszlop-kezeléssel</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== 4. AUTH ÉS SECURITY ==================== -->
+    <div class="section" id="auth-security">
+        <h2>4. AUTH ÉS SECURITY MODELL</h2>
+
+        <h3>4.1. Globális Szerepkörök (profiles.role)</h3>
+        <p>A <code>profiles.role</code> mező <code>user_role</code> ENUM típusú: <code>super_admin</code>, <code>admin</code>, <code>normal</code>, <code>viewer</code></p>
 
         <div class="status-box implemented">
             <span class="status-icon green">✓</span>
             <strong>super_admin:</strong><br>
             • Teljes hozzáférés minden vállalathoz és funkcióhoz<br>
-            • Felhasználók létrehozása/törlése<br>
+            • Felhasználók létrehozása, szerkesztése, törlése<br>
             • Rendszerbeállítások módosítása<br>
             • Vállalatok és licencek kezelése<br>
             • Audit log megtekintése<br>
             • Zárolt fiókok feloldása<br>
-            • Active sessions kezelése (kick out)<br>
-            • Resend API kulcs megtekintése<br>
-            • Licenc generátor használata
+            • Active sessions kezelése (session termination)<br>
+            • Resend API kulcs megtekintése (nem maszkolt)<br>
+            • Licenc generátor használata (/license-generator)
         </div>
 
         <div class="status-box implemented">
             <span class="status-icon green">✓</span>
             <strong>admin:</strong><br>
-            • Hozzáférés a saját vállalataihoz (user_companies)<br>
+            • Hozzáférés a saját vállalataihoz (user_companies alapján)<br>
             • Vállalatspecifikus jogosultságok (user_company_permissions)<br>
-            • Licenc limitek betartása<br>
-            • Jóváhagyási kérelmek kezelése
+            • Licenc limitek betartása kötelező<br>
+            • Jóváhagyási kérelmek elfogadása/elutasítása<br>
+            • Felhasználók hozzárendelése feladatokhoz, projektekhez
         </div>
 
         <div class="status-box implemented">
             <span class="status-icon green">✓</span>
             <strong>normal:</strong><br>
-            • Alapértelmezett felhasználó<br>
+            • Alapértelmezett felhasználói szerepkör<br>
             • Vállalatspecifikus jogosultságok szerint<br>
-            • Csak saját profil látható (strict privacy model)<br>
-            • Csak Super Adminok és Company Adminok rendelhetnek feladatokat/projekteket más felhasználókhoz
+            • <strong>Strict privacy model:</strong> csak saját profil látható<br>
+            • Feladat/projekt hozzárendelés: csak Super Admin és Company Admin teheti meg
         </div>
 
         <div class="status-box implemented">
             <span class="status-icon green">✓</span>
             <strong>viewer:</strong><br>
-            • Csak olvasási jog<br>
-            • Nem számít bele a licenc seat limitbe
+            • Csak olvasási jogosultság<br>
+            • Nem számít bele a licenc seat limitbe<br>
+            • Export funkciók elérhetők
         </div>
 
-        <h3>3.2. Vállalat Szerepkörök (user_company_permissions.role)</h3>
-
+        <h3>4.2. Vállalat Szerepkörök (user_company_permissions.role)</h3>
+        <p><code>company_role</code> ENUM: <code>ADMIN</code>, <code>NORMAL</code>, <code>VIEWER</code></p>
         <table>
-            <thead><tr><th>Szerepkör</th><th>Jogosultságok</th></tr></thead>
+            <thead><tr><th>Szerepkör</th><th>Jogosultságok</th><th>Seat fogyasztás</th></tr></thead>
             <tbody>
-                <tr><td><strong>ADMIN</strong></td><td>Vállalaton belül minden adat kezelése, felhasználók hozzárendelése, törzsadat szerkesztés (can_edit_master_data), jóváhagyások</td></tr>
-                <tr><td><strong>NORMAL</strong></td><td>Saját adatok + hozzárendelt entitások kezelése, can_delete flag szerint törlési jog</td></tr>
-                <tr><td><strong>VIEWER</strong></td><td>Csak olvasás, nem használ seat-et a licencből</td></tr>
+                <tr><td><strong>ADMIN</strong></td><td>Vállalaton belül minden adat kezelése, felhasználók hozzárendelése, törzsadat szerkesztés (can_edit_master_data), jóváhagyások</td><td>Igen</td></tr>
+                <tr><td><strong>NORMAL</strong></td><td>Saját adatok + hozzárendelt entitások kezelése, can_delete flag szerint törlési jog</td><td>Igen</td></tr>
+                <tr><td><strong>VIEWER</strong></td><td>Csak olvasás, nincs módosítási jog</td><td>Nem</td></tr>
             </tbody>
         </table>
 
-        <h3>3.3. Speciális Jogosultságok</h3>
+        <h3>4.3. Speciális Jogosultság Flagek</h3>
         <ul>
-            <li><strong>can_delete:</strong> Soft delete művelet engedélyezése</li>
-            <li><strong>can_view_logs:</strong> Audit napló megtekintése</li>
-            <li><strong>can_edit_master_data:</strong> Törzsadatok szerkesztése</li>
+            <li><code>can_delete</code> - Soft delete művelet engedélyezése</li>
+            <li><code>can_view_logs</code> - Audit napló megtekintése</li>
+            <li><code>can_edit_master_data</code> - Törzsadatok szerkesztése</li>
         </ul>
 
-        <h3>3.4. Row Level Security (RLS)</h3>
+        <h3>4.4. Two-Factor Authentication (2FA)</h3>
 
+        <h4>4.4.1. TOTP Implementáció</h4>
+        <ul>
+            <li>TOTP algoritmus (Time-based One-Time Password)</li>
+            <li>Secret generálás: <code>generate_2fa_secret()</code> DB function (32 karakter Base32)</li>
+            <li>QR kód generálás kliens oldalon (qrcode library)</li>
+            <li>Validálás: <code>verify-2fa-token</code> edge function (otpauth library)</li>
+            <li>Recovery codes: 10 db egyszer használatos kód (<code>user_recovery_codes</code> tábla)</li>
+        </ul>
+
+        <h4>4.4.2. Session 2FA Verifikáció</h4>
+        <table>
+            <thead><tr><th>Tábla/Funkció</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td><code>session_2fa_verifications</code></td><td>Sikeres 2FA után session_id + user_id + expires_at tárolása</td></tr>
+                <tr><td><code>is_2fa_verified(uid)</code></td><td>RLS-ben használt segédfüggvény - ellenőrzi van-e érvényes 2FA session</td></tr>
+                <tr><td><code>two_factor_session_duration_minutes</code></td><td>System setting, default: 720 perc (12 óra)</td></tr>
+            </tbody>
+        </table>
+
+        <h4>4.4.3. 2FA Brute Force Védelem</h4>
+        <table>
+            <thead><tr><th>Tábla</th><th>Funkció</th></tr></thead>
+            <tbody>
+                <tr><td><code>two_factor_attempts</code></td><td>Sikertelen 2FA próbálkozások naplózása</td></tr>
+                <tr><td><code>two_factor_locks</code></td><td>Zárolás túl sok sikertelen próbálkozás után</td></tr>
+                <tr><td><code>is_two_factor_locked(uid)</code></td><td>Zárolás ellenőrzése</td></tr>
+                <tr><td><code>apply_two_factor_lock_if_needed()</code></td><td>Automatikus zárolás alkalmazása</td></tr>
+            </tbody>
+        </table>
         <div class="info-box">
-            <strong>Minden védett tábla RLS pattern:</strong>
-            <pre>-- SELECT policy
+            <strong>2FA beállítások (system_settings):</strong><br>
+            • <code>two_factor_max_attempts = 10</code><br>
+            • <code>two_factor_window_minutes = 10</code><br>
+            • <code>two_factor_lock_minutes = 10</code>
+        </div>
+
+        <h3>4.5. Account Lockout</h3>
+
+        <h4>4.5.1. Működés</h4>
+        <ol>
+            <li>Bejelentkezési kísérlet rögzítése: <code>record_login_attempt()</code> RPC (rate limit: max 10/perc/IP)</li>
+            <li>Sikertelen próbálkozások számlálása: <code>count_recent_failed_attempts()</code></li>
+            <li>Küszöb túllépésekor: <code>lock_account_for_email()</code> automatikus zárolás</li>
+            <li>Zárolás értesítés: <code>notify-account-lock</code> edge function</li>
+            <li>Automatikus feloldás: <code>locked_until</code> idő letelte után</li>
+            <li>Manuális feloldás: Super Admin - <code>unlock_account_by_user_id()</code></li>
+            <li>Sikeres login után: korábbi sikertelen próbálkozások törlése</li>
+        </ol>
+
+        <h4>4.5.2. Beállítások</h4>
+        <div class="info-box">
+            <strong>Account lock beállítások (system_settings):</strong><br>
+            • <code>account_lock_attempts = 5</code> - Sikertelen próbálkozások száma<br>
+            • <code>account_lock_auto_unlock_minutes = 1</code> - Automatikus feloldás ideje<br>
+            • <code>account_lock_failed_attempts_window_minutes = 1</code> - Időablak a számláláshoz
+        </div>
+
+        <h4>4.5.3. Admin Kezelőfelület</h4>
+        <p>Account Management oldal (/account-management) - Super Admin only:</p>
+        <ul>
+            <li><strong>Active Sessions tab:</strong> Aktív sessionök listája, session termination (kick out)</li>
+            <li><strong>Locked Accounts tab:</strong> Zárolt fiókok, manuális feloldás</li>
+            <li><strong>Login Attempts tab:</strong> Bejelentkezési előzmények, szűrés</li>
+        </ul>
+
+        <h3>4.6. Session Kezelés</h3>
+
+        <h4>4.6.1. Single Session Enforcement</h4>
+        <p>Bejelentkezéskor minden korábbi session lezárásra kerül:</p>
+        <pre>await supabase.auth.signOut({ scope: 'others' });</pre>
+
+        <h4>4.6.2. Real-time Session Termination</h4>
+        <p>Super Admin által kezdeményezett session termination broadcast-tal működik:</p>
+        <ol>
+            <li>Admin meghívja a <code>terminate-user-session</code> edge function-t</li>
+            <li>Edge function broadcast küld: <code>session-terminate-${userId}</code> channel</li>
+            <li>AuthContext figyeli a channelt és azonnal kijelentkezteti a usert</li>
+        </ol>
+
+        <h4>4.6.3. Inactivity Logout</h4>
+        <ul>
+            <li>Konfigurálható timeout: <code>inactivity_logout_minutes</code> (default: 5 perc)</li>
+            <li><code>useInactivityLogout</code> hook figyeli a user aktivitást</li>
+            <li>Timeout esetén automatikus kijelentkeztetés</li>
+        </ul>
+
+        <h3>4.7. Password Policy</h3>
+        <ul>
+            <li><strong>Komplexitás:</strong> Min 8 karakter, 1 nagybetű, 1 kisbetű, 1 szám, 1 speciális karakter</li>
+            <li><strong>Lejárat:</strong> 90 nap (konfigurálható: <code>password_expiry_days</code>)</li>
+            <li><strong>Lejárt jelszó:</strong> /change-password oldalra irányítás</li>
+            <li><strong>Kötelező változtatás:</strong> <code>must_change_password</code> flag</li>
+            <li><strong>Pwned ellenőrzés:</strong> Supabase Auth beépített funkciója</li>
+        </ul>
+
+        <h3>4.8. Row Level Security (RLS)</h3>
+
+        <h4>4.8.1. Alapvető RLS Pattern</h4>
+        <pre>
+-- SELECT policy példa
+CREATE POLICY "Users can view company data"
+ON public.some_table
+FOR SELECT
 USING (
   is_super_admin(auth.uid()) 
-  OR 
-  (
-    company_id IN (
+  OR (
+    is_2fa_verified(auth.uid())
+    AND company_id IN (
       SELECT company_id 
       FROM user_companies 
       WHERE user_id = auth.uid()
     )
-    AND is_2fa_verified(auth.uid())
   )
-)</pre>
+);
+        </pre>
+
+        <h4>4.8.2. Fontos RLS Segédfüggvények</h4>
+        <table>
+            <thead><tr><th>Függvény</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td><code>is_super_admin(uid)</code></td><td>Super admin ellenőrzés profiles.role alapján</td></tr>
+                <tr><td><code>is_admin(uid)</code></td><td>Admin szerepkör ellenőrzés</td></tr>
+                <tr><td><code>is_admin_or_above(uid)</code></td><td>Admin vagy super_admin</td></tr>
+                <tr><td><code>is_2fa_verified(uid)</code></td><td>2FA session ellenőrzés</td></tr>
+                <tr><td><code>is_company_admin_new(uid, company_id)</code></td><td>Adott vállalatnál admin-e</td></tr>
+                <tr><td><code>can_user_delete_in_company(uid, company_id)</code></td><td>Törlési jog ellenőrzés</td></tr>
+                <tr><td><code>can_view_company_sensitive_data(uid, company_id)</code></td><td>Érzékeny adatok (adószám) megtekintése</td></tr>
+                <tr><td><code>is_account_locked(uid)</code></td><td>Fiók zárolás ellenőrzés</td></tr>
+                <tr><td><code>is_company_license_effective(company_id)</code></td><td>Érvényes licenc ellenőrzés</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== 5. ADATMODELL ==================== -->
+    <div class="section" id="database">
+        <h2>5. ADATMODELL / ADATBÁZIS SÉMA</h2>
+
+        <h3>5.1. Felhasználók és Autentikáció</h3>
+
+        <h4>profiles</h4>
+        <p>Felhasználói profilok - <code>auth.users</code> kiterjesztése.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>→ auth.users.id</td></tr>
+                <tr><td>email</td><td>text NOT NULL</td><td>Email cím (unique)</td></tr>
+                <tr><td>full_name</td><td>text</td><td>Teljes név</td></tr>
+                <tr><td>given_name</td><td>text</td><td>Keresztnév</td></tr>
+                <tr><td>family_name</td><td>text</td><td>Vezetéknév</td></tr>
+                <tr><td>user_code</td><td>text</td><td>Regisztrációs kód (8 karakter)</td></tr>
+                <tr><td>role</td><td>user_role ENUM</td><td>super_admin, admin, normal, viewer</td></tr>
+                <tr><td>is_active</td><td>boolean</td><td>Aktív státusz (default: false)</td></tr>
+                <tr><td>language</td><td>text</td><td>'en' vagy 'hu'</td></tr>
+                <tr><td>default_company_id</td><td>uuid (FK)</td><td>→ companies.id</td></tr>
+                <tr><td>must_change_password</td><td>boolean</td><td>Kötelező jelszóváltoztatás flag</td></tr>
+                <tr><td>password_changed_at</td><td>timestamptz</td><td>Jelszó utolsó módosítás (90 napos lejárat számításhoz)</td></tr>
+                <tr><td>can_delete</td><td>boolean</td><td>Globális törlési jog</td></tr>
+                <tr><td>can_view_logs</td><td>boolean</td><td>Audit log megtekintési jog</td></tr>
+                <tr><td>two_factor_enabled</td><td>boolean</td><td>2FA bekapcsolva</td></tr>
+                <tr><td>two_factor_secret</td><td>text</td><td>TOTP titkos kulcs (Base32)</td></tr>
+                <tr><td>personal_task_color</td><td>text</td><td>Személyes feladat szín naptárban</td></tr>
+                <tr><td>personal_event_color</td><td>text</td><td>Személyes esemény szín naptárban</td></tr>
+                <tr><td>invitation_token</td><td>text</td><td>Meghívó token</td></tr>
+                <tr><td>invitation_sent_at</td><td>timestamptz</td><td>Meghívó küldés időpontja</td></tr>
+                <tr><td>invitation_expires_at</td><td>timestamptz</td><td>Meghívó lejárat (24 óra)</td></tr>
+                <tr><td>registered_at</td><td>timestamptz</td><td>Regisztráció befejezése</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h4>login_attempts</h4>
+        <p>Bejelentkezési kísérletek naplója - <strong>biztonságos rögzítés RPC-n keresztül</strong>.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>email</td><td>text NOT NULL</td><td>Email cím</td></tr>
+                <tr><td>user_id</td><td>uuid (nullable)</td><td>→ auth.users (ha létezik)</td></tr>
+                <tr><td>success</td><td>boolean NOT NULL</td><td>Sikeres-e a kísérlet</td></tr>
+                <tr><td>attempt_time</td><td>timestamptz</td><td>Kísérlet időpontja (default: now())</td></tr>
+                <tr><td>ip_address</td><td>text</td><td>Kliens IP címe</td></tr>
+                <tr><td>user_agent</td><td>text</td><td>Böngésző azonosító</td></tr>
+            </tbody>
+        </table>
+        <div class="warning-box">
+            <strong>Biztonsági megjegyzés:</strong> Nincs közvetlen INSERT RLS policy! Csak a <code>record_login_attempt()</code> SECURITY DEFINER RPC használható, ami rate limiting-et is végez (max 10 sikertelen/perc/IP).
         </div>
 
-        <p><strong>Fontos RLS segédfüggvények:</strong></p>
-        <ul>
-            <li><code>is_super_admin(uid)</code> - Super admin ellenőrzés</li>
-            <li><code>is_admin_or_above(uid)</code> - Admin vagy magasabb</li>
-            <li><code>is_2fa_verified(uid)</code> - 2FA session ellenőrzés</li>
-            <li><code>can_view_company_sensitive_data()</code> - Érzékeny adatok (adószám) védelme</li>
-        </ul>
-    </div>
+        <h4>locked_accounts</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>user_id</td><td>uuid NOT NULL UNIQUE</td><td>→ auth.users (egy rekord/user)</td></tr>
+                <tr><td>locked_at</td><td>timestamptz</td><td>Zárolás időpontja</td></tr>
+                <tr><td>locked_until</td><td>timestamptz (nullable)</td><td>Zárolás vége (NULL = permanens)</td></tr>
+                <tr><td>locked_by_system</td><td>boolean</td><td>Automatikus zárolás-e</td></tr>
+                <tr><td>reason</td><td>text</td><td>Zárolás oka</td></tr>
+                <tr><td>unlocked_at</td><td>timestamptz</td><td>Feloldás időpontja</td></tr>
+                <tr><td>unlocked_by</td><td>uuid (FK)</td><td>→ profiles (ki oldotta fel)</td></tr>
+            </tbody>
+        </table>
 
-    <div class="section" id="security">
-        <h2>4. AUTENTIKÁCIÓ ÉS BIZTONSÁG</h2>
+        <h4>session_2fa_verifications</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>user_id</td><td>uuid NOT NULL</td><td>→ auth.users</td></tr>
+                <tr><td>session_id</td><td>text NOT NULL</td><td>JWT session azonosító</td></tr>
+                <tr><td>verified_at</td><td>timestamptz</td><td>Verifikáció időpontja</td></tr>
+                <tr><td>expires_at</td><td>timestamptz NOT NULL</td><td>Lejárat időpontja</td></tr>
+            </tbody>
+        </table>
 
-        <h3>4.1. Login Flow</h3>
-        <ol>
-            <li><strong>Email + Password</strong> → Supabase Auth</li>
-            <li><strong>Single Session Enforcement:</strong> Bejelentkezéskor minden korábbi session lezárásra kerül (<code>signOut({ scope: 'others' })</code>)</li>
-            <li><strong>Ha 2FA enabled:</strong>
-                <ul>
-                    <li>RLS blokkolja az adatokat (<code>is_2fa_verified = false</code>)</li>
-                    <li>2FA dialog megjelenik</li>
-                    <li>User beírja a TOTP vagy recovery kódot</li>
-                    <li><code>verify-2fa-token</code> edge function validál</li>
-                    <li>Sikeres validáció → <code>session_2fa_verifications</code> írás</li>
-                </ul>
-            </li>
-            <li><strong>Jelszó lejárat ellenőrzés:</strong> 90 napos lejárat, kötelező jelszóváltoztatás ha lejárt</li>
-            <li><strong>Inaktivitás logout:</strong> Konfigurálható timeout (default 5 perc)</li>
-        </ol>
+        <h4>user_recovery_codes</h4>
+        <p>2FA recovery kódok tárolása (10 db/user, egyszer használatos).</p>
 
-        <h3>4.2. Account Lockout</h3>
-        <div class="status-box implemented">
-            <span class="status-icon green">✓</span>
-            <strong>Mechanizmus:</strong><br>
-            • <code>account_lock_attempts</code> (default 5) sikertelen login → lock<br>
-            • <code>account_lock_failed_attempts_window_minutes</code> (1 perc) időablakban<br>
-            • Lock időtartam: <code>account_lock_auto_unlock_minutes</code> (1 perc)<br>
-            • Automatikus feloldás lejárat után<br>
-            • Manuális feloldás Super Admin által<br>
-            • Sikeres login törli a sikertelen próbálkozások számát<br>
-            • Email értesítés zároláskor (Resend API)
+        <h3>5.2. Vállalatok és Licencek</h3>
+
+        <h4>companies</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>name</td><td>text NOT NULL</td><td>Vállalat neve</td></tr>
+                <tr><td>tax_id</td><td>text</td><td>Adószám (érzékeny - companies_safe view)</td></tr>
+                <tr><td>address</td><td>text</td><td>Cím</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+        <div class="info-box">
+            <strong>companies_safe view:</strong> Tax_id mező elrejtése nem-admin felhasználók elől. <code>can_view_company_sensitive_data()</code> függvény ellenőrzi a jogosultságot.
         </div>
 
-        <h3>4.3. Regisztráció</h3>
-        <ol>
-            <li>Super Admin létrehozza a felhasználót (email, vezetéknév, keresztnév)</li>
-            <li><strong>Két gomb:</strong> "Mentés" (csak létrehoz) VAGY "Mentés és kód küldése" (létrehoz + meghívó)</li>
-            <li>"Regisztrációs kód küldése" → 8 karakteres kód generálás + email küldés (24 óra érvényesség)</li>
-            <li><strong>Újraküldéskor:</strong> ÚJ kód generálódik (nem ugyanaz)</li>
-            <li>Felhasználó a linkről regisztrál: email (readonly) + név (readonly, SA által beállított) + kód + jelszó (2x)</li>
-            <li>Jelszó komplexitás: min 8 karakter, nagy/kisbetű, szám, speciális karakter</li>
-            <li>Pwned password ellenőrzés (Supabase Auth)</li>
-            <li>Kód validáció backend-en (pontosan egyezni kell)</li>
-            <li>Sikeres regisztráció → <code>registered_at</code> timestamp</li>
-            <li><strong>Regisztrációs státusz jelzők:</strong> óra ikon (nem küldött), boríték ikon (küldött), pipa ikon (regisztrált)</li>
-        </ol>
+        <h4>company_licenses</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK, UNIQUE)</td><td>→ companies (1:1 kapcsolat)</td></tr>
+                <tr><td>license_key</td><td>text</td><td>Titkosított kulcs (12-bit nonce-szal)</td></tr>
+                <tr><td>max_users</td><td>integer NOT NULL</td><td>Licencelt seat-ek száma</td></tr>
+                <tr><td>valid_from</td><td>timestamptz NOT NULL</td><td>Érvényesség kezdete</td></tr>
+                <tr><td>valid_until</td><td>timestamptz NOT NULL</td><td>Érvényesség vége</td></tr>
+                <tr><td>is_active</td><td>boolean</td><td>Aktív státusz</td></tr>
+                <tr><td>features</td><td>jsonb</td><td>Engedélyezett modulok tömbje</td></tr>
+            </tbody>
+        </table>
+        <div class="info-box">
+            <strong>Features értékek:</strong> ["partners", "projects", "sales", "documents", "calendar", "my_items", "audit"]<br>
+            <strong>Seat számítás:</strong> <code>get_company_used_seats()</code> - ADMIN és NORMAL role-ú aktív userek száma (viewer nem számít)
+        </div>
 
-        <h3>4.4. Session Kezelés</h3>
-        <ul>
-            <li><strong>Active Sessions oldal:</strong> Super Admin látja az aktív sessionöket (inaktivitás timeout-on belül)</li>
-            <li><strong>Session termination:</strong> Realtime broadcast azonnali kijelentkeztetés</li>
-            <li><strong>User törléskor:</strong> Minden session automatikus lezárás + kapcsolódó adatok törlése</li>
-        </ul>
+        <h4>user_companies</h4>
+        <p>Felhasználó-vállalat összerendelés (N:M kapcsolat).</p>
 
-        <h3>4.5. 2FA (Two-Factor Authentication)</h3>
-        <ul>
-            <li>TOTP standard (otpauth library)</li>
-            <li>QR kód generálás (qrcode library)</li>
-            <li>Recovery codes (10 db, SHA-256 hash tárolás)</li>
-            <li>Session duration konfigurálható (default 720 perc = 12 óra)</li>
-            <li>Rate limiting: max 10 próba / 10 perc, utána 10 perc lock</li>
-        </ul>
+        <h4>user_company_permissions</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>user_id</td><td>uuid (FK)</td><td>→ profiles</td></tr>
+                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
+                <tr><td>role</td><td>company_role ENUM</td><td>ADMIN, NORMAL, VIEWER</td></tr>
+                <tr><td>can_delete</td><td>boolean</td><td>Törlési jog vállalatnál</td></tr>
+                <tr><td>can_view_logs</td><td>boolean</td><td>Napló megtekintés vállalatnál</td></tr>
+                <tr><td>can_edit_master_data</td><td>boolean</td><td>Törzsadat szerkesztés</td></tr>
+            </tbody>
+        </table>
+
+        <h3>5.3. Partnerek</h3>
+
+        <h4>partners</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies (vállalat scope)</td></tr>
+                <tr><td>name</td><td>text NOT NULL</td><td>Partner neve</td></tr>
+                <tr><td>tax_id</td><td>text NOT NULL</td><td>Magyar adószám (xxxxxxxx-x-xx) - <strong>KÖTELEZŐ</strong></td></tr>
+                <tr><td>eu_vat_number</td><td>text</td><td>EU ÁFA szám (opcionális)</td></tr>
+                <tr><td>email</td><td>text</td><td>Email cím</td></tr>
+                <tr><td>phone</td><td>text</td><td>Telefonszám</td></tr>
+                <tr><td>default_currency</td><td>text</td><td>Alapértelmezett deviza</td></tr>
+                <tr><td>category</td><td>text</td><td>→ master_data (partner_category)</td></tr>
+                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
+                <tr><td>restrict_access</td><td>boolean</td><td>Korlátozott hozzáférés flag</td></tr>
+                <tr><td>parent_partner_id</td><td>uuid (FK)</td><td>Szülő partner (mező megmaradt, de <strong>FUNKCIÓ ELTÁVOLÍTVA</strong>)</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <div class="warning-box">
+            <strong>Adószám validáció:</strong><br>
+            • Formátum: xxxxxxxx-x-xx (11 számjegy)<br>
+            • Ellenőrző számjegy: pozíció 1-7 súlyok (9,7,3,1,9,7,3) modulo 10<br>
+            • ÁFA kód (9. pozíció): 1-5 közötti érték<br>
+            • Regionális kód (10-11. pozíció): érvényes NAV hivatal kódok
+        </div>
+
+        <div class="removed-box">
+            <strong>ELTÁVOLÍTOTT FUNKCIÓ:</strong> Anya-leányvállalat kapcsolat (parent-subsidiary) - user döntés alapján eltávolítva. A <code>parent_partner_id</code> mező megmaradt az adatbázisban, de a funkció nem működik.
+        </div>
+
+        <h4>partner_addresses</h4>
+        <p>Háromszintű címrendszer: headquarters (székhely - kötelező), site (telephely - opcionális), mailing (levelezési - opcionális).</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK) NOT NULL</td><td>→ partners</td></tr>
+                <tr><td>address_type</td><td>text NOT NULL</td><td>'headquarters', 'site', 'mailing'</td></tr>
+                <tr><td>postal_code</td><td>text</td><td>Irányítószám (→ postal_codes lookup)</td></tr>
+                <tr><td>city</td><td>text</td><td>Város/Település</td></tr>
+                <tr><td>county</td><td>text</td><td>Megye (Budapest = "-")</td></tr>
+                <tr><td>country</td><td>text</td><td>Ország</td></tr>
+                <tr><td>street_name</td><td>text</td><td>Utcanév</td></tr>
+                <tr><td>street_type</td><td>text</td><td>Közterület típusa (→ master_data)</td></tr>
+                <tr><td>house_number</td><td>text</td><td>Házszám</td></tr>
+                <tr><td>building</td><td>text</td><td>Épület</td></tr>
+                <tr><td>staircase</td><td>text</td><td>Lépcsőház</td></tr>
+                <tr><td>floor_door</td><td>text</td><td>Emelet/ajtó</td></tr>
+                <tr><td>plot_number</td><td>text</td><td>Helyrajzi szám</td></tr>
+            </tbody>
+        </table>
+
+        <h4>partner_contacts</h4>
+        <p>Kapcsolattartók kezelése partnerenként.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK) NOT NULL</td><td>→ partners</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>name</td><td>text NOT NULL</td><td>Kapcsolattartó neve</td></tr>
+                <tr><td>position</td><td>text</td><td>Pozíció/beosztás</td></tr>
+                <tr><td>email</td><td>text</td><td>Email cím</td></tr>
+                <tr><td>phone</td><td>text</td><td>Telefonszám</td></tr>
+                <tr><td>is_primary</td><td>boolean</td><td>Elsődleges kapcsolattartó</td></tr>
+                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
+            </tbody>
+        </table>
+
+        <h4>partner_user_access</h4>
+        <p>Felhasználói hozzáférés korlátozása partnerekhez (restrict_access = true esetén).</p>
+
+        <h3>5.4. Projektek, Feladatok, Események</h3>
+
+        <h4>projects</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>code</td><td>text</td><td>Projekt azonosító kód</td></tr>
+                <tr><td>name</td><td>text NOT NULL</td><td>Projekt neve</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>status</td><td>text</td><td>→ master_data (project_status)</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners (ügyfél)</td></tr>
+                <tr><td>owner_user_id</td><td>uuid (FK)</td><td>→ profiles (projekt tulajdonos)</td></tr>
+                <tr><td>responsible1_user_id</td><td>uuid (FK)</td><td>→ profiles (1. felelős)</td></tr>
+                <tr><td>responsible2_user_id</td><td>uuid (FK)</td><td>→ profiles (2. felelős)</td></tr>
+                <tr><td>task_color</td><td>text</td><td>Projekt feladatok színe naptárban</td></tr>
+                <tr><td>event_color</td><td>text</td><td>Projekt események színe naptárban</td></tr>
+                <tr><td>start_date, end_date</td><td>date</td><td>Projekt időszak</td></tr>
+                <tr><td>budget</td><td>numeric</td><td>Költségkeret</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h4>tasks</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>project_id</td><td>uuid (FK)</td><td>→ projects (nullable)</td></tr>
+                <tr><td>sales_id</td><td>uuid (FK)</td><td>→ sales (nullable)</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners (nullable)</td></tr>
+                <tr><td>title</td><td>text NOT NULL</td><td>Feladat címe</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>status</td><td>text</td><td>→ master_data (task_status)</td></tr>
+                <tr><td>responsible_user_id</td><td>uuid (FK)</td><td>→ profiles (felelős)</td></tr>
+                <tr><td>created_by</td><td>uuid (FK) NOT NULL</td><td>→ profiles (létrehozó)</td></tr>
+                <tr><td>deadline</td><td>timestamptz NOT NULL</td><td>Határidő (<strong>KÖTELEZŐ</strong>)</td></tr>
+                <tr><td>is_all_day</td><td>boolean</td><td>Egész napos feladat</td></tr>
+                <tr><td>recurrence_type</td><td>text</td><td>none, daily, weekly, monthly, yearly</td></tr>
+                <tr><td>recurrence_interval</td><td>integer</td><td>Ismétlődés gyakoriság (pl. minden 2. hét)</td></tr>
+                <tr><td>recurrence_end_date</td><td>date</td><td>Ismétlődés vége</td></tr>
+                <tr><td>parent_task_id</td><td>uuid (FK)</td><td>Szülő feladat (virtuális előfordulásokhoz)</td></tr>
+                <tr><td>occurrence_date</td><td>date</td><td>Virtuális előfordulás dátuma</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h4>events</h4>
+        <p>Események - <strong>külön tábla a feladatoktól</strong>, résztvevő-kezeléssel.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>title</td><td>text NOT NULL</td><td>Esemény címe</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>start_time</td><td>timestamptz NOT NULL</td><td>Kezdés időpontja</td></tr>
+                <tr><td>end_time</td><td>timestamptz NOT NULL</td><td>Befejezés időpontja (<strong>KÖTELEZŐ</strong>)</td></tr>
+                <tr><td>is_all_day</td><td>boolean</td><td>Egész napos esemény</td></tr>
+                <tr><td>location</td><td>text</td><td>Helyszín</td></tr>
+                <tr><td>project_id</td><td>uuid (FK)</td><td>→ projects (nullable)</td></tr>
+                <tr><td>sales_id</td><td>uuid (FK)</td><td>→ sales (nullable)</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners (nullable)</td></tr>
+                <tr><td>responsible_user_id</td><td>uuid (FK)</td><td>→ profiles (felelős)</td></tr>
+                <tr><td>created_by</td><td>uuid (FK) NOT NULL</td><td>→ profiles (létrehozó)</td></tr>
+                <tr><td>recurrence_type, recurrence_interval, recurrence_end_date</td><td>mixed</td><td>Ismétlődés beállítások</td></tr>
+                <tr><td>parent_event_id, occurrence_date</td><td>uuid/date</td><td>Virtuális előfordulásokhoz</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h4>event_participants</h4>
+        <p>Esemény résztvevők (belső és külső meghívottak).</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>event_id</td><td>uuid (FK) NOT NULL</td><td>→ events</td></tr>
+                <tr><td>user_id</td><td>uuid (FK)</td><td>→ profiles (belső résztvevő)</td></tr>
+                <tr><td>external_email</td><td>text</td><td>Külső résztvevő email</td></tr>
+                <tr><td>external_name</td><td>text</td><td>Külső résztvevő neve</td></tr>
+                <tr><td>status</td><td>text</td><td>invited, accepted, declined, tentative</td></tr>
+                <tr><td>notified_at</td><td>timestamptz</td><td>Értesítés küldése</td></tr>
+                <tr><td>responded_at</td><td>timestamptz</td><td>Válasz időpontja</td></tr>
+            </tbody>
+        </table>
+
+        <h3>5.5. Értékesítések</h3>
+
+        <h4>sales</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>name</td><td>text NOT NULL</td><td>Értékesítés neve</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners (ügyfél)</td></tr>
+                <tr><td>status</td><td>text</td><td>→ master_data (sale_status)</td></tr>
+                <tr><td>expected_value</td><td>numeric</td><td>Várható érték</td></tr>
+                <tr><td>currency</td><td>text</td><td>Deviza</td></tr>
+                <tr><td>probability</td><td>integer</td><td>Valószínűség %</td></tr>
+                <tr><td>expected_close_date</td><td>date</td><td>Várható lezárási dátum</td></tr>
+                <tr><td>business_unit</td><td>text</td><td>Üzletág</td></tr>
+                <tr><td>owner_user_id</td><td>uuid (FK)</td><td>→ profiles (felelős)</td></tr>
+                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h3>5.6. Szerződések és Verziók</h3>
+
+        <h4>contracts</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>owner_company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>title</td><td>text NOT NULL</td><td>Szerződés címe</td></tr>
+                <tr><td>contract_number</td><td>text</td><td>Szerződés azonosító</td></tr>
+                <tr><td>contract_type</td><td>text</td><td>→ master_data (contract_type)</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>status</td><td>text</td><td>draft, active, expired, terminated</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners (szerződő fél)</td></tr>
+                <tr><td>project_id</td><td>uuid (FK)</td><td>→ projects (kapcsolódó projekt)</td></tr>
+                <tr><td>sales_id</td><td>uuid (FK)</td><td>→ sales (kapcsolódó értékesítés)</td></tr>
+                <tr><td>signed_date</td><td>date</td><td>Aláírás dátuma</td></tr>
+                <tr><td>effective_date</td><td>date</td><td>Hatályba lépés</td></tr>
+                <tr><td>expiry_date</td><td>date</td><td>Lejárat dátuma</td></tr>
+                <tr><td>total_value</td><td>numeric</td><td>Szerződés értéke</td></tr>
+                <tr><td>currency</td><td>text</td><td>Deviza (default: HUF)</td></tr>
+                <tr><td>payment_frequency</td><td>text</td><td>monthly, quarterly, annually, one-time</td></tr>
+                <tr><td>payment_day</td><td>integer</td><td>Fizetési nap (hó napja)</td></tr>
+                <tr><td>billing_start_date</td><td>date</td><td>Számlázás kezdete</td></tr>
+                <tr><td>auto_renewal</td><td>boolean</td><td>Automatikus megújítás</td></tr>
+                <tr><td>renewal_period_months</td><td>integer</td><td>Megújítási időszak hónapokban</td></tr>
+                <tr><td>termination_notice_days</td><td>integer</td><td>Felmondási idő napokban</td></tr>
+                <tr><td>expiry_warning_days</td><td>integer</td><td>Lejárat figyelmeztetés (default: 30)</td></tr>
+                <tr><td>renewal_warning_days</td><td>integer</td><td>Megújítás figyelmeztetés (default: 45)</td></tr>
+                <tr><td>termination_warning_days</td><td>integer</td><td>Felmondás figyelmeztetés (default: 60)</td></tr>
+                <tr><td>restrict_access</td><td>boolean</td><td>Korlátozott hozzáférés</td></tr>
+                <tr><td>created_by</td><td>uuid (FK)</td><td>→ profiles (létrehozó)</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h4>contract_versions</h4>
+        <p>Szerződés verziók - minden módosítás új verzió, visszaállítási lehetőség (admin only).</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>contract_id</td><td>uuid (FK) NOT NULL</td><td>→ contracts</td></tr>
+                <tr><td>version_number</td><td>integer</td><td>Verziószám</td></tr>
+                <tr><td>is_current</td><td>boolean</td><td>Aktuális verzió-e</td></tr>
+                <tr><td>title</td><td>text NOT NULL</td><td>Verzió címe</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>change_summary</td><td>text</td><td>Változások összefoglalója</td></tr>
+                <tr><td>file_path</td><td>text</td><td>Storage path</td></tr>
+                <tr><td>file_size</td><td>integer</td><td>Fájl méret (byte)</td></tr>
+                <tr><td>mime_type</td><td>text</td><td>MIME típus</td></tr>
+                <tr><td>original_file_id</td><td>uuid (FK)</td><td>→ contract_versions (eredeti fájl)</td></tr>
+                <tr><td>created_by</td><td>uuid (FK)</td><td>→ profiles</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>Létrehozás időpontja</td></tr>
+            </tbody>
+        </table>
+
+        <h4>contract_user_access</h4>
+        <p>Felhasználói hozzáférés korlátozása szerződésekhez.</p>
+
+        <h3>5.7. Dokumentumok és Fájlok</h3>
+
+        <h4>documents</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>owner_company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>title</td><td>text NOT NULL</td><td>Dokumentum címe</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>visibility</td><td>text NOT NULL</td><td>COMPANY_ONLY, PROJECT_ONLY, SALES_ONLY, PUBLIC</td></tr>
+                <tr><td>partner_id</td><td>uuid (FK)</td><td>→ partners</td></tr>
+                <tr><td>project_id</td><td>uuid (FK)</td><td>→ projects</td></tr>
+                <tr><td>sales_id</td><td>uuid (FK)</td><td>→ sales</td></tr>
+                <tr><td>uploaded_by</td><td>uuid (FK)</td><td>→ profiles</td></tr>
+                <tr><td>uploaded_at</td><td>timestamptz</td><td>Feltöltés időpontja</td></tr>
+                <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Audit időbélyegek</td></tr>
+            </tbody>
+        </table>
+
+        <h4>document_files</h4>
+        <p>Multi-file támogatás dokumentumonként, verziókövetéssel.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>document_id</td><td>uuid (FK) NOT NULL</td><td>→ documents</td></tr>
+                <tr><td>file_name</td><td>text NOT NULL</td><td>Fájlnév</td></tr>
+                <tr><td>file_path</td><td>text NOT NULL</td><td>Storage path</td></tr>
+                <tr><td>file_size</td><td>integer</td><td>Fájl méret (byte)</td></tr>
+                <tr><td>mime_type</td><td>text</td><td>MIME típus</td></tr>
+                <tr><td>version</td><td>integer</td><td>Verziószám</td></tr>
+                <tr><td>is_current</td><td>boolean</td><td>Aktuális verzió-e</td></tr>
+                <tr><td>original_file_id</td><td>uuid (FK)</td><td>→ document_files (eredeti fájl)</td></tr>
+                <tr><td>uploaded_by</td><td>uuid (FK)</td><td>→ profiles</td></tr>
+                <tr><td>uploaded_at</td><td>timestamptz</td><td>Feltöltés időpontja</td></tr>
+            </tbody>
+        </table>
+
+        <h4>document_templates</h4>
+        <p>Dokumentum sablonok változó helyettesítéssel.</p>
+
+        <h3>5.8. Időkövetés</h3>
+
+        <h4>time_entries</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>user_id</td><td>uuid (FK) NOT NULL</td><td>→ profiles (ki mérte)</td></tr>
+                <tr><td>task_id</td><td>uuid (FK) NOT NULL</td><td>→ tasks (melyik feladathoz)</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>start_time</td><td>timestamptz NOT NULL</td><td>Kezdés</td></tr>
+                <tr><td>end_time</td><td>timestamptz</td><td>Befejezés (NULL ha fut)</td></tr>
+                <tr><td>duration_minutes</td><td>integer</td><td>Időtartam percben (számított)</td></tr>
+                <tr><td>is_running</td><td>boolean</td><td>Aktív timer-e</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>Létrehozás időpontja</td></tr>
+            </tbody>
+        </table>
+        <div class="info-box">
+            <strong>Korlátozás:</strong> Egy felhasználónak egyszerre csak egy aktív (is_running = true) time entry-je lehet.
+        </div>
+
+        <h3>5.9. Jóváhagyás és Automatizáció</h3>
+
+        <h4>approval_workflows</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>entity_type</td><td>text NOT NULL</td><td>contract, document, project</td></tr>
+                <tr><td>entity_id</td><td>uuid NOT NULL</td><td>Entitás azonosító</td></tr>
+                <tr><td>status</td><td>text</td><td>pending, approved, rejected</td></tr>
+                <tr><td>requested_by</td><td>uuid (FK) NOT NULL</td><td>→ profiles (kérelmező)</td></tr>
+                <tr><td>approved_by</td><td>uuid (FK)</td><td>→ profiles (jóváhagyó)</td></tr>
+                <tr><td>approved_at</td><td>timestamptz</td><td>Jóváhagyás/elutasítás időpontja</td></tr>
+                <tr><td>rejection_reason</td><td>text</td><td>Elutasítás indoka (kötelező elutasításnál)</td></tr>
+                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
+            </tbody>
+        </table>
+
+        <h4>automation_rules</h4>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>company_id</td><td>uuid (FK) NOT NULL</td><td>→ companies</td></tr>
+                <tr><td>name</td><td>text NOT NULL</td><td>Szabály neve</td></tr>
+                <tr><td>description</td><td>text</td><td>Leírás</td></tr>
+                <tr><td>trigger_type</td><td>text NOT NULL</td><td>Trigger típus</td></tr>
+                <tr><td>trigger_config</td><td>jsonb</td><td>Trigger konfiguráció</td></tr>
+                <tr><td>action_type</td><td>text NOT NULL</td><td>Akció típus</td></tr>
+                <tr><td>action_config</td><td>jsonb</td><td>Akció konfiguráció</td></tr>
+                <tr><td>is_active</td><td>boolean</td><td>Aktív-e</td></tr>
+                <tr><td>created_by</td><td>uuid (FK)</td><td>→ profiles</td></tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <strong>Trigger típusok:</strong> task_status_change, task_created, deadline_approaching, project_status_change, sales_status_change, contract_expiring<br><br>
+            <strong>Akció típusok:</strong> send_notification, change_status, assign_user, create_task, send_email
+        </div>
+
+        <h4>automation_logs</h4>
+        <p>Automatizáció végrehajtási napló (success, error_message, trigger_data, action_result).</p>
+
+        <h3>5.10. Rendszer Táblák</h3>
+
+        <h4>master_data</h4>
+        <p>Törzsadatok - dinamikus típusok kategóriákba rendezve.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>type</td><td>text NOT NULL</td><td>Típus azonosító</td></tr>
+                <tr><td>value</td><td>text NOT NULL</td><td>Érték (DB-ben tárolva)</td></tr>
+                <tr><td>label</td><td>text NOT NULL</td><td>Megjelenítendő címke</td></tr>
+                <tr><td>order_index</td><td>integer</td><td>Rendezési sorrend</td></tr>
+                <tr><td>is_default</td><td>boolean</td><td>Alapértelmezett-e</td></tr>
+            </tbody>
+        </table>
+        <div class="info-box">
+            <strong>Törzsadat típusok kategóriái (Settings > Törzsadatok):</strong><br>
+            • <strong>Partnerek:</strong> partner_category<br>
+            • <strong>Projektek:</strong> project_status<br>
+            • <strong>Értékesítés:</strong> sale_status<br>
+            • <strong>Szerződések:</strong> contract_type, payment_frequency<br>
+            • <strong>Feladatok:</strong> task_status<br>
+            • <strong>Egyéb:</strong> currency, cost_category, country, county, street_type
+        </div>
+
+        <h4>postal_codes (~4000 rekord)</h4>
+        <p>Magyar irányítószámok, települések, megyék a cím kitöltéshez.</p>
+
+        <h4>notifications</h4>
+        <p>Real-time értesítések (Supabase Realtime). Típusok: task, deadline, automation, approval, system.</p>
+
+        <h4>favorites</h4>
+        <p>Felhasználónkénti kedvencek (projektek, sales, szerződések, partnerek, dokumentumok).</p>
+
+        <h4>tags + entity_tags</h4>
+        <p>Vállalat-szintű címkék tetszőleges entitásokhoz.</p>
+        <div class="warning-box">
+            <strong>Címke törlési korlátozás:</strong> Címke csak akkor törölhető, ha nincs egyetlen entitáshoz sem hozzárendelve (usageCount = 0).
+        </div>
+
+        <h4>comments</h4>
+        <p>Megjegyzések entitásokhoz (entity_type, entity_id). Szerkesztés/törlés csak szerző által.</p>
+        <div class="info-box">
+            <strong>Soft delete:</strong> <code>soft_delete_comment(comment_id)</code> SECURITY DEFINER RPC függvényen keresztül (RLS bypass).
+        </div>
+
+        <h4>dashboard_widgets</h4>
+        <p>Felhasználónkénti widget beállítások (visibility, position, width).</p>
+
+        <h4>system_settings</h4>
+        <p>Rendszerszintű beállítások kulcs-érték párokként.</p>
+        <table>
+            <thead><tr><th>Kulcs</th><th>Típus</th><th>Default</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>account_lock_attempts</td><td>integer</td><td>5</td><td>Max sikertelen próbálkozás</td></tr>
+                <tr><td>account_lock_auto_unlock_minutes</td><td>integer</td><td>1</td><td>Auto unlock idő</td></tr>
+                <tr><td>account_lock_failed_attempts_window_minutes</td><td>integer</td><td>1</td><td>Időablak</td></tr>
+                <tr><td>two_factor_session_duration_minutes</td><td>integer</td><td>720</td><td>2FA session hossza</td></tr>
+                <tr><td>two_factor_max_attempts</td><td>integer</td><td>10</td><td>Max 2FA próbálkozás</td></tr>
+                <tr><td>two_factor_window_minutes</td><td>integer</td><td>10</td><td>2FA időablak</td></tr>
+                <tr><td>two_factor_lock_minutes</td><td>integer</td><td>10</td><td>2FA lock idő</td></tr>
+                <tr><td>password_expiry_days</td><td>integer</td><td>90</td><td>Jelszó lejárat</td></tr>
+                <tr><td>inactivity_logout_minutes</td><td>integer</td><td>5</td><td>Inaktivitás timeout</td></tr>
+                <tr><td>use_browser_locale</td><td>boolean</td><td>true</td><td>Böngésző locale használata</td></tr>
+                <tr><td>thousand_separator</td><td>text</td><td>" "</td><td>Ezres elválasztó</td></tr>
+                <tr><td>decimal_separator</td><td>text</td><td>","</td><td>Tizedes elválasztó</td></tr>
+                <tr><td>resend_api_key</td><td>text</td><td>-</td><td>Resend API kulcs</td></tr>
+                <tr><td>email_from_address</td><td>text</td><td>onboarding@resend.dev</td><td>Küldő email</td></tr>
+                <tr><td>email_from_name</td><td>text</td><td>PipeLiT</td><td>Küldő név</td></tr>
+            </tbody>
+        </table>
+
+        <h4>logs</h4>
+        <p>Audit napló - minden entitás művelet naplózása.</p>
+        <table>
+            <thead><tr><th>Mező</th><th>Típus</th><th>Leírás</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
+                <tr><td>entity_type</td><td>text NOT NULL</td><td>Entitás típusa</td></tr>
+                <tr><td>entity_id</td><td>uuid</td><td>Entitás azonosító</td></tr>
+                <tr><td>action</td><td>text NOT NULL</td><td>create, update, delete, stb.</td></tr>
+                <tr><td>user_id</td><td>uuid (FK)</td><td>→ profiles (ki végezte)</td></tr>
+                <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
+                <tr><td>previous_values</td><td>jsonb</td><td>Előző értékek</td></tr>
+                <tr><td>new_values</td><td>jsonb</td><td>Új értékek</td></tr>
+                <tr><td>created_at</td><td>timestamptz</td><td>Időbélyeg</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <div class="section" id="license">
-        <h2>5. LICENCKEZELÉS</h2>
-
-        <h3>5.1. Licenc Struktúra</h3>
-        <ul>
-            <li><strong>Max users:</strong> Licencelt felhasználók száma (VIEWER nem számít)</li>
-            <li><strong>Valid from/until:</strong> Érvényességi időszak</li>
-            <li><strong>Features:</strong> Engedélyezett funkciók listája (7 feature)</li>
-            <li><strong>License key:</strong> Titkosított kulcs 12-bit nonce-szal (nem determinisztikus)</li>
-        </ul>
-
-        <h3>5.2. Feature Mapping</h3>
-        <table>
-            <thead><tr><th>Menüpont</th><th>Feature név</th><th>Bit</th></tr></thead>
-            <tbody>
-                <tr><td>Partnerek</td><td>partners</td><td>0</td></tr>
-                <tr><td>Projektek</td><td>projects</td><td>1</td></tr>
-                <tr><td>Értékesítés</td><td>sales</td><td>2</td></tr>
-                <tr><td>Dokumentumok</td><td>documents</td><td>3</td></tr>
-                <tr><td>Naptár</td><td>calendar</td><td>4</td></tr>
-                <tr><td>Feladatok és események</td><td>my_items</td><td>5</td></tr>
-                <tr><td>Audit</td><td>audit</td><td>6</td></tr>
-            </tbody>
-        </table>
-
-        <h3>5.3. Lejárat Kezelés</h3>
-        <ul>
-            <li>Lejárat közeledtével értesítés a Notification Center-ben</li>
-            <li>Lejárt licenc → read-only mód</li>
-            <li>LicenseGuard komponens védi a védett oldalakat</li>
-        </ul>
-
-        <h3>5.4. Licenc Generátor</h3>
-        <p>Super Admin számára elérhető UI a licenckulcsok generálásához (feature bitmask, max users, érvényesség).</p>
-    </div>
-
-    <div class="section" id="edge-functions">
-        <h2>6. EDGE FUNCTIONS</h2>
-
-        <h3>6.1. Authentication Functions</h3>
-        <table>
-            <thead><tr><th>Funkció</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td><code>verify-2fa-token</code></td><td>TOTP vagy recovery kód validálás, session_2fa_verifications írás</td></tr>
-                <tr><td><code>generate-recovery-codes</code></td><td>10 db backup kód generálás, hash tárolás</td></tr>
-                <tr><td><code>complete-registration</code></td><td>Regisztráció befejezése kód validációval</td></tr>
-                <tr><td><code>get-active-sessions</code></td><td>Aktív sessionök lekérdezése inaktivitás timeout-on belül</td></tr>
-                <tr><td><code>terminate-user-session</code></td><td>Session lezárás realtime broadcast-tal</td></tr>
-            </tbody>
-        </table>
-
-        <h3>6.2. User Management Functions</h3>
-        <table>
-            <thead><tr><th>Funkció</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td><code>admin-create-user</code></td><td>Új felhasználó létrehozása + vállalat hozzárendelés + licenc ellenőrzés</td></tr>
-                <tr><td><code>admin-update-user</code></td><td>Felhasználó módosítása (role változtatás védelem)</td></tr>
-                <tr><td><code>admin-update-password</code></td><td>Jelszó reset, must_change_password = true</td></tr>
-                <tr><td><code>admin-delete-user</code></td><td>Soft delete + session termination + kapcsolódó adatok törlése</td></tr>
-                <tr><td><code>send-registration-invite</code></td><td>Regisztrációs kód generálás és email küldés</td></tr>
-            </tbody>
-        </table>
-
-        <h3>6.3. License Functions</h3>
-        <table>
-            <thead><tr><th>Funkció</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td><code>activate-license</code></td><td>Licenc kulcs validálás és aktiválás</td></tr>
-                <tr><td><code>validate-license</code></td><td>Licenc érvényesség és seat usage ellenőrzés</td></tr>
-            </tbody>
-        </table>
-
-        <h3>6.4. Notification Functions</h3>
-        <table>
-            <thead><tr><th>Funkció</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td><code>notify-account-lock</code></td><td>Email küldés fiók zároláskor</td></tr>
-                <tr><td><code>check-deadlines</code></td><td>Határidő ellenőrzés és értesítés generálás</td></tr>
-                <tr><td><code>send-email</code></td><td>Általános email küldés Resend API-val</td></tr>
-                <tr><td><code>send-event-invitation</code></td><td>Esemény meghívó email ICS melléklettel</td></tr>
-            </tbody>
-        </table>
-
-        <h3>6.5. Automation Functions</h3>
-        <table>
-            <thead><tr><th>Funkció</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td><code>execute-automation</code></td><td>Automatizációs szabályok végrehajtása trigger alapján</td></tr>
-            </tbody>
-        </table>
-
-        <h3>6.6. Other Functions</h3>
-        <table>
-            <thead><tr><th>Funkció</th><th>Leírás</th></tr></thead>
-            <tbody>
-                <tr><td><code>check-api-key-status</code></td><td>Resend API kulcs ellenőrzés (Super Admin only)</td></tr>
-            </tbody>
-        </table>
-    </div>
-
+    <!-- ==================== 6. FUNKCIONÁLIS MODULOK ==================== -->
     <div class="section" id="modules">
-        <h2>7. FUNKCIONÁLIS MODULOK</h2>
+        <h2>6. FUNKCIONÁLIS MODULOK</h2>
 
-        <h3>7.1. Partner Modul</h3>
+        <h3>6.1. Partner Modul</h3>
+        <p><strong>Cél:</strong> Ügyfelek, szállítók, partnerek nyilvántartása.</p>
+        <p><strong>Érintett role-ok:</strong> Minden bejelentkezett felhasználó (company scope szerint)</p>
+        
+        <h4>Képernyők</h4>
         <ul>
-            <li>Háromszintű címrendszer (székhely kötelező, telephely opcionális, levelezési opcionális) másolási lehetőséggel ("Megegyezik a székhellyel" / "Megegyezik a telephellyel" checkbox)</li>
-            <li>Magyar adószám validáció (xxxxxxxx-x-xx formátum, ellenőrző számjegy, ÁFA kód 1-5, NAV regionális kódok)</li>
-            <li><strong>Adószám kötelező</strong> - mentés nem lehetséges érvényes adószám nélkül</li>
-            <li>Kapcsolattartók kezelése (elsődleges jelölés, pozíció, elérhetőségek)</li>
-            <li>Felhasználói hozzáférés korlátozás (restrict_access + partner_user_access)</li>
-            <li>Partner részlet oldal: Projektek, Feladatok, Események, Dokumentumok, Értékesítések tabok</li>
+            <li><strong>/partners</strong> - Partner lista (szűrés, rendezés, export)</li>
+            <li><strong>/partners/:id</strong> - Partner részletek (tabok: Projektek, Feladatok, Események, Dokumentumok, Értékesítések)</li>
+        </ul>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>CRUD műveletek</li>
+            <li>Háromszintű címrendszer (székhely kötelező, telephely/levelezési opcionális)</li>
+            <li>Cím másolás checkboxokkal ("Megegyezik a székhellyel")</li>
+            <li>Magyar adószám validáció (<strong>KÖTELEZŐ</strong>)</li>
+            <li>Kapcsolattartók kezelése (elsődleges jelölés)</li>
+            <li>Felhasználói hozzáférés korlátozás (restrict_access flag)</li>
             <li>Export (PDF, Excel, CSV) látható oszlopokkal</li>
-            <li>Oszlop láthatóság és sorrend testreszabás localStorage-ban</li>
-            <li><strong>Anya-leány vállalat kapcsolat:</strong> ELTÁVOLÍTVA (user döntés)</li>
+            <li>Oszlop láthatóság és sorrend testreszabás</li>
         </ul>
+        
+        <div class="removed-box">
+            <strong>ELTÁVOLÍTOTT:</strong> Anya-leányvállalat kapcsolat funkció (user döntés alapján).
+        </div>
 
-        <h3>7.2. Projekt Modul</h3>
+        <h3>6.2. Projekt Modul</h3>
+        <p><strong>Cél:</strong> Projektek tervezése, nyomon követése.</p>
+        
+        <h4>Képernyők</h4>
         <ul>
-            <li>Projekt CRUD + részlet oldal</li>
-            <li>Kanban nézet (drag-drop státuszváltás)</li>
-            <li>Gantt diagram (idősor nézet)</li>
+            <li><strong>/projects</strong> - Projekt lista</li>
+            <li><strong>/projects/:id</strong> - Projekt részletek (feladatok, események, dokumentumok)</li>
+            <li><strong>/kanban</strong> - Kanban nézet (drag-drop státuszváltás)</li>
+            <li><strong>/gantt</strong> - Gantt diagram (idősor nézet)</li>
+        </ul>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>CRUD műveletek</li>
+            <li>Projekt státuszok (master_data-ból)</li>
+            <li>Projekt felelősök (owner + 2 responsible)</li>
             <li>Projekt színek naptárban (task_color, event_color)</li>
-            <li>Projekt felelősök (owner, responsible1, responsible2)</li>
             <li>Kapcsolódó feladatok, események, dokumentumok</li>
+            <li>Jóváhagyási workflow integráció</li>
+            <li>Export és kedvencek</li>
         </ul>
 
-        <h3>7.3. Sales Modul</h3>
+        <h3>6.3. Sales Modul</h3>
+        <p><strong>Cél:</strong> Értékesítési pipeline kezelése.</p>
+        
+        <h4>Képernyők</h4>
         <ul>
-            <li>Sales pipeline kezelés</li>
-            <li>Várható érték és lezárási dátum</li>
-            <li>Üzletági besorolás (business_unit)</li>
+            <li><strong>/sales</strong> - Értékesítés lista</li>
+            <li><strong>/sales/:id</strong> - Értékesítés részletek</li>
+        </ul>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>CRUD műveletek</li>
+            <li>Várható érték és valószínűség</li>
+            <li>Lezárási dátum előrejelzés</li>
+            <li>Üzletági besorolás</li>
             <li>Kapcsolódó feladatok, dokumentumok</li>
-            <li>Sales részlet oldal</li>
         </ul>
 
-        <h3>7.4. Szerződés Modul</h3>
+        <h3>6.4. Szerződés Modul</h3>
+        <p><strong>Cél:</strong> Szerződések kezelése, verziókövetése, lejárat figyelése.</p>
+        
+        <h4>Képernyők</h4>
         <ul>
-            <li>Teljes verziókövetés (contract_versions) - minden módosítás új verzió</li>
+            <li><strong>/contracts</strong> - Szerződés lista (Dokumentumtár almenüben)</li>
+            <li><strong>/contracts/:id</strong> - Szerződés részletek (fájlok, verziók)</li>
+        </ul>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>CRUD műveletek</li>
+            <li>Teljes verziókövetés (contract_versions)</li>
             <li>Verzió visszaállítás (admin only)</li>
-            <li>Lejárat, felmondási idő, megújítás figyelmeztetések (konfigurálható napok)</li>
-            <li>Fizetési információk (gyakoriság: monthly/quarterly/annually/one-time, összeg, deviza)</li>
-            <li>Automatikus megújítás beállítás (auto_renewal + renewal_period_months)</li>
-            <li>Felhasználói hozzáférés korlátozás (restrict_access + contract_user_access)</li>
-            <li>Multi-file támogatás (verziókövetéssel, verzió visszaállítás admin only)</li>
-            <li>PDF és kép előnézet (Office formátumok NEM támogatottak)</li>
-            <li>Visibility: COMPANY_ONLY, PROJECT_ONLY, SALES_ONLY, PUBLIC (Documents modullal azonos RLS)</li>
-            <li>Bulk ZIP letöltés ({szerződés_cím}_{YYYYMMDD_HHMMSS}.zip)</li>
-            <li>Szűrés (fájltípus, dátum, szöveg), drag-drop feltöltés</li>
-            <li>Soft delete (admin) / Hard delete (super admin + jelszó)</li>
+            <li>Lejárat, felmondási idő, megújítás figyelmeztetések</li>
+            <li>Fizetési információk (gyakoriság, összeg, deviza)</li>
+            <li>Automatikus megújítás beállítás</li>
+            <li>Felhasználói hozzáférés korlátozás</li>
+            <li>Multi-file támogatás verziókövetéssel</li>
+            <li>PDF és kép előnézet</li>
+            <li>Bulk ZIP letöltés</li>
+            <li>Szűrés (fájltípus, dátum, szöveg)</li>
+            <li>Drag-drop feltöltés</li>
+            <li>Soft delete (admin) / Hard delete (SA + jelszó)</li>
             <li>Jóváhagyási workflow integráció</li>
         </ul>
 
-        <h3>7.5. Dokumentum Modul</h3>
+        <h3>6.5. Dokumentum Modul</h3>
+        <p><strong>Cél:</strong> Dokumentumok tárolása, verziókövetése, megosztása.</p>
+        
+        <h4>Képernyők</h4>
         <ul>
-            <li>Multi-file támogatás (document_files tábla)</li>
+            <li><strong>/documents</strong> - Dokumentum lista (Dokumentumtár almenüben)</li>
+            <li><strong>/documents/:id</strong> - Dokumentum részletek</li>
+            <li><strong>/templates</strong> - Dokumentum sablonok</li>
+        </ul>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>Multi-file támogatás (document_files)</li>
             <li>Verziókövetés és visszaállítás (admin only)</li>
             <li>Visibility: COMPANY_ONLY, PROJECT_ONLY, SALES_ONLY, PUBLIC</li>
-            <li><strong>PDF és kép előnézet</strong> (Word/Excel/PowerPoint preview ELTÁVOLÍTVA - nem megbízható böngészőben)</li>
-            <li>PDF előnézet komplex funkciókkal:
-                <ul>
-                    <li>Folyamatos görgetés (nincs lapozás gomb)</li>
-                    <li>Zoom (50-200%, reset gomb)</li>
-                    <li>Scroll-alapú oldalszám kijelzés + oldal ugrás Enter-rel</li>
-                    <li>Keresés kiemelésekkel (Acrobat stílusú - világoskék találatok, sötétkék aktuális)</li>
-                    <li>Thumbnail sidebar + könyvjelzők (ha van a PDF-ben)</li>
-                    <li>Forgatás (90° lépték), teljes képernyő, nyomtatás</li>
-                    <li>Szöveg kijelölés és másolás</li>
-                </ul>
-            </li>
+            <li>PDF és kép előnézet (blob URL-lel)</li>
             <li>Bulk ZIP letöltés ({dokumentum_cím}_{YYYYMMDD_HHMMSS}.zip)</li>
             <li>Szűrés (fájltípus, dátum tartomány, szabad szöveg)</li>
-            <li>Drag-drop feltöltés + checkbox-os kijelölés</li>
-            <li>Soft delete (admin) / Hard delete (super admin + jelszó megerősítés)</li>
+            <li>Drag-drop feltöltés</li>
+            <li>Soft delete (admin) / Hard delete (SA + jelszó)</li>
             <li>Jóváhagyási workflow integráció</li>
-            <li>Fájltípus-specifikus ikonok (getFileTypeIcon utility)</li>
+            <li>Fájltípus-specifikus ikonok</li>
+        </ul>
+        
+        <div class="removed-box">
+            <strong>ELTÁVOLÍTOTT:</strong> Word/Excel/PowerPoint előnézet (nem megbízható böngészőben - user döntés).
+        </div>
+
+        <h4>PDF Előnézet Funkciók</h4>
+        <ul>
+            <li>Folyamatos görgetés (nincs lapozás gomb)</li>
+            <li>Zoom (50-200%, reset gomb)</li>
+            <li>Scroll-alapú oldalszám kijelzés + oldal ugrás Enter-rel</li>
+            <li>Keresés kiemelésekkel (Acrobat stílusú - világoskék találatok, sötétkék aktuális)</li>
+            <li>Thumbnail sidebar + könyvjelzők</li>
+            <li>Forgatás (90° lépték), teljes képernyő, nyomtatás</li>
+            <li>Szöveg kijelölés és másolás</li>
         </ul>
 
-        <h3>7.6. Feladat és Esemény Modul</h3>
+        <h3>6.6. Feladat és Esemény Modul</h3>
+        <p><strong>Cél:</strong> Teendők és események kezelése, naptár integráció.</p>
+        
+        <h4>Képernyők</h4>
         <ul>
-            <li>Feladatok és események <strong>külön táblákban</strong> (tasks, events)</li>
-            <li>Ismétlődés támogatás (none, daily, weekly, monthly, yearly) intervallummal</li>
-            <li>Virtuális előfordulások generálása naptárhoz (recurrenceUtils.generateRecurrences)</li>
+            <li><strong>/my-items</strong> - Saját feladatok és események</li>
+            <li><strong>/calendar</strong> - Naptár nézet</li>
+        </ul>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>Feladatok és események <strong>külön táblákban</strong></li>
+            <li>Ismétlődés támogatás (none, daily, weekly, monthly, yearly)</li>
+            <li>Virtuális előfordulások generálása (recurrenceUtils)</li>
             <li>Egész napos jelölés explicit toggle-lel</li>
             <li>Partner, projekt, sales kapcsolat (opcionális)</li>
             <li>Felelős és létrehozó megkülönböztetés</li>
-            <li><strong>Határidő/befejezési idő kötelező</strong></li>
-            <li>Láthatóság: <strong>felelős VAGY létrehozó</strong> látja saját naptárban és listában</li>
-            <li>Törlési jogosultság:
-                <ul>
-                    <li>Személyes (projekt/sales nélküli): létrehozó törölheti</li>
-                    <li>Projekthez/sales-hez kötött: super admin, company admin (can_delete), projekt owner, projekt felelősök törölhetik</li>
-                </ul>
-            </li>
-            <li>"Saját dolgaim" (My Items) oldal: személyes + hozzárendelt feladatok/események</li>
-            <li>Események résztvevőkkel (belső user + külső email meghívók)</li>
+            <li><strong>Határidő/befejezési idő KÖTELEZŐ</strong></li>
+            <li>Láthatóság: felelős VAGY létrehozó látja</li>
+            <li>Események résztvevőkkel (belső user + külső email)</li>
         </ul>
-
-        <h3>7.7. Naptár Modul</h3>
+        
+        <h4>Törlési Jogosultság</h4>
         <ul>
-            <li>Három nézet: nap, hét, hónap (hónap nézetnél drag megőrzi az eredeti időpontot)</li>
-            <li>24 órás időformátum (alkalmazás-szerte kötelező)</li>
-            <li>Drag-drop átütemezés (@dnd-kit - DraggableTask + DroppableCell)</li>
-            <li>TaskViewSheet: kattintásra részletek megjelenítése (read-only slide-out panel)</li>
-            <li>Projekt színek (task_color, event_color) és személyes színek (personal_task_color, personal_event_color)</li>
-            <li>Egész napos elemek külön "all-day" sorban (nem az órás gridben)</li>
-            <li>Sticky fejléc, oldalon belüli görgetés (nem belső scrollbar)</li>
-            <li>Hét és nap nézetben konzisztens grid template az oszlopok igazításához</li>
+            <li><strong>Személyes (projekt/sales nélküli):</strong> létrehozó törölheti</li>
+            <li><strong>Projekthez/sales-hez kötött:</strong> super admin, company admin (can_delete), projekt owner, projekt felelősök törölhetik</li>
         </ul>
 
-        <h3>7.8. Időkövetés (Time Tracking)</h3>
+        <h3>6.7. Naptár Modul</h3>
+        <p><strong>Cél:</strong> Feladatok és események vizuális megjelenítése idősoron.</p>
+        
+        <h4>Képernyő:</h4> <strong>/calendar</strong>
+        
+        <h4>Funkciók</h4>
+        <ul>
+            <li>Három nézet: nap, hét, hónap</li>
+            <li><strong>24 órás időformátum</strong> (alkalmazás-szerte kötelező)</li>
+            <li>Drag-drop átütemezés (@dnd-kit)</li>
+            <li>Hónap nézetnél drag megőrzi az eredeti időpontot</li>
+            <li>TaskViewSheet: kattintásra read-only részletek (slide-out panel)</li>
+            <li>Projekt színek és személyes színek</li>
+            <li>Egész napos elemek külön "all-day" sorban</li>
+            <li>Sticky fejléc, oldalon belüli görgetés</li>
+            <li>Konzisztens grid template az oszlopok igazításához</li>
+        </ul>
+
+        <h3>6.8. Időkövetés Modul</h3>
+        <p><strong>Cél:</strong> Projektekre/feladatokra fordított idő mérése.</p>
+        
+        <h4>Képernyő:</h4> <strong>/time-tracking</strong>
+        
+        <h4>Funkciók</h4>
         <ul>
             <li>Timer indítás/leállítás feladathoz</li>
             <li>Manuális időbejegyzés (start, end, leírás)</li>
-            <li>Egy aktív timer / felhasználó</li>
+            <li>Egy aktív timer / felhasználó korlátozás</li>
             <li>Összesítés projekt és időszak szerint</li>
             <li>TimeTrackingWidget feladat részletnél</li>
-            <li>TimeTracking oldal szűrőkkel és exporttal</li>
+            <li>Export funkció</li>
         </ul>
 
-        <h3>7.9. Jóváhagyási Workflow</h3>
+        <h3>6.9. Jóváhagyási Workflow</h3>
+        <p><strong>Cél:</strong> Szerződések, dokumentumok, projektek jóváhagyása.</p>
+        
+        <h4>Funkciók</h4>
         <ul>
             <li>Jóváhagyás kérés: szerződés, dokumentum, projekt</li>
             <li>Státuszok: pending, approved, rejected</li>
             <li>Elutasítás indoklás kötelező</li>
             <li>Előzmények megtekintése (ApprovalHistoryDialog)</li>
             <li>Dashboard widget: PendingApprovalsWidget (admin)</li>
-            <li>Integrálva: ContractDetail, DocumentDetail, ProjectDetail</li>
         </ul>
 
-        <h3>7.10. Automatizáció</h3>
+        <h3>6.10. Automatizáció Modul</h3>
+        <p><strong>Cél:</strong> Trigger-alapú automatikus műveletek.</p>
+        
+        <h4>Képernyő:</h4> <strong>/automation</strong>
+        
+        <h4>Trigger típusok</h4>
         <ul>
-            <li><strong>Trigger típusok:</strong>
-                <ul>
-                    <li>task_status_change (from/to status)</li>
-                    <li>task_created</li>
-                    <li>deadline_approaching (days_before)</li>
-                    <li>project_status_change</li>
-                    <li>sales_status_change</li>
-                    <li>contract_expiring</li>
-                </ul>
-            </li>
-            <li><strong>Akció típusok:</strong>
-                <ul>
-                    <li>send_notification (title, message)</li>
-                    <li>change_status (new_status)</li>
-                    <li>assign_user (user_id)</li>
-                    <li>create_task (task_title, deadline_days)</li>
-                    <li>send_email</li>
-                </ul>
-            </li>
+            <li>task_status_change (from/to status)</li>
+            <li>task_created</li>
+            <li>deadline_approaching (days_before)</li>
+            <li>project_status_change</li>
+            <li>sales_status_change</li>
+            <li>contract_expiring</li>
+        </ul>
+        
+        <h4>Akció típusok</h4>
+        <ul>
+            <li>send_notification (title, message)</li>
+            <li>change_status (new_status)</li>
+            <li>assign_user (user_id)</li>
+            <li>create_task (task_title, deadline_days)</li>
+            <li>send_email</li>
+        </ul>
+        
+        <h4>Komponensek</h4>
+        <ul>
             <li>RuleConditionBuilder: dinamikus UI trigger/action config-hoz</li>
-            <li>Végrehajtási napló (automation_logs)</li>
+            <li>AutomationLogsList: végrehajtási napló</li>
             <li>execute-automation edge function</li>
         </ul>
 
-        <h3>7.11. Dashboard</h3>
+        <h3>6.11. Dashboard</h3>
+        <p><strong>Cél:</strong> Összefoglaló nézet testreszabható widgetekkel.</p>
+        
+        <h4>Képernyő:</h4> <strong>/ (főoldal)</strong>
+        
+        <h4>Widgetek</h4>
         <ul>
-            <li>Testreszabható widgetek drag-drop rendezéssel</li>
-            <li>Widget típusok:
-                <ul>
-                    <li>LicenseStatusWidget</li>
-                    <li>PendingApprovalsWidget (admin)</li>
-                    <li>TasksWidget (lejáró/késő feladatok)</li>
-                    <li>WeeklyCalendarWidget</li>
-                    <li>ProjectsChart (bar chart)</li>
-                    <li>SalesChart (pie chart)</li>
-                    <li>RecentActivityWidget</li>
-                </ul>
-            </li>
-            <li>Widget visibility, position, width beállítás</li>
-            <li>Felhasználónkénti mentés (dashboard_widgets tábla)</li>
+            <li>LicenseStatusWidget - licenc állapot</li>
+            <li>PendingApprovalsWidget - függő jóváhagyások (admin)</li>
+            <li>TasksWidget - lejáró/késő feladatok</li>
+            <li>WeeklyCalendarWidget - heti naptár</li>
+            <li>ProjectsChart - projekt státuszok (bar chart)</li>
+            <li>SalesChart - sales pipeline (pie chart)</li>
+            <li>RecentActivityWidget - legutóbbi tevékenységek</li>
+        </ul>
+        
+        <h4>Testreszabás</h4>
+        <ul>
+            <li>Widget visibility toggle</li>
+            <li>Drag-drop pozíció rendezés</li>
+            <li>Szélesség beállítás (half/full)</li>
+            <li>Felhasználónkénti mentés (dashboard_widgets)</li>
             <li>DashboardCustomizer popover</li>
         </ul>
 
-        <h3>7.12. Értesítések</h3>
+        <h3>6.12. További Modulok</h3>
+        
+        <h4>Értesítések</h4>
         <ul>
             <li>Real-time Supabase Realtime subscriptions</li>
-            <li>NotificationCenter (TopBar-ban harang ikon)</li>
-            <li>Típusok: task, deadline, automation, approval, system</li>
+            <li>NotificationCenter (TopBar harang ikon)</li>
             <li>Olvasottnak jelölés, navigálás entitáshoz</li>
-            <li>check-deadlines edge function periodikus futtatáshoz</li>
         </ul>
-
-        <h3>7.13. Keresés és Export</h3>
+        
+        <h4>Globális Keresés</h4>
         <ul>
-            <li>GlobalSearch: projektek, sales, partnerek, dokumentumok keresése</li>
+            <li>GlobalSearch komponens TopBar-ban</li>
+            <li>Projektek, sales, partnerek, dokumentumok keresése</li>
+            <li>Navigálás találatra</li>
+        </ul>
+        
+        <h4>Export és Riportok</h4>
+        <ul>
             <li>ExportMenu: PDF, Excel, CSV formátumok</li>
             <li>Látható oszlopok exportálása</li>
-            <li>jspdf + jspdf-autotable, xlsx könyvtárak</li>
+            <li>Reports oldal összesítésekkel</li>
         </ul>
-
-        <h3>7.14. Kedvencek és Címkék</h3>
+        
+        <h4>Import</h4>
         <ul>
-            <li>FavoriteButton: csillag ikon a "kedvenc" oszlopban (Projektek, Sales, Szerződések, Partnerek, Dokumentumok)</li>
-            <li>favorites tábla felhasználónként (user_id scoped)</li>
-            <li>TagSelector: címke választó és inline létrehozás</li>
-            <li>tags + entity_tags táblák (vállalat-scoped)</li>
-            <li><strong>Címke törlési korlátozás:</strong> csak akkor törölhető, ha usageCount = 0 (nincs egyetlen entitáshoz sem hozzárendelve)</li>
-            <li>Címke törlés: csak admin látja a törlés gombot</li>
-        </ul>
-
-        <h3>7.15. Bulk Műveletek</h3>
-        <ul>
-            <li>Checkbox-os kijelölés táblázatokban</li>
-            <li>BulkActionsToolbar: tömeges törlés, státuszváltás</li>
-            <li>BulkDeleteDialog: megerősítés kéréssel</li>
-        </ul>
-
-        <h3>7.16. Riportok és Import</h3>
-        <ul>
-            <li>Reports oldal: projekt, sales, partner összesítések</li>
             <li>CSV/Excel import: partnerek, projektek, sales</li>
-            <li>ImportDialog: mező mapping, validáció, hibajelentés</li>
-            <li>Dokumentum sablonok (document_templates) változó helyettesítéssel</li>
+            <li>ImportDialog: mező mapping, validáció</li>
         </ul>
-
-        <h3>7.17. Pénznem Formázás</h3>
+        
+        <h4>Kedvencek és Címkék</h4>
         <ul>
-            <li>Konfigurálható system_settings-ben: use_browser_locale, thousand_separator, decimal_separator</li>
-            <li>HUF: 0 tizedesjegy (kerekítve), EUR/USD: 2 tizedesjegy</li>
-            <li>Pénzösszeg mezők: monospace betűtípus (font-mono), jobbra igazítva (text-right)</li>
-            <li>formatCurrency() utility függvény központi formázáshoz</li>
+            <li>FavoriteButton minden listázó oldalon</li>
+            <li>TagSelector entitásokhoz</li>
+            <li>Címke törlés csak ha nincs hozzárendelve</li>
+        </ul>
+        
+        <h4>Bulk Műveletek</h4>
+        <ul>
+            <li>Checkbox-os kijelölés</li>
+            <li>BulkActionsToolbar: tömeges törlés, státuszváltás</li>
+        </ul>
+        
+        <h4>Megjegyzések</h4>
+        <ul>
+            <li>CommentsSection komponens</li>
+            <li>Entitásokhoz fűzhető megjegyzések</li>
+            <li>Szerkesztés/törlés csak szerző által</li>
         </ul>
     </div>
 
-    <div class="section" id="frontend">
-        <h2>8. FRONTEND STRUKTÚRA</h2>
+    <!-- ==================== 7. FOLYAMATOK ==================== -->
+    <div class="section" id="flows">
+        <h2>7. FOLYAMATOK / FLOW-K</h2>
 
-        <h3>8.1. Főbb Oldalak</h3>
+        <h3>7.1. Login + 2FA Flow</h3>
+        <ol>
+            <li>User megadja email + jelszó</li>
+            <li><code>supabase.auth.signInWithPassword()</code></li>
+            <li>Sikeres auth → <code>signOut({ scope: 'others' })</code> (single session)</li>
+            <li>Ellenőrzés: <code>is_account_locked_by_email()</code></li>
+            <li>Ha locked → hibaüzenet, login blokkolva</li>
+            <li><code>record_login_attempt()</code> rögzítés</li>
+            <li>Ellenőrzés: <code>user_has_2fa_enabled()</code></li>
+            <li>Ha 2FA enabled → TwoFactorDialog megjelenik</li>
+            <li>User beírja TOTP vagy recovery kódot</li>
+            <li><code>verify-2fa-token</code> edge function validál</li>
+            <li>Sikeres → <code>session_2fa_verifications</code> létrehozás</li>
+            <li>Ellenőrzés: <code>is_password_expired()</code></li>
+            <li>Ha lejárt → redirect /change-password</li>
+            <li>Sikeres login → Dashboard</li>
+        </ol>
+
+        <h3>7.2. Account Lock / Unlock Flow</h3>
+        
+        <h4>Automatikus zárolás</h4>
+        <ol>
+            <li>Sikertelen login → <code>record_login_attempt()</code></li>
+            <li><code>count_recent_failed_attempts()</code> ellenőrzés</li>
+            <li>Ha >= threshold (default 5) → <code>lock_account_for_email()</code></li>
+            <li><code>notify-account-lock</code> edge function → admin értesítés</li>
+            <li>locked_until beállítás (default 1 perc)</li>
+        </ol>
+        
+        <h4>Automatikus feloldás</h4>
+        <ol>
+            <li>locked_until idő letelt</li>
+            <li><code>cleanup_expired_locks()</code> törli a rekordot</li>
+            <li>Következő login kísérlet sikeres lehet</li>
+        </ol>
+        
+        <h4>Manuális feloldás</h4>
+        <ol>
+            <li>Super Admin → Account Management → Locked Accounts tab</li>
+            <li>"Feloldás" gomb → <code>unlock_account_by_user_id()</code></li>
+            <li>locked_accounts rekord törlése + failed attempts törlése</li>
+        </ol>
+
+        <h3>7.3. User Létrehozás + Regisztráció Flow</h3>
+        
+        <h4>Super Admin által létrehozás</h4>
+        <ol>
+            <li>SA megnyitja Settings → Fiókok Kezelése</li>
+            <li>"Új felhasználó" → UserCreateForm</li>
+            <li>Kitölti: email, teljes név, vezetéknév, keresztnév, role</li>
+            <li><strong>Két gomb:</strong>
+                <ul>
+                    <li>"Mentés" - csak létrehozza, nem küld meghívót</li>
+                    <li>"Mentés és kód küldése" - létrehozza + meghívót küld</li>
+                </ul>
+            </li>
+            <li><code>admin-create-user</code> edge function → auth.users + profiles</li>
+        </ol>
+        
+        <h4>Regisztrációs kód küldése</h4>
+        <ol>
+            <li>SA kiválasztja a usert → "Regisztrációs kód küldése"</li>
+            <li><code>prepare_user_invitation()</code> → új 8 karakteres kód generálás</li>
+            <li><code>send-registration-invite</code> edge function → email küldés</li>
+            <li>24 órás lejárat beállítás</li>
+            <li><strong>Újraküldéskor mindig ÚJ kód generálódik</strong></li>
+        </ol>
+        
+        <h4>Regisztráció befejezése</h4>
+        <ol>
+            <li>User megkapja az emailt a linkkel</li>
+            <li>/register?email=...&code=... oldal</li>
+            <li>Email és név mezők <strong>read-only</strong> (pre-filled)</li>
+            <li>User megadja: jelszó (2x), regisztrációs kód</li>
+            <li><code>complete-registration</code> edge function validál</li>
+            <li>Jelszó komplexitás ellenőrzés</li>
+            <li>Sikeres → registered_at beállítás, is_active = true</li>
+        </ol>
+        
+        <h4>Regisztrációs státusz jelzők (UserList)</h4>
+        <ul>
+            <li>🕐 Óra ikon - meghívó még nem küldve</li>
+            <li>✉️ Boríték ikon - meghívó elküldve, regisztráció folyamatban</li>
+            <li>✓ Pipa ikon - regisztrált felhasználó</li>
+        </ul>
+
+        <h3>7.4. Licenc Aktiválás Flow</h3>
+        <ol>
+            <li>SA generál licenc kulcsot (/license-generator)</li>
+            <li>Licenc kulcs tartalmazza: company info + features + validity + nonce</li>
+            <li>Company admin megkapja a kulcsot</li>
+            <li>Settings → Company → "Licenc aktiválása"</li>
+            <li><code>activate-license</code> edge function validál és aktivál</li>
+            <li>company_licenses rekord létrehozás/frissítés</li>
+        </ol>
+
+        <h3>7.5. Dokumentum Feltöltés + Verziókezelés Flow</h3>
+        <ol>
+            <li>User megnyitja DocumentDetail vagy ContractDetail</li>
+            <li>Drag-drop vagy "Feltöltés" gomb</li>
+            <li>Fájl feltöltés → Supabase Storage (documents bucket)</li>
+            <li>document_files rekord létrehozás (version = 1, is_current = true)</li>
+            <li>Új verzió feltöltésekor:
+                <ul>
+                    <li>Régi verzió is_current = false</li>
+                    <li>Új rekord version = n+1, is_current = true</li>
+                    <li>original_file_id → első verzió</li>
+                </ul>
+            </li>
+            <li>Verzió visszaállítás (admin only):
+                <ul>
+                    <li>Régi verzió másolása új verzióként</li>
+                    <li>is_current flag-ek frissítése</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>7.6. Automatizáció Végrehajtás Flow</h3>
+        <ol>
+            <li>Trigger event történik (pl. task státuszváltás)</li>
+            <li><code>useAutomationExecution</code> hook meghívja <code>execute-automation</code></li>
+            <li>Edge function lekérdezi az aktív szabályokat</li>
+            <li>Trigger config illeszkedés ellenőrzés</li>
+            <li>Ha illeszkedik → action végrehajtás</li>
+            <li>automation_logs rekord létrehozás (success/error)</li>
+        </ol>
+    </div>
+
+    <!-- ==================== 8. EDGE FUNCTIONS ==================== -->
+    <div class="section" id="edge-functions">
+        <h2>8. EDGE FUNCTIONS</h2>
+
+        <h3>8.1. Auth és User Management</h3>
+        <table>
+            <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>admin-create-user</code></td>
+                    <td>Új felhasználó létrehozása (auth + profile)</td>
+                    <td>email, full_name, given_name, family_name, role, company_id, company_role</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
+                    <td><code>admin-update-user</code></td>
+                    <td>Felhasználó adatok módosítása</td>
+                    <td>userId, role, is_active, can_delete, can_view_logs</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
+                    <td><code>admin-delete-user</code></td>
+                    <td>Felhasználó törlése (soft + auth)</td>
+                    <td>userId</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
+                    <td><code>admin-update-password</code></td>
+                    <td>Felhasználó jelszó módosítása</td>
+                    <td>userId, newPassword</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
+                    <td><code>complete-registration</code></td>
+                    <td>Regisztráció befejezése kóddal</td>
+                    <td>email, userCode, fullName, familyName, givenName, password</td>
+                    <td>Publikus (kód validáció)</td>
+                </tr>
+                <tr>
+                    <td><code>send-registration-invite</code></td>
+                    <td>Regisztrációs meghívó küldése</td>
+                    <td>userId</td>
+                    <td>Super Admin</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>8.2. Session és Security</h3>
+        <table>
+            <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>verify-2fa-token</code></td>
+                    <td>TOTP/recovery kód validálás</td>
+                    <td>email, token, isRecoveryCode</td>
+                    <td>Authenticated</td>
+                </tr>
+                <tr>
+                    <td><code>generate-recovery-codes</code></td>
+                    <td>Recovery kódok generálása</td>
+                    <td>-</td>
+                    <td>Authenticated</td>
+                </tr>
+                <tr>
+                    <td><code>get-active-sessions</code></td>
+                    <td>Aktív sessionök lekérdezése</td>
+                    <td>-</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
+                    <td><code>terminate-user-session</code></td>
+                    <td>Session megszakítása + broadcast</td>
+                    <td>userId</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
+                    <td><code>notify-account-lock</code></td>
+                    <td>Fiók zárolás értesítés küldése</td>
+                    <td>userEmail, reason</td>
+                    <td>System (SECURITY DEFINER)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>8.3. License Management</h3>
+        <table>
+            <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>activate-license</code></td>
+                    <td>Licenc kulcs aktiválása</td>
+                    <td>licenseKey, companyId</td>
+                    <td>Company Admin</td>
+                </tr>
+                <tr>
+                    <td><code>validate-license</code></td>
+                    <td>Licenc érvényesség ellenőrzés</td>
+                    <td>companyId</td>
+                    <td>Authenticated</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>8.4. Notifications és Email</h3>
+        <table>
+            <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>send-email</code></td>
+                    <td>Email küldés Resend API-val</td>
+                    <td>to[], subject, html, from</td>
+                    <td>System</td>
+                </tr>
+                <tr>
+                    <td><code>send-event-invitation</code></td>
+                    <td>Esemény meghívó küldése</td>
+                    <td>eventId, participantIds</td>
+                    <td>Authenticated</td>
+                </tr>
+                <tr>
+                    <td><code>check-deadlines</code></td>
+                    <td>Határidő ellenőrzés és értesítés</td>
+                    <td>-</td>
+                    <td>System (cron)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>8.5. Automation</h3>
+        <table>
+            <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>execute-automation</code></td>
+                    <td>Automatizációs szabályok végrehajtása</td>
+                    <td>triggerType, entityType, entityId, triggerData</td>
+                    <td>Authenticated</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>8.6. Utility</h3>
+        <table>
+            <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>check-api-key-status</code></td>
+                    <td>Resend API kulcs ellenőrzés</td>
+                    <td>-</td>
+                    <td>Super Admin</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== 9. FRONTEND ==================== -->
+    <div class="section" id="frontend">
+        <h2>9. FRONTEND STRUKTÚRA</h2>
+
+        <h3>9.1. Oldalak (29 db)</h3>
         <table>
             <thead><tr><th>Route</th><th>Komponens</th><th>Leírás</th></tr></thead>
             <tbody>
-                <tr><td>/</td><td>Index</td><td>Redirect auth alapján</td></tr>
+                <tr><td>/</td><td>Dashboard</td><td>Testreszabható dashboard</td></tr>
                 <tr><td>/auth</td><td>Auth</td><td>Login + 2FA</td></tr>
                 <tr><td>/register</td><td>Register</td><td>Regisztráció kóddal</td></tr>
                 <tr><td>/change-password</td><td>ChangePassword</td><td>Kötelező jelszóváltoztatás</td></tr>
-                <tr><td>/dashboard</td><td>Dashboard</td><td>Testreszabható dashboard</td></tr>
-                <tr><td>/calendar</td><td>CalendarPage</td><td>Naptár (nap/hét/hónap)</td></tr>
-                <tr><td>/my-items</td><td>MyItems</td><td>Saját feladatok és események</td></tr>
-                <tr><td>/partners, /partners/:id</td><td>Partners, PartnerDetail</td><td>Partner lista és részletek</td></tr>
-                <tr><td>/projects, /projects/:id</td><td>Projects, ProjectDetail</td><td>Projektek</td></tr>
-                <tr><td>/sales, /sales/:id</td><td>Sales, SalesDetail</td><td>Értékesítések</td></tr>
-                <tr><td>/contracts, /contracts/:id</td><td>Contracts, ContractDetail</td><td>Szerződések</td></tr>
-                <tr><td>/documents, /documents/:id</td><td>Documents, DocumentDetail</td><td>Dokumentumok</td></tr>
-                <tr><td>/document-templates</td><td>DocumentTemplates</td><td>Sablonok</td></tr>
-                <tr><td>/time-tracking</td><td>TimeTracking</td><td>Időkövetés</td></tr>
+                <tr><td>/partners</td><td>Partners</td><td>Partner lista</td></tr>
+                <tr><td>/partners/:id</td><td>PartnerDetail</td><td>Partner részletek</td></tr>
+                <tr><td>/projects</td><td>Projects</td><td>Projekt lista</td></tr>
+                <tr><td>/projects/:id</td><td>ProjectDetail</td><td>Projekt részletek</td></tr>
+                <tr><td>/sales</td><td>Sales</td><td>Értékesítés lista</td></tr>
+                <tr><td>/sales/:id</td><td>SalesDetail</td><td>Értékesítés részletek</td></tr>
+                <tr><td>/contracts</td><td>Contracts</td><td>Szerződés lista</td></tr>
+                <tr><td>/contracts/:id</td><td>ContractDetail</td><td>Szerződés részletek</td></tr>
+                <tr><td>/documents</td><td>Documents</td><td>Dokumentum lista</td></tr>
+                <tr><td>/documents/:id</td><td>DocumentDetail</td><td>Dokumentum részletek</td></tr>
+                <tr><td>/templates</td><td>DocumentTemplates</td><td>Sablonok</td></tr>
+                <tr><td>/calendar</td><td>CalendarPage</td><td>Naptár nézet</td></tr>
+                <tr><td>/my-items</td><td>MyItems</td><td>Saját feladatok/események</td></tr>
                 <tr><td>/kanban</td><td>Kanban</td><td>Kanban nézet</td></tr>
                 <tr><td>/gantt</td><td>Gantt</td><td>Gantt diagram</td></tr>
-                <tr><td>/automation</td><td>Automation</td><td>Automatizációs szabályok</td></tr>
+                <tr><td>/time-tracking</td><td>TimeTracking</td><td>Időkövetés</td></tr>
+                <tr><td>/automation</td><td>Automation</td><td>Automatizáció</td></tr>
                 <tr><td>/reports</td><td>Reports</td><td>Riportok</td></tr>
-                <tr><td>/logs</td><td>Logs</td><td>Audit napló</td></tr>
-                <tr><td>/settings</td><td>Settings</td><td>Beállítások (tabs)</td></tr>
-                <tr><td>/account-management</td><td>AccountManagement</td><td>Fiók kezelés (SA)</td></tr>
-                <tr><td>/license-generator</td><td>LicenseGenerator</td><td>Licenc generátor (SA)</td></tr>
+                <tr><td>/logs</td><td>Logs</td><td>Audit napló (SA only)</td></tr>
+                <tr><td>/settings</td><td>Settings</td><td>Beállítások</td></tr>
+                <tr><td>/companies</td><td>Companies</td><td>Vállalatok (SA only)</td></tr>
+                <tr><td>/account-management</td><td>AccountManagement</td><td>Fiókok kezelése</td></tr>
+                <tr><td>/license-generator</td><td>LicenseGenerator</td><td>Licenc generátor (SA only)</td></tr>
+                <tr><td>*</td><td>NotFound</td><td>404 oldal</td></tr>
             </tbody>
         </table>
 
-        <h3>8.2. Fő Layout Komponensek</h3>
-        <ul>
-            <li><strong>MainLayout:</strong> AppSidebar + TopBar</li>
-            <li><strong>AppSidebar:</strong> Összecsukható navigáció (role/feature alapú), toggle gomb kötelező funkció</li>
-            <li><strong>TopBar:</strong> Vállalat választó (bal oldalon, dinamikus szélesség), GlobalSearch (jobb oldalon), Értesítések (harang), User menu, Nyelv választó</li>
-            <li><strong>Day/Night toggle:</strong> Regisztrációs oldalon is elérhető (bejelentkezés előtt)</li>
-        </ul>
-
-        <h3>8.3. Táblázat Rendszer</h3>
-        <ul>
-            <li><strong>ResizableTable:</strong> Standard táblázat komponens minden listázó oldalon</li>
-            <li><strong>useColumnSettings hook:</strong> Oszlop láthatóság, sorrend, szélesség localStorage-ban (táblánként külön kulcs)</li>
-            <li><strong>ColumnSettingsPopover:</strong> Oszlop beállítások UI</li>
-            <li>Sticky header (top-0 z-10)</li>
-            <li>Drag-drop oszlop rendezés (fejlécen és popover-ben)</li>
-            <li>Oszlop szélesség állítás húzással</li>
-            <li>Kompakt padding (px-3 py-2)</li>
-            <li>Dinamikus sormagasság (tartalom alapján)</li>
-            <li><strong>Igazítás szabály:</strong> dátumok, badge-ek, akciók, státuszok középre; nevek, szövegek balra</li>
-        </ul>
-
-        <h3>8.4. Főbb Hookok</h3>
+        <h3>9.2. Hookok (47 db)</h3>
         <table>
             <thead><tr><th>Kategória</th><th>Hookok</th></tr></thead>
             <tbody>
-                <tr><td>Auth</td><td>useUserProfile, use2FA, useInactivityLogout, useAccountLock</td></tr>
-                <tr><td>Data</td><td>useCompanies, useUsers, usePartners, useProjects, useSales, useContracts, useDocuments, useTasks, useEvents</td></tr>
-                <tr><td>Features</td><td>useTimeTracking, useApprovalWorkflows, useAutomationRules, useNotifications, useFavorites, useTags, useComments</td></tr>
-                <tr><td>UI</td><td>useColumnSettings, useDashboardWidgets, useBulkSelection, useSortableData</td></tr>
-                <tr><td>License</td><td>useLicenseValidation, useLicenseEnforcement, useFeatureAccess, useReadOnlyMode</td></tr>
+                <tr><td><strong>Auth</strong></td><td>useUserProfile, use2FA, useInactivityLogout, useAccountLock, useActiveSessions, useLockedAccounts, useLoginAttempts, useLoginAttemptsList</td></tr>
+                <tr><td><strong>Data CRUD</strong></td><td>useCompanies, useUsers, usePartners, usePartnerContacts, useProjects, useSales, useContracts, useDocuments, useEvents, useTasks</td></tr>
+                <tr><td><strong>Files</strong></td><td>useDocumentFiles, useContractFiles, useDocumentTemplates</td></tr>
+                <tr><td><strong>Features</strong></td><td>useTimeTracking, useApprovalWorkflows, useAutomationRules, useAutomationLogs, useAutomationExecution, useNotifications, useFavorites, useTags, useComments</td></tr>
+                <tr><td><strong>UI</strong></td><td>useColumnSettings, useDashboardWidgets, useBulkSelection, useBulkOperations, useSortableData, usePostalCodes</td></tr>
+                <tr><td><strong>License</strong></td><td>useLicenseValidation, useLicenseEnforcement, useFeatureAccess, useReadOnlyMode, useCompanyLicenses</td></tr>
+                <tr><td><strong>System</strong></td><td>useSystemSettings, useMasterData, useUserCompanies, useAppLogo, useApiKeyStatus, useDeadlineChecker, useUpdateTaskDeadline</td></tr>
+                <tr><td><strong>Utility</strong></td><td>use-mobile, use-toast</td></tr>
             </tbody>
         </table>
 
-        <h3>8.5. Branding</h3>
+        <h3>9.3. Layout és Navigáció</h3>
         <ul>
-            <li>Alkalmazás neve: PipeLiT</li>
-            <li>Feltölthető logo (Settings > System)</li>
-            <li>Supabase storage "branding" bucket</li>
-            <li>Logo megjelenik: login, register, sidebar</li>
-        </ul>
-    </div>
-
-    <div class="section" id="i18n">
-        <h2>9. NEMZETKÖZIESÍTÉS (I18N)</h2>
-
-        <h3>9.1. Támogatott Nyelvek</h3>
-        <ul>
-            <li><strong>Magyar (hu)</strong> - alapértelmezett</li>
-            <li><strong>English (en)</strong></li>
+            <li><strong>MainLayout:</strong> AppSidebar + TopBar wrapper</li>
+            <li><strong>AppSidebar:</strong> Összecsukható navigáció, toggle gomb <strong>kötelező funkció</strong></li>
+            <li><strong>TopBar:</strong> Vállalat választó (bal), GlobalSearch (jobb), Értesítések, User menu, Nyelv választó</li>
+            <li><strong>Day/Night toggle:</strong> Regisztrációs oldalon is elérhető</li>
         </ul>
 
-        <h3>9.2. Fordítási Fájlok</h3>
+        <h3>9.4. Táblázat Rendszer</h3>
         <ul>
-            <li><code>src/locales/hu.json</code>, <code>src/locales/en.json</code> - UI szövegek</li>
-            <li><code>src/locales/masterdata-hu.json</code>, <code>src/locales/masterdata-en.json</code> - Törzsadat címkék</li>
+            <li><strong>ResizableTable:</strong> Univerzális táblázat komponens - minden listánál használandó</li>
+            <li><strong>useColumnSettings hook:</strong> Oszlop láthatóság, sorrend, szélesség (localStorage)</li>
+            <li><strong>ColumnSettingsPopover:</strong> Oszlop beállítások UI</li>
+            <li>Sticky header (top-0 z-10)</li>
+            <li>Drag-drop oszlop rendezés</li>
+            <li>Oszlop szélesség állítás húzással</li>
+            <li>Kompakt padding (px-3 py-2)</li>
+            <li>Dinamikus sormagasság</li>
         </ul>
-
-        <h3>9.3. Nyelv Választás</h3>
-        <ul>
-            <li>TopBar-ban dropdown</li>
-            <li>Felhasználói preferencia mentése (profiles.language)</li>
-            <li>Browser language detection fallback</li>
-            <li>Regisztrációs oldalon is elérhető (bejelentkezés nélkül)</li>
-        </ul>
-
-        <h3>9.4. Időformátum</h3>
-        <ul>
-            <li>24 órás formátum az egész alkalmazásban</li>
-            <li>date-fns library, hu locale</li>
-        </ul>
-    </div>
-
-    <div class="section" id="summary">
-        <h2>10. ÖSSZEFOGLALÁS</h2>
-
+        
         <div class="info-box">
-            <strong>Implementáció státusz: 100% ✓</strong><br><br>
-            
-            <strong style="color: #28a745;">Teljesen implementált:</strong><br>
-            • Teljes autentikáció (login, 2FA, session kezelés, regisztráció)<br>
-            • Felhasználó- és jogosultságkezelés (RLS, roles, permissions)<br>
-            • Vállalat és licenckezelés (aktiválás, seat limit, feature flags)<br>
-            • Partner modul (címek, kapcsolattartók, validáció)<br>
-            • Projekt és Sales modul (Kanban, Gantt)<br>
-            • Szerződés modul (verziózás, figyelmeztetések)<br>
-            • Dokumentum modul (multi-file, PDF előnézet)<br>
-            • Feladat és Esemény modul (ismétlődés, naptár)<br>
-            • Időkövetés (timer, manuális bejegyzés)<br>
-            • Jóváhagyási workflow (kérés/jóváhagyás/elutasítás)<br>
-            • Automatizáció (triggerek, akciók, naplózás)<br>
-            • Dashboard (testreszabható widgetek)<br>
-            • Értesítések (real-time)<br>
-            • Keresés és Export (PDF, Excel, CSV)<br>
-            • Kedvencek és Címkék<br>
-            • Audit log<br>
-            • Rendszerbeállítások<br>
-            • Email integráció (Resend API)
+            <strong>Igazítási szabály:</strong><br>
+            • Dátumok, badge-ek, akciók, státuszok, számok → <strong>középre</strong><br>
+            • Nevek, szövegek, leírások → <strong>balra</strong>
         </div>
 
-        <h3>10.1. Biztonsági Jellemzők</h3>
-        <ul class="feature-list">
-            <li class="done">Row Level Security minden táblán</li>
-            <li class="done">2FA (TOTP + recovery codes)</li>
-            <li class="done">Account lockout rate limiting</li>
-            <li class="done">Jelszó komplexitás + 90 napos lejárat</li>
-            <li class="done">Single session enforcement</li>
-            <li class="done">Inaktivitás logout</li>
-            <li class="done">Session termination (admin)</li>
-            <li class="done">Audit logging</li>
-            <li class="done">Soft delete pattern</li>
-            <li class="done">SECURITY DEFINER RPC-k RLS bypass-hoz</li>
+        <h3>9.5. Form Validáció</h3>
+        <ul>
+            <li>Kötelező mezők: vékony piros keret + "Kötelező mező" hibaüzenet</li>
+            <li>Adószám: speciális magyar validáció (formátum, ellenőrző számjegy, ÁFA kód, NAV kód)</li>
+            <li>Jelszó: komplexitási követelmények megjelenítése</li>
+            <li>Mentés gomb tiltva érvénytelen form esetén</li>
         </ul>
 
-        <h3>10.2. Technikai Részletek</h3>
+        <h3>9.6. Branding</h3>
         <ul>
-            <li><strong>Build:</strong> Vite + TypeScript</li>
-            <li><strong>State Management:</strong> TanStack Query (react-query) - staleTime: 5 perc, gcTime: 30 perc, refetchOnWindowFocus: false</li>
-            <li><strong>Routing:</strong> react-router-dom v6</li>
-            <li><strong>Lazy Loading:</strong> React.lazy + Suspense minden oldalra (PageLoader skeleton fallback)</li>
-            <li><strong>Forms:</strong> react-hook-form + zod</li>
-            <li><strong>UI:</strong> shadcn/ui + Tailwind CSS + Lucide icons</li>
-            <li><strong>Drag & Drop:</strong> @dnd-kit</li>
-            <li><strong>Charts:</strong> Recharts</li>
-            <li><strong>PDF:</strong> react-pdf + pdfjs-dist (blob URL kötelező, nem signed URL)</li>
-            <li><strong>Export:</strong> jspdf + jspdf-autotable + xlsx + jszip (bulk download)</li>
-            <li><strong>Date inputs:</strong> Native HTML date/datetime-local (react-day-picker Deno kompatibilitási probléma miatt)</li>
-            <li><strong>Rich Text:</strong> TipTap</li>
+            <li>Alkalmazás neve: <strong>PipeLiT</strong></li>
+            <li>Feltölthető logo (Settings > System)</li>
+            <li>Storage: "branding" bucket</li>
+            <li>Megjelenés: login, register, sidebar header</li>
+            <li>Cache busting mechanizmus logo frissítéshez</li>
         </ul>
 
-        <h3>10.3. Fontos Architektúrális Döntések</h3>
+        <h3>9.7. Pénznem Formázás</h3>
         <ul>
-            <li><strong>Soft Delete Pattern:</strong> SECURITY DEFINER RPC függvényeken keresztül (RLS policy konfliktus miatt) - soft_delete_project, soft_delete_task, soft_delete_event, soft_delete_company, soft_delete_document, soft_delete_comment</li>
-            <li><strong>Real-time Session Termination:</strong> Supabase Realtime broadcast (session-terminate-{userId} csatorna) - azonnali kijelentkeztetés polling nélkül</li>
-            <li><strong>User Törlés:</strong> Automatikus session termination + locked_accounts, login_attempts, user_company_permissions cleanup</li>
-            <li><strong>Licenc Kulcs:</strong> 12-bit random nonce a nem-determinisztikus generáláshoz (4096 egyedi érték)</li>
-            <li><strong>PDF Preview:</strong> Blob URL kötelező (signed URL → Chrome CSP/X-Frame-Options blokkolás)</li>
-            <li><strong>Office Preview:</strong> ELTÁVOLÍTVA - Word/Excel/PowerPoint nem megbízható böngészőben</li>
-            <li><strong>Event-driven Updates:</strong> Polling helyett Supabase Realtime subscriptions (postgres_changes)</li>
-            <li><strong>Comments:</strong> Soft delete SECURITY DEFINER RPC-n keresztül (csak szerző törölheti)</li>
+            <li>HUF: 0 tizedesjegy (kerekítve)</li>
+            <li>EUR/USD: 2 tizedesjegy</li>
+            <li>Pénzösszeg oszlopok: <code>font-mono text-right</code></li>
+            <li><code>formatCurrency()</code> utility a központi formázáshoz</li>
+            <li>Beállítás: use_browser_locale vagy manuális separator config</li>
         </ul>
 
-        <h3>10.4. UI/UX Szabályok</h3>
+        <h3>9.8. i18n</h3>
         <ul>
-            <li><strong>Form Validáció:</strong> Kötelező mezők piros szegéllyel + "Kötelező mező" hibaüzenet</li>
-            <li><strong>Akció gombok:</strong> Táblázatban icon-only (size="icon" h-7 w-7), részlet oldalakon text gomb</li>
-            <li><strong>Naptár színek:</strong> Projekt szintű (task_color, event_color) és személyes szintű (personal_task_color, personal_event_color) - ColorPicker komponenssel állítható</li>
-            <li><strong>Resend API kulcs:</strong> Csak Super Admin látja (unmasked), check-api-key-status edge function ellenőrzi jogosultságot</li>
-            <li><strong>Settings táblázatok:</strong> Companies, Master Data, Account Management tabok is támogatják az oszlop kezelést (visibility, reorder, resize)</li>
-        </ul>
-
-        <h3>10.5. Jövőbeli Lehetőségek</h3>
-        <ul>
-            <li>NAV integráció (adategyeztetés)</li>
-            <li>Számlázó rendszer integráció</li>
-            <li>Mobile app (React Native)</li>
-            <li>Advanced analytics és reporting</li>
-            <li>Workflow designer (vizuális)</li>
+            <li>Támogatott nyelvek: Magyar (hu), English (en)</li>
+            <li>Nyelvi fájlok: src/locales/hu.json, src/locales/en.json</li>
+            <li>Törzsadat fordítások: masterdata-hu.json, masterdata-en.json</li>
+            <li>LanguageSelector komponens TopBar-ban</li>
+            <li>Nyelv mentése profiles.language + localStorage</li>
         </ul>
     </div>
 
-    <footer style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #666;">
-        <p>PipeLiT Rendszer Specifikáció v2.1 | Generálva: 2025-12-08</p>
-    </footer>
+    <!-- ==================== 10. NEM FUNKCIONÁLIS ==================== -->
+    <div class="section" id="non-functional">
+        <h2>10. NEM FUNKCIONÁLIS KÖVETELMÉNYEK</h2>
+
+        <h3>10.1. Teljesítmény</h3>
+        <ul>
+            <li>Lazy loading minden oldalra (React.lazy + Suspense)</li>
+            <li>TanStack Query cache: staleTime 5 perc, gcTime 30 perc</li>
+            <li>refetchOnWindowFocus: false</li>
+            <li>Skeleton loader fallback</li>
+        </ul>
+
+        <h3>10.2. Biztonság</h3>
+        <ul>
+            <li>RLS minden táblán (50+ policy)</li>
+            <li>SECURITY DEFINER függvények érzékeny műveletekhez</li>
+            <li>2FA támogatás (TOTP + recovery codes)</li>
+            <li>Account lockout brute force ellen</li>
+            <li>Single session enforcement</li>
+            <li>Password expiry (90 nap)</li>
+            <li>Rate limiting (login attempts)</li>
+            <li>Session termination broadcast</li>
+        </ul>
+
+        <h3>10.3. Audit és Logging</h3>
+        <ul>
+            <li>logs tábla minden entitás művelethez</li>
+            <li>login_attempts minden bejelentkezési kísérlethez</li>
+            <li>automation_logs automatizáció végrehajtásokhoz</li>
+            <li>Sensitive profile changes trigger (role, 2FA, permissions)</li>
+            <li>Account lock events logging</li>
+        </ul>
+
+        <h3>10.4. Skálázhatóság</h3>
+        <ul>
+            <li>Multi-tenant architektúra (company_id szeparáció)</li>
+            <li>Supabase managed infrastructure</li>
+            <li>Edge functions stateless design</li>
+        </ul>
+
+        <h3>10.5. Téma és Megjelenés</h3>
+        <ul>
+            <li>Light/Dark mód támogatás (next-themes)</li>
+            <li>24 órás időformátum alkalmazás-szerte</li>
+            <li>Responsive design (Tailwind breakpoints)</li>
+            <li>Semantic color tokens (index.css)</li>
+        </ul>
+    </div>
+
+    <!-- ==================== 11. ARCHITEKTÚRÁLIS DÖNTÉSEK ==================== -->
+    <div class="section" id="architectural-decisions">
+        <h2>11. ARCHITEKTÚRÁLIS DÖNTÉSEK</h2>
+
+        <h3>11.1. Soft Delete SECURITY DEFINER Pattern</h3>
+        <div class="decision-box">
+            <strong>Probléma:</strong> RLS UPDATE policy és SELECT policy ütközése (deleted_at IS NULL check).<br><br>
+            <strong>Megoldás:</strong> Minden major entitáshoz SECURITY DEFINER RPC function:
+            <ul>
+                <li><code>soft_delete_project()</code></li>
+                <li><code>soft_delete_task()</code></li>
+                <li><code>soft_delete_event()</code></li>
+                <li><code>soft_delete_contract()</code></li>
+                <li><code>soft_delete_comment()</code></li>
+            </ul>
+            Ezek bypass-olják az RLS-t és explicit jogosultság-ellenőrzést végeznek.
+        </div>
+
+        <h3>11.2. PDF Preview Blob URL</h3>
+        <div class="decision-box">
+            <strong>Probléma:</strong> Supabase signed URL-ek iframe-ben Chrome CSP/X-Frame-Options blokkolás.<br><br>
+            <strong>Megoldás:</strong> Fájl letöltés → <code>URL.createObjectURL(blob)</code> → object tag-ben megjelenítés. Ez az application origin-ről szolgálja ki a PDF-et.
+        </div>
+
+        <h3>11.3. Real-time Session Termination</h3>
+        <div class="decision-box">
+            <strong>Probléma:</strong> Admin által kezdeményezett kijelentkeztetés azonnali végrehajtása.<br><br>
+            <strong>Megoldás:</strong> Supabase Realtime broadcast a <code>session-terminate-${userId}</code> channelen. AuthContext figyeli és azonnal kijelentkezteti a usert.
+        </div>
+
+        <h3>11.4. Native HTML Date Input</h3>
+        <div class="decision-box">
+            <strong>Probléma:</strong> Calendar library (react-day-picker) Deno/Edge Functions build hibák.<br><br>
+            <strong>Megoldás:</strong> Native HTML <code>&lt;input type="date"&gt;</code> és <code>&lt;input type="datetime-local"&gt;</code> használata mindenhol.
+        </div>
+
+        <h3>11.5. Login Attempts Rate Limiting</h3>
+        <div class="decision-box">
+            <strong>Probléma:</strong> DoS támadás login_attempts táblán keresztül.<br><br>
+            <strong>Megoldás:</strong> <code>record_login_attempt()</code> SECURITY DEFINER RPC, ami max 10 sikertelen/perc/IP rate limit-et alkalmaz. Nincs közvetlen INSERT RLS policy.
+        </div>
+
+        <h3>11.6. Licenc Kulcs Non-determinizmus</h3>
+        <div class="decision-box">
+            <strong>Probléma:</strong> Azonos input paraméterek azonos licenc kulcsot generálnak → kulcs megoszthatóság.<br><br>
+            <strong>Megoldás:</strong> 12-bit random nonce (4096 lehetséges érték) hozzáadása a licenc payload-hoz.
+        </div>
+    </div>
+
+    <!-- ==================== 12. ROADMAP / BACKLOG ==================== -->
+    <div class="section" id="backlog">
+        <h2>12. ROADMAP / BACKLOG</h2>
+
+        <h3>12.1. Implementált (100%)</h3>
+        <ul class="feature-list">
+            <li class="done">Phase 1: Bulk operations, Favorites, Tags</li>
+            <li class="done">Phase 2: Comments, Recurring tasks/events, Partner contacts</li>
+            <li class="done">Phase 3: Reports, CSV/Excel import, Document templates</li>
+            <li class="done">Phase 4: Kanban, Gantt, Dashboard customization, Time tracking, Approval workflows, Automation</li>
+        </ul>
+
+        <h3>12.2. Tervezett / Backlog</h3>
+        <ul class="feature-list">
+            <li class="missing">Email integráció (IMAP/SMTP közvetlen - Deno korlátozás miatt elhalasztva)</li>
+            <li class="missing">NAV integráció (adószám ellenőrzés API)</li>
+            <li class="missing">Számlázó rendszer integráció</li>
+            <li class="missing">Publikus API (third-party integrations)</li>
+            <li class="missing">Mobile app (React Native)</li>
+            <li class="missing">Advanced analytics / BI dashboard</li>
+            <li class="missing">Workflow designer (vizuális flow builder)</li>
+            <li class="missing">AI-alapú feladat priorizálás</li>
+        </ul>
+
+        <h3>12.3. Ismert Korlátozások</h3>
+        <ul>
+            <li>Office formátumok (Word/Excel/PowerPoint) preview nem támogatott - böngészőben nem megbízható</li>
+            <li>Direct SMTP nem lehetséges Edge Functions-ben (Deno runtime korlátozás) - Resend HTTP API használatos</li>
+            <li>Anya-leányvállalat kapcsolat funkció eltávolítva user döntés alapján</li>
+        </ul>
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div class="info-box" style="margin-top: 50px;">
+        <strong>Dokumentum vége</strong><br>
+        PipeLiT - Teljes Rendszer Specifikáció v3.0<br>
+        Generálva: 2025-12-08<br>
+        Ez a dokumentum a kódbázis és a teljes Lovable beszélgetés alapján készült.
+    </div>
+
 </body>
 </html>
