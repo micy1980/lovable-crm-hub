@@ -434,7 +434,8 @@
                 <tr><td>default_currency</td><td>text</td><td>Alapértelmezett deviza</td></tr>
                 <tr><td>category</td><td>text</td><td>master_data ref</td></tr>
                 <tr><td>restrict_access</td><td>boolean</td><td>Korlátozott hozzáférés (partner_user_access)</td></tr>
-                <tr><td>parent_partner_id</td><td>uuid (FK)</td><td>Szülő partner (anya-leány - eltávolítva)</td></tr>
+                <tr><td>parent_partner_id</td><td>uuid (FK)</td><td>Szülő partner (anya-leány funkció ELTÁVOLÍTVA, mező megmaradt)</td></tr>
+                <tr><td>notes</td><td>text</td><td>Megjegyzések</td></tr>
                 <tr><td>created_at, updated_at, deleted_at</td><td>timestamptz</td><td>Időbélyegzők</td></tr>
             </tbody>
         </table>
@@ -570,11 +571,11 @@
                 <tr><td>id</td><td>uuid (PK)</td><td>Elsődleges kulcs</td></tr>
                 <tr><td>company_id</td><td>uuid (FK)</td><td>→ companies</td></tr>
                 <tr><td>user_id</td><td>uuid (FK)</td><td>→ profiles</td></tr>
-                <tr><td>task_id</td><td>uuid (FK, nullable)</td><td>→ tasks</td></tr>
+                <tr><td>task_id</td><td>uuid (FK)</td><td>→ tasks (kötelező)</td></tr>
                 <tr><td>description</td><td>text</td><td>Leírás</td></tr>
                 <tr><td>start_time, end_time</td><td>timestamptz</td><td>Időpontok</td></tr>
-                <tr><td>duration_minutes</td><td>integer</td><td>Időtartam percben</td></tr>
-                <tr><td>is_running</td><td>boolean</td><td>Aktív timer</td></tr>
+                <tr><td>duration_minutes</td><td>integer</td><td>Időtartam percben (számított)</td></tr>
+                <tr><td>is_running</td><td>boolean</td><td>Aktív timer (egy aktív/felhasználó)</td></tr>
             </tbody>
         </table>
 
@@ -628,10 +629,18 @@
         <p>Felhasználónkénti widget láthatóság, pozíció és szélesség beállítások.</p>
 
         <h4>master_data (törzsadatok)</h4>
-        <p>Dinamikus típusok: partner_category, project_status, task_status, sale_status, contract_type, payment_frequency, currency, cost_category, country, county, street_type.</p>
+        <p>Dinamikus típusok menü kategóriákba rendezve (Settings > Törzsadatok):</p>
+        <ul>
+            <li><strong>Partnerek:</strong> partner_category</li>
+            <li><strong>Projektek:</strong> project_status</li>
+            <li><strong>Értékesítés:</strong> sale_status</li>
+            <li><strong>Szerződések:</strong> contract_type, payment_frequency</li>
+            <li><strong>Feladatok:</strong> task_status</li>
+            <li><strong>Egyéb:</strong> currency, cost_category, country, county, street_type</li>
+        </ul>
 
         <h4>postal_codes (~4000 rekord)</h4>
-        <p>Magyar irányítószámok, települések, megyék a cím kitöltéshez.</p>
+        <p>Magyar irányítószámok, települések, megyék a cím kitöltéshez. Budapest esetén megye = "-" automatikusan.</p>
 
         <h4>system_settings (rendszerbeállítások)</h4>
         <div class="info-box">
@@ -684,7 +693,8 @@
             <strong>normal:</strong><br>
             • Alapértelmezett felhasználó<br>
             • Vállalatspecifikus jogosultságok szerint<br>
-            • Csak saját profil látható (strict privacy)
+            • Csak saját profil látható (strict privacy model)<br>
+            • Csak Super Adminok és Company Adminok rendelhetnek feladatokat/projekteket más felhasználókhoz
         </div>
 
         <div class="status-box implemented">
@@ -775,12 +785,16 @@ USING (
 
         <h3>4.3. Regisztráció</h3>
         <ol>
-            <li>Super Admin létrehozza a felhasználót (email, név)</li>
-            <li>"Regisztrációs kód küldése" → 8 karakteres kód generálás + email küldés</li>
-            <li>Felhasználó a linkről regisztrál: email (readonly) + név (readonly) + kód + jelszó</li>
+            <li>Super Admin létrehozza a felhasználót (email, vezetéknév, keresztnév)</li>
+            <li><strong>Két gomb:</strong> "Mentés" (csak létrehoz) VAGY "Mentés és kód küldése" (létrehoz + meghívó)</li>
+            <li>"Regisztrációs kód küldése" → 8 karakteres kód generálás + email küldés (24 óra érvényesség)</li>
+            <li><strong>Újraküldéskor:</strong> ÚJ kód generálódik (nem ugyanaz)</li>
+            <li>Felhasználó a linkről regisztrál: email (readonly) + név (readonly, SA által beállított) + kód + jelszó (2x)</li>
             <li>Jelszó komplexitás: min 8 karakter, nagy/kisbetű, szám, speciális karakter</li>
-            <li>Kód validáció backend-en</li>
+            <li>Pwned password ellenőrzés (Supabase Auth)</li>
+            <li>Kód validáció backend-en (pontosan egyezni kell)</li>
             <li>Sikeres regisztráció → <code>registered_at</code> timestamp</li>
+            <li><strong>Regisztrációs státusz jelzők:</strong> óra ikon (nem küldött), boríték ikon (küldött), pipa ikon (regisztrált)</li>
         </ol>
 
         <h3>4.4. Session Kezelés</h3>
@@ -905,12 +919,15 @@ USING (
 
         <h3>7.1. Partner Modul</h3>
         <ul>
-            <li>Háromszintű címrendszer (székhely, telephely, levelezési) másolási lehetőséggel</li>
-            <li>Magyar adószám validáció (formátum, ellenőrző számjegy, ÁFA kód, NAV kódok)</li>
-            <li>Kapcsolattartók kezelése (elsődleges jelölés)</li>
+            <li>Háromszintű címrendszer (székhely kötelező, telephely opcionális, levelezési opcionális) másolási lehetőséggel ("Megegyezik a székhellyel" / "Megegyezik a telephellyel" checkbox)</li>
+            <li>Magyar adószám validáció (xxxxxxxx-x-xx formátum, ellenőrző számjegy, ÁFA kód 1-5, NAV regionális kódok)</li>
+            <li><strong>Adószám kötelező</strong> - mentés nem lehetséges érvényes adószám nélkül</li>
+            <li>Kapcsolattartók kezelése (elsődleges jelölés, pozíció, elérhetőségek)</li>
             <li>Felhasználói hozzáférés korlátozás (restrict_access + partner_user_access)</li>
             <li>Partner részlet oldal: Projektek, Feladatok, Események, Dokumentumok, Értékesítések tabok</li>
             <li>Export (PDF, Excel, CSV) látható oszlopokkal</li>
+            <li>Oszlop láthatóság és sorrend testreszabás localStorage-ban</li>
+            <li><strong>Anya-leány vállalat kapcsolat:</strong> ELTÁVOLÍTVA (user döntés)</li>
         </ul>
 
         <h3>7.2. Projekt Modul</h3>
@@ -946,42 +963,47 @@ USING (
 
         <h3>7.5. Dokumentum Modul</h3>
         <ul>
-            <li>Multi-file támogatás (document_files)</li>
-            <li>Verziókövetés és visszaállítás (admin)</li>
+            <li>Multi-file támogatás (document_files tábla)</li>
+            <li>Verziókövetés és visszaállítás (admin only)</li>
             <li>Visibility: COMPANY_ONLY, PROJECT_ONLY, SALES_ONLY, PUBLIC</li>
+            <li><strong>PDF és kép előnézet</strong> (Word/Excel/PowerPoint preview ELTÁVOLÍTVA - nem megbízható böngészőben)</li>
             <li>PDF előnézet komplex funkciókkal:
                 <ul>
-                    <li>Folyamatos görgetés</li>
-                    <li>Zoom (50-200%)</li>
-                    <li>Oldal ugrás és oldalszám kijelzés</li>
-                    <li>Keresés kiemelésekkel (Acrobat stílusú)</li>
-                    <li>Thumbnail sidebar + könyvjelzők</li>
-                    <li>Forgatás, teljes képernyő, nyomtatás</li>
+                    <li>Folyamatos görgetés (nincs lapozás gomb)</li>
+                    <li>Zoom (50-200%, reset gomb)</li>
+                    <li>Scroll-alapú oldalszám kijelzés + oldal ugrás Enter-rel</li>
+                    <li>Keresés kiemelésekkel (Acrobat stílusú - világoskék találatok, sötétkék aktuális)</li>
+                    <li>Thumbnail sidebar + könyvjelzők (ha van a PDF-ben)</li>
+                    <li>Forgatás (90° lépték), teljes képernyő, nyomtatás</li>
+                    <li>Szöveg kijelölés és másolás</li>
                 </ul>
             </li>
-            <li>Bulk ZIP letöltés ({title}_{timestamp}.zip)</li>
-            <li>Szűrés (típus, dátum, szöveg)</li>
-            <li>Drag-drop feltöltés</li>
-            <li>Soft delete (admin) / Hard delete (super admin + jelszó)</li>
+            <li>Bulk ZIP letöltés ({dokumentum_cím}_{YYYYMMDD_HHMMSS}.zip)</li>
+            <li>Szűrés (fájltípus, dátum tartomány, szabad szöveg)</li>
+            <li>Drag-drop feltöltés + checkbox-os kijelölés</li>
+            <li>Soft delete (admin) / Hard delete (super admin + jelszó megerősítés)</li>
             <li>Jóváhagyási workflow integráció</li>
+            <li>Fájltípus-specifikus ikonok (getFileTypeIcon utility)</li>
         </ul>
 
         <h3>7.6. Feladat és Esemény Modul</h3>
         <ul>
-            <li>Feladatok és események külön táblákban</li>
-            <li>Ismétlődés támogatás (none, daily, weekly, monthly, yearly)</li>
-            <li>Virtuális előfordulások generálása naptárhoz</li>
-            <li>Egész napos jelölés</li>
-            <li>Partner, projekt, sales kapcsolat</li>
+            <li>Feladatok és események <strong>külön táblákban</strong> (tasks, events)</li>
+            <li>Ismétlődés támogatás (none, daily, weekly, monthly, yearly) intervallummal</li>
+            <li>Virtuális előfordulások generálása naptárhoz (recurrenceUtils.generateRecurrences)</li>
+            <li>Egész napos jelölés explicit toggle-lel</li>
+            <li>Partner, projekt, sales kapcsolat (opcionális)</li>
             <li>Felelős és létrehozó megkülönböztetés</li>
-            <li>Láthatóság: felelős VAGY létrehozó látja</li>
+            <li><strong>Határidő/befejezési idő kötelező</strong></li>
+            <li>Láthatóság: <strong>felelős VAGY létrehozó</strong> látja saját naptárban és listában</li>
             <li>Törlési jogosultság:
                 <ul>
-                    <li>Személyes (projekt nélküli): létrehozó törölheti</li>
-                    <li>Projekthez kötött: admin, owner, felelős törölheti</li>
+                    <li>Személyes (projekt/sales nélküli): létrehozó törölheti</li>
+                    <li>Projekthez/sales-hez kötött: super admin, company admin (can_delete), projekt owner, projekt felelősök törölhetik</li>
                 </ul>
             </li>
-            <li>"Saját dolgaim" (My Items) oldal</li>
+            <li>"Saját dolgaim" (My Items) oldal: személyes + hozzárendelt feladatok/események</li>
+            <li>Események résztvevőkkel (belső user + külső email meghívók)</li>
         </ul>
 
         <h3>7.7. Naptár Modul</h3>
@@ -1079,11 +1101,12 @@ USING (
 
         <h3>7.14. Kedvencek és Címkék</h3>
         <ul>
-            <li>FavoriteButton: csillag ikon minden listázó oldalon</li>
-            <li>favorites tábla felhasználónként</li>
-            <li>TagSelector: címke választó és létrehozás</li>
-            <li>tags + entity_tags táblák</li>
-            <li>Címke csak akkor törölhető, ha nincs használatban</li>
+            <li>FavoriteButton: csillag ikon a "kedvenc" oszlopban (Projektek, Sales, Szerződések, Partnerek, Dokumentumok)</li>
+            <li>favorites tábla felhasználónként (user_id scoped)</li>
+            <li>TagSelector: címke választó és inline létrehozás</li>
+            <li>tags + entity_tags táblák (vállalat-scoped)</li>
+            <li><strong>Címke törlési korlátozás:</strong> csak akkor törölhető, ha usageCount = 0 (nincs egyetlen entitáshoz sem hozzárendelve)</li>
+            <li>Címke törlés: csak admin látja a törlés gombot</li>
         </ul>
 
         <h3>7.15. Bulk Műveletek</h3>
@@ -1097,8 +1120,16 @@ USING (
         <ul>
             <li>Reports oldal: projekt, sales, partner összesítések</li>
             <li>CSV/Excel import: partnerek, projektek, sales</li>
-            <li>ImportDialog: mező mapping, validáció</li>
-            <li>Dokumentum sablonok (document_templates)</li>
+            <li>ImportDialog: mező mapping, validáció, hibajelentés</li>
+            <li>Dokumentum sablonok (document_templates) változó helyettesítéssel</li>
+        </ul>
+
+        <h3>7.17. Pénznem Formázás</h3>
+        <ul>
+            <li>Konfigurálható system_settings-ben: use_browser_locale, thousand_separator, decimal_separator</li>
+            <li>HUF: 0 tizedesjegy (kerekítve), EUR/USD: 2 tizedesjegy</li>
+            <li>Pénzösszeg mezők: monospace betűtípus (font-mono), jobbra igazítva (text-right)</li>
+            <li>formatCurrency() utility függvény központi formázáshoz</li>
         </ul>
     </div>
 
@@ -1137,19 +1168,22 @@ USING (
         <h3>8.2. Fő Layout Komponensek</h3>
         <ul>
             <li><strong>MainLayout:</strong> AppSidebar + TopBar</li>
-            <li><strong>AppSidebar:</strong> Összecsukható navigáció (role/feature alapú)</li>
-            <li><strong>TopBar:</strong> Vállalat választó (bal), GlobalSearch (jobb), Értesítések, User menu, Nyelv</li>
+            <li><strong>AppSidebar:</strong> Összecsukható navigáció (role/feature alapú), toggle gomb kötelező funkció</li>
+            <li><strong>TopBar:</strong> Vállalat választó (bal oldalon, dinamikus szélesség), GlobalSearch (jobb oldalon), Értesítések (harang), User menu, Nyelv választó</li>
+            <li><strong>Day/Night toggle:</strong> Regisztrációs oldalon is elérhető (bejelentkezés előtt)</li>
         </ul>
 
         <h3>8.3. Táblázat Rendszer</h3>
         <ul>
-            <li><strong>ResizableTable:</strong> Standard táblázat komponens</li>
-            <li><strong>useColumnSettings hook:</strong> Oszlop láthatóság, sorrend, szélesség localStorage-ban</li>
+            <li><strong>ResizableTable:</strong> Standard táblázat komponens minden listázó oldalon</li>
+            <li><strong>useColumnSettings hook:</strong> Oszlop láthatóság, sorrend, szélesség localStorage-ban (táblánként külön kulcs)</li>
             <li><strong>ColumnSettingsPopover:</strong> Oszlop beállítások UI</li>
-            <li>Sticky header</li>
-            <li>Drag-drop oszlop rendezés</li>
-            <li>Oszlop szélesség állítás</li>
+            <li>Sticky header (top-0 z-10)</li>
+            <li>Drag-drop oszlop rendezés (fejlécen és popover-ben)</li>
+            <li>Oszlop szélesség állítás húzással</li>
             <li>Kompakt padding (px-3 py-2)</li>
+            <li>Dinamikus sormagasság (tartalom alapján)</li>
+            <li><strong>Igazítás szabály:</strong> dátumok, badge-ek, akciók, státuszok középre; nevek, szövegek balra</li>
         </ul>
 
         <h3>8.4. Főbb Hookok</h3>
@@ -1253,13 +1287,23 @@ USING (
             <li><strong>UI:</strong> shadcn/ui + Tailwind CSS + Lucide icons</li>
             <li><strong>Drag & Drop:</strong> @dnd-kit</li>
             <li><strong>Charts:</strong> Recharts</li>
-            <li><strong>PDF:</strong> react-pdf + pdfjs-dist</li>
-            <li><strong>Export:</strong> jspdf + jspdf-autotable + xlsx</li>
-            <li><strong>Calendar:</strong> react-day-picker</li>
+            <li><strong>PDF:</strong> react-pdf + pdfjs-dist (blob URL kötelező, nem signed URL)</li>
+            <li><strong>Export:</strong> jspdf + jspdf-autotable + xlsx + jszip (bulk download)</li>
+            <li><strong>Date inputs:</strong> Native HTML date/datetime-local (react-day-picker Deno kompatibilitási probléma miatt)</li>
             <li><strong>Rich Text:</strong> TipTap</li>
         </ul>
 
-        <h3>10.3. Jövőbeli Lehetőségek</h3>
+        <h3>10.3. Fontos Architektúrális Döntések</h3>
+        <ul>
+            <li><strong>Soft Delete Pattern:</strong> SECURITY DEFINER RPC függvényeken keresztül (RLS policy konfliktus miatt)</li>
+            <li><strong>Real-time Session Termination:</strong> Supabase Realtime broadcast (session-terminate-{userId} csatorna)</li>
+            <li><strong>Licenc Kulcs:</strong> 12-bit random nonce a nem-determinisztikus generáláshoz</li>
+            <li><strong>PDF Preview:</strong> Blob URL kötelező (signed URL → Chrome CSP blokkolás)</li>
+            <li><strong>Office Preview:</strong> ELTÁVOLÍTVA - Word/Excel/PowerPoint nem megbízható böngészőben</li>
+            <li><strong>Event-driven Updates:</strong> Polling helyett Supabase Realtime subscriptions</li>
+        </ul>
+
+        <h3>10.4. Jövőbeli Lehetőségek</h3>
         <ul>
             <li>NAV integráció (adategyeztetés)</li>
             <li>Számlázó rendszer integráció</li>
