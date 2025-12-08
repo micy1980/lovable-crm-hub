@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, History } from 'lucide-react';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { CommentsSection } from '@/components/shared/CommentsSection';
 import { ProjectTasks } from '@/components/projects/ProjectTasks';
@@ -23,6 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ApprovalRequestButton } from '@/components/approval/ApprovalRequestButton';
+import { ApprovalHistoryDialog } from '@/components/approval/ApprovalHistoryDialog';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ const ProjectDetail = () => {
   const { canEdit } = useReadOnlyMode();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [approvalHistoryOpen, setApprovalHistoryOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: project, isLoading } = useQuery({
@@ -117,6 +120,14 @@ const ProjectDetail = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          {id && <ApprovalRequestButton entityType="project" entityId={id} />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setApprovalHistoryOpen(true)}
+          >
+            <History className="h-4 w-4" />
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -243,8 +254,16 @@ const ProjectDetail = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {id && (
+        <ApprovalHistoryDialog
+          open={approvalHistoryOpen}
+          onOpenChange={setApprovalHistoryOpen}
+          entityType="project"
+          entityId={id}
+        />
+      )}
     </div>
   );
 };
 
-export default ProjectDetail;

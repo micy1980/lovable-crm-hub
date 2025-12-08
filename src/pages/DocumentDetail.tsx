@@ -14,7 +14,8 @@ import {
   Building,
   FolderKanban,
   TrendingUp,
-  Users
+  Users,
+  History
 } from 'lucide-react';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +40,8 @@ import { LicenseGuard } from '@/components/license/LicenseGuard';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog';
+import { ApprovalRequestButton } from '@/components/approval/ApprovalRequestButton';
+import { ApprovalHistoryDialog } from '@/components/approval/ApprovalHistoryDialog';
 
 const DocumentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +50,7 @@ const DocumentDetail = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
+  const [approvalHistoryOpen, setApprovalHistoryOpen] = useState(false);
   const { data: profile } = useUserProfile();
   const isSuper = isSuperAdmin(profile);
   const isAdmin = isAdminOrAbove(profile);
@@ -159,6 +163,10 @@ const DocumentDetail = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            {id && <ApprovalRequestButton entityType="document" entityId={id} />}
+            <Button variant="ghost" size="icon" onClick={() => setApprovalHistoryOpen(true)}>
+              <History className="h-4 w-4" />
+            </Button>
             <Button variant="outline" onClick={() => setEditOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
               Szerkesztés
@@ -305,6 +313,15 @@ const DocumentDetail = () => {
         title="Dokumentum végleges törlése"
         description="A dokumentum és a hozzá tartozó fájlok véglegesen törlésre kerülnek. Ez a művelet nem visszavonható. Kérjük, adja meg jelszavát a megerősítéshez."
       />
+
+      {id && (
+        <ApprovalHistoryDialog
+          open={approvalHistoryOpen}
+          onOpenChange={setApprovalHistoryOpen}
+          entityType="document"
+          entityId={id}
+        />
+      )}
     </LicenseGuard>
   );
 };

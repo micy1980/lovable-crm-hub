@@ -12,7 +12,8 @@ import {
   DollarSign, 
   AlertTriangle,
   RefreshCw,
-  Lock
+  Lock,
+  History
 } from 'lucide-react';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { CommentsSection } from '@/components/shared/CommentsSection';
@@ -41,6 +42,8 @@ import { formatCurrency, getNumberFormatSettings } from '@/lib/formatCurrency';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { isSuperAdmin, isAdminOrAbove } from '@/lib/roleUtils';
 import { PasswordConfirmDialog } from '@/components/shared/PasswordConfirmDialog';
+import { ApprovalRequestButton } from '@/components/approval/ApprovalRequestButton';
+import { ApprovalHistoryDialog } from '@/components/approval/ApprovalHistoryDialog';
 
 const ContractDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +52,7 @@ const ContractDetail = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
+  const [approvalHistoryOpen, setApprovalHistoryOpen] = useState(false);
   
   const { settings: systemSettings } = useSystemSettings();
   const numberFormatSettings = getNumberFormatSettings(systemSettings);
@@ -173,6 +177,10 @@ const ContractDetail = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              {id && <ApprovalRequestButton entityType="contract" entityId={id} />}
+              <Button variant="ghost" size="icon" onClick={() => setApprovalHistoryOpen(true)}>
+                <History className="h-4 w-4" />
+              </Button>
               <Button variant="outline" onClick={() => setEditOpen(true)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Szerkesztés
@@ -391,6 +399,15 @@ const ContractDetail = () => {
           title="Szerződés végleges törlése"
           description="A szerződés és minden hozzá tartozó verzió véglegesen törlésre kerül. Ez a művelet nem visszavonható. Kérjük, adja meg jelszavát a megerősítéshez."
         />
+
+        {id && (
+          <ApprovalHistoryDialog
+            open={approvalHistoryOpen}
+            onOpenChange={setApprovalHistoryOpen}
+            entityType="contract"
+            entityId={id}
+          />
+        )}
     </LicenseGuard>
   );
 };
