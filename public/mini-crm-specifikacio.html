@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PipeLiT - Teljes Rendszer Specifikáció v3</title>
+    <title>PipeLiT - Teljes Rendszer Specifikáció v3.1</title>
     <style>
         * {
             margin: 0;
@@ -271,11 +271,12 @@
     
     <div class="info-box">
         <strong>Dokumentum információk:</strong><br>
-        <strong>Verzió: 3.0</strong><br>
+        <strong>Verzió: 3.1</strong><br>
         Utolsó frissítés: 2025-12-08<br>
         Projekt típus: Vállalati CRM rendszer feladatkezeléssel, projektmenedzsmenttel és automatizációval<br>
         Technológia: React + TypeScript + Lovable Cloud (Supabase)<br>
-        Alkalmazás neve: <strong>PipeLiT</strong>
+        Alkalmazás neve: <strong>PipeLiT</strong><br>
+        <em>Megjegyzés: Ez a dokumentum a kódbázis és adatbázis-séma alapján frissült. Az Edge Functions darabszám és hook nevek mindig a kód alapján frissítendők.</em>
     </div>
 
     <div class="toc">
@@ -442,11 +443,11 @@
             </div>
             <div class="tech-item">
                 <strong>Edge Functions</strong>
-                Deno Runtime (19 funkció)
+                Deno Runtime (18 funkció)
             </div>
             <div class="tech-item">
-                <strong>Email</strong>
-                Resend HTTP API
+                <strong>Email (jelenleg)</strong>
+                Resend HTTP API (Lovable Cloud)
             </div>
         </div>
 
@@ -461,6 +462,24 @@
         <div class="info-box">
             <strong>Lazy Loading:</strong><br>
             Minden oldal <code>React.lazy()</code> + <code>Suspense</code> fallback-kel töltődik a gyorsabb initial load érdekében.
+        </div>
+
+        <h3>2.4. Email Architektúra</h3>
+        <div class="status-box implemented">
+            <span class="status-icon green">✓</span>
+            <strong>Jelenlegi implementáció (Lovable Cloud):</strong><br>
+            • Resend HTTP API (npm:resend@4.0.0)<br>
+            • Edge Function: <code>send-email</code><br>
+            • API kulcs: <code>RESEND_API_KEY</code> (environment secret vagy system_settings)<br>
+            • Super Admin látja a teljes API kulcsot a Settings oldalon
+        </div>
+        
+        <div class="warning-box">
+            <strong>Jövőbeli / LAN-only email architektúra (tervezett):</strong><br>
+            A projekt hosszú távú célja egy LAN-only self-hosted környezet Gmail SMTP-vel. Ez jelenleg NEM implementált, mert:<br>
+            • Deno runtime (Edge Functions) nem támogat közvetlen SMTP kapcsolatot<br>
+            • Self-hosted környezetben Supabase helyett saját backend kellene<br><br>
+            <strong>Megvalósítási terv:</strong> Node.js backend + Nodemailer + Gmail App Password
         </div>
     </div>
 
@@ -486,7 +505,7 @@
 │                    LOVABLE CLOUD (Supabase)                     │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
 │  │  PostgREST  │  │  Realtime   │  │   Edge Functions        │  │
-│  │  (Auto API) │  │  (WS)       │  │   (19 Deno function)    │  │
+│  │  (Auto API) │  │  (WS)       │  │   (18 Deno function)    │  │
 │  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
 │         │                │                     │                 │
 │  ┌──────▼────────────────▼─────────────────────▼─────────────┐  │
@@ -709,7 +728,7 @@
             <li><strong>Lejárat:</strong> 90 nap (konfigurálható: <code>password_expiry_days</code>)</li>
             <li><strong>Lejárt jelszó:</strong> /change-password oldalra irányítás</li>
             <li><strong>Kötelező változtatás:</strong> <code>must_change_password</code> flag</li>
-            <li><strong>Pwned ellenőrzés:</strong> Supabase Auth beépített funkciója</li>
+            <li><strong>Pwned ellenőrzés:</strong> Supabase Auth automatikus hibakezelése - a <code>complete-registration</code> edge function elkapja a "weak_password" hibát és magyar nyelvű üzenetet ad ("Ez a jelszó túl gyakori vagy ismert adatlopásban szerepelt.")</li>
         </ul>
 
         <h3>4.8. Row Level Security (RLS)</h3>
@@ -1985,7 +2004,7 @@ USING (
                 <tr><td><strong>UI</strong></td><td>useColumnSettings, useDashboardWidgets, useBulkSelection, useBulkOperations, useSortableData, usePostalCodes</td></tr>
                 <tr><td><strong>License</strong></td><td>useLicenseValidation, useLicenseEnforcement, useFeatureAccess, useReadOnlyMode, useCompanyLicenses</td></tr>
                 <tr><td><strong>System</strong></td><td>useSystemSettings, useMasterData, useUserCompanies, useAppLogo, useApiKeyStatus, useDeadlineChecker, useUpdateTaskDeadline</td></tr>
-                <tr><td><strong>Utility</strong></td><td>use-mobile, use-toast</td></tr>
+                <tr><td><strong>Utility</strong></td><td>useIsMobile (use-mobile.tsx), use-toast</td></tr>
             </tbody>
         </table>
 
@@ -2184,9 +2203,17 @@ USING (
     <!-- ==================== FOOTER ==================== -->
     <div class="info-box" style="margin-top: 50px;">
         <strong>Dokumentum vége</strong><br>
-        PipeLiT - Teljes Rendszer Specifikáció v3.0<br>
+        PipeLiT - Teljes Rendszer Specifikáció v3.1<br>
         Generálva: 2025-12-08<br>
-        Ez a dokumentum a kódbázis és a teljes Lovable beszélgetés alapján készült.
+        Ez a dokumentum a kódbázis és a teljes Lovable beszélgetés alapján készült.<br><br>
+        <strong>v3.1 változások:</strong>
+        <ul style="margin-top: 10px; margin-bottom: 0;">
+            <li>Edge Functions darabszám pontosítva: 18 db (korábban hibásan 19)</li>
+            <li>Pwned jelszó ellenőrzés pontosítva: Supabase Auth hibakezelés + magyar üzenet</li>
+            <li>Hook név javítva: useIsMobile (use-mobile.tsx fájlban)</li>
+            <li>Email stack pontosítva: jelenleg Resend HTTP API + jövőbeli LAN-only Gmail SMTP architektúra dokumentálva</li>
+            <li>Karbantartási megjegyzés hozzáadva a dokumentum fejlécébe</li>
+        </ul>
     </div>
 
 </body>
