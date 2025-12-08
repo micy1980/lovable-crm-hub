@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PipeLiT - Teljes Rendszer Specifikáció v3.1</title>
+    <title>PipeLiT - Teljes Rendszer Specifikáció v3.2</title>
     <style>
         * {
             margin: 0;
@@ -271,7 +271,7 @@
     
     <div class="info-box">
         <strong>Dokumentum információk:</strong><br>
-        <strong>Verzió: 3.1</strong><br>
+        <strong>Verzió: 3.2</strong><br>
         Utolsó frissítés: 2025-12-08<br>
         Projekt típus: Vállalati CRM rendszer feladatkezeléssel, projektmenedzsmenttel és automatizációval<br>
         Technológia: React + TypeScript + Lovable Cloud (Supabase)<br>
@@ -2203,14 +2203,19 @@ USING (
     <!-- ==================== FOOTER ==================== -->
     <div class="info-box" style="margin-top: 50px;">
         <strong>Dokumentum vége</strong><br>
-        PipeLiT - Teljes Rendszer Specifikáció v3.1<br>
+        PipeLiT - Teljes Rendszer Specifikáció v3.2<br>
         Generálva: 2025-12-08<br>
         Ez a dokumentum a kódbázis és a teljes Lovable beszélgetés alapján készült.<br><br>
+        <strong>v3.2 változások:</strong>
+        <ul style="margin-top: 10px; margin-bottom: 0;">
+            <li>Tartalomjegyzék linkek ellenőrizve: belső anchor hivatkozások használata (#intro, #tech-stack, stb.)</li>
+            <li>Utility hook: <code>useIsMobile</code> (fájl: <code>use-mobile.tsx</code>)</li>
+            <li>Verziószám frissítve v3.2-re</li>
+        </ul>
         <strong>v3.1 változások:</strong>
         <ul style="margin-top: 10px; margin-bottom: 0;">
             <li>Edge Functions darabszám pontosítva: 18 db (korábban hibásan 19)</li>
             <li>Pwned jelszó ellenőrzés pontosítva: Supabase Auth hibakezelés + magyar üzenet</li>
-            <li>Hook név javítva: useIsMobile (use-mobile.tsx fájlban)</li>
             <li>Email stack pontosítva: jelenleg Resend HTTP API + jövőbeli LAN-only Gmail SMTP architektúra dokumentálva</li>
             <li>Karbantartási megjegyzés hozzáadva a dokumentum fejlécébe</li>
         </ul>
