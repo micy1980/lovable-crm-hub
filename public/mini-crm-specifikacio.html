@@ -623,7 +623,7 @@
         <p>Vállalat-szintű címkék tetszőleges entitásokhoz, színkódolással.</p>
 
         <h4>comments (megjegyzések)</h4>
-        <p>Entitásokhoz fűzött megjegyzések, szerkesztés és soft delete (szerző által).</p>
+        <p>Entitásokhoz fűzött megjegyzések (entity_type, entity_id). Szerkesztés és soft delete csak szerző által - soft_delete_comment() SECURITY DEFINER RPC-n keresztül.</p>
 
         <h4>dashboard_widgets (dashboard testreszabás)</h4>
         <p>Felhasználónkénti widget láthatóság, pozíció és szélesség beállítások.</p>
@@ -951,13 +951,18 @@ USING (
 
         <h3>7.4. Szerződés Modul</h3>
         <ul>
-            <li>Teljes verziókövetés (contract_versions)</li>
-            <li>Lejárat, felmondási idő, megújítás figyelmeztetések</li>
-            <li>Fizetési információk (gyakoriság, összeg, deviza)</li>
-            <li>Automatikus megújítás beállítás</li>
-            <li>Felhasználói hozzáférés korlátozás</li>
-            <li>Multi-file támogatás (contract_versions fájlok)</li>
-            <li>PDF és kép előnézet</li>
+            <li>Teljes verziókövetés (contract_versions) - minden módosítás új verzió</li>
+            <li>Verzió visszaállítás (admin only)</li>
+            <li>Lejárat, felmondási idő, megújítás figyelmeztetések (konfigurálható napok)</li>
+            <li>Fizetési információk (gyakoriság: monthly/quarterly/annually/one-time, összeg, deviza)</li>
+            <li>Automatikus megújítás beállítás (auto_renewal + renewal_period_months)</li>
+            <li>Felhasználói hozzáférés korlátozás (restrict_access + contract_user_access)</li>
+            <li>Multi-file támogatás (verziókövetéssel, verzió visszaállítás admin only)</li>
+            <li>PDF és kép előnézet (Office formátumok NEM támogatottak)</li>
+            <li>Visibility: COMPANY_ONLY, PROJECT_ONLY, SALES_ONLY, PUBLIC (Documents modullal azonos RLS)</li>
+            <li>Bulk ZIP letöltés ({szerződés_cím}_{YYYYMMDD_HHMMSS}.zip)</li>
+            <li>Szűrés (fájltípus, dátum, szöveg), drag-drop feltöltés</li>
+            <li>Soft delete (admin) / Hard delete (super admin + jelszó)</li>
             <li>Jóváhagyási workflow integráció</li>
         </ul>
 
@@ -1008,13 +1013,14 @@ USING (
 
         <h3>7.7. Naptár Modul</h3>
         <ul>
-            <li>Három nézet: nap, hét, hónap</li>
-            <li>24 órás időformátum</li>
-            <li>Drag-drop átütemezés</li>
-            <li>TaskViewSheet: kattintásra részletek megjelenítése (read-only)</li>
-            <li>Projekt és személyes színek</li>
-            <li>Egész napos elemek külön sorban</li>
-            <li>Sticky fejléc</li>
+            <li>Három nézet: nap, hét, hónap (hónap nézetnél drag megőrzi az eredeti időpontot)</li>
+            <li>24 órás időformátum (alkalmazás-szerte kötelező)</li>
+            <li>Drag-drop átütemezés (@dnd-kit - DraggableTask + DroppableCell)</li>
+            <li>TaskViewSheet: kattintásra részletek megjelenítése (read-only slide-out panel)</li>
+            <li>Projekt színek (task_color, event_color) és személyes színek (personal_task_color, personal_event_color)</li>
+            <li>Egész napos elemek külön "all-day" sorban (nem az órás gridben)</li>
+            <li>Sticky fejléc, oldalon belüli görgetés (nem belső scrollbar)</li>
+            <li>Hét és nap nézetben konzisztens grid template az oszlopok igazításához</li>
         </ul>
 
         <h3>7.8. Időkövetés (Time Tracking)</h3>
@@ -1281,8 +1287,9 @@ USING (
         <h3>10.2. Technikai Részletek</h3>
         <ul>
             <li><strong>Build:</strong> Vite + TypeScript</li>
-            <li><strong>State Management:</strong> TanStack Query (react-query)</li>
+            <li><strong>State Management:</strong> TanStack Query (react-query) - staleTime: 5 perc, gcTime: 30 perc, refetchOnWindowFocus: false</li>
             <li><strong>Routing:</strong> react-router-dom v6</li>
+            <li><strong>Lazy Loading:</strong> React.lazy + Suspense minden oldalra (PageLoader skeleton fallback)</li>
             <li><strong>Forms:</strong> react-hook-form + zod</li>
             <li><strong>UI:</strong> shadcn/ui + Tailwind CSS + Lucide icons</li>
             <li><strong>Drag & Drop:</strong> @dnd-kit</li>
@@ -1295,15 +1302,26 @@ USING (
 
         <h3>10.3. Fontos Architektúrális Döntések</h3>
         <ul>
-            <li><strong>Soft Delete Pattern:</strong> SECURITY DEFINER RPC függvényeken keresztül (RLS policy konfliktus miatt)</li>
-            <li><strong>Real-time Session Termination:</strong> Supabase Realtime broadcast (session-terminate-{userId} csatorna)</li>
-            <li><strong>Licenc Kulcs:</strong> 12-bit random nonce a nem-determinisztikus generáláshoz</li>
-            <li><strong>PDF Preview:</strong> Blob URL kötelező (signed URL → Chrome CSP blokkolás)</li>
+            <li><strong>Soft Delete Pattern:</strong> SECURITY DEFINER RPC függvényeken keresztül (RLS policy konfliktus miatt) - soft_delete_project, soft_delete_task, soft_delete_event, soft_delete_company, soft_delete_document, soft_delete_comment</li>
+            <li><strong>Real-time Session Termination:</strong> Supabase Realtime broadcast (session-terminate-{userId} csatorna) - azonnali kijelentkeztetés polling nélkül</li>
+            <li><strong>User Törlés:</strong> Automatikus session termination + locked_accounts, login_attempts, user_company_permissions cleanup</li>
+            <li><strong>Licenc Kulcs:</strong> 12-bit random nonce a nem-determinisztikus generáláshoz (4096 egyedi érték)</li>
+            <li><strong>PDF Preview:</strong> Blob URL kötelező (signed URL → Chrome CSP/X-Frame-Options blokkolás)</li>
             <li><strong>Office Preview:</strong> ELTÁVOLÍTVA - Word/Excel/PowerPoint nem megbízható böngészőben</li>
-            <li><strong>Event-driven Updates:</strong> Polling helyett Supabase Realtime subscriptions</li>
+            <li><strong>Event-driven Updates:</strong> Polling helyett Supabase Realtime subscriptions (postgres_changes)</li>
+            <li><strong>Comments:</strong> Soft delete SECURITY DEFINER RPC-n keresztül (csak szerző törölheti)</li>
         </ul>
 
-        <h3>10.4. Jövőbeli Lehetőségek</h3>
+        <h3>10.4. UI/UX Szabályok</h3>
+        <ul>
+            <li><strong>Form Validáció:</strong> Kötelező mezők piros szegéllyel + "Kötelező mező" hibaüzenet</li>
+            <li><strong>Akció gombok:</strong> Táblázatban icon-only (size="icon" h-7 w-7), részlet oldalakon text gomb</li>
+            <li><strong>Naptár színek:</strong> Projekt szintű (task_color, event_color) és személyes szintű (personal_task_color, personal_event_color) - ColorPicker komponenssel állítható</li>
+            <li><strong>Resend API kulcs:</strong> Csak Super Admin látja (unmasked), check-api-key-status edge function ellenőrzi jogosultságot</li>
+            <li><strong>Settings táblázatok:</strong> Companies, Master Data, Account Management tabok is támogatják az oszlop kezelést (visibility, reorder, resize)</li>
+        </ul>
+
+        <h3>10.5. Jövőbeli Lehetőségek</h3>
         <ul>
             <li>NAV integráció (adategyeztetés)</li>
             <li>Számlázó rendszer integráció</li>
@@ -1314,7 +1332,7 @@ USING (
     </div>
 
     <footer style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #ddd; text-align: center; color: #666;">
-        <p>PipeLiT Rendszer Specifikáció v2.0 | Generálva: 2025-12-08</p>
+        <p>PipeLiT Rendszer Specifikáció v2.1 | Generálva: 2025-12-08</p>
     </footer>
 </body>
 </html>
