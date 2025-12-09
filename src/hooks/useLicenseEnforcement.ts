@@ -16,7 +16,8 @@ export interface LicenseStatus {
     calendar: boolean;
     projects: boolean;
     documents: boolean;
-    logs: boolean;
+    audit: boolean;
+    my_items: boolean;
   };
   validFrom: string | null;
   validUntil: string | null;
@@ -43,7 +44,8 @@ export const useLicenseEnforcement = (): LicenseStatus => {
           calendar: false,
           projects: false,
           documents: false,
-          logs: false,
+          audit: false,
+          my_items: false,
         },
         validFrom: null,
         validUntil: null,
@@ -70,7 +72,8 @@ export const useLicenseEnforcement = (): LicenseStatus => {
           calendar: false,
           projects: false,
           documents: false,
-          logs: false,
+          audit: false,
+          my_items: false,
         },
         validFrom: null,
         validUntil: null,
@@ -90,7 +93,8 @@ export const useLicenseEnforcement = (): LicenseStatus => {
       calendar: features.includes('calendar'),
       projects: features.includes('projects'),
       documents: features.includes('documents'),
-      logs: features.includes('logs'),
+      audit: features.includes('audit'),
+      my_items: features.includes('my_items'),
     };
 
     return {
