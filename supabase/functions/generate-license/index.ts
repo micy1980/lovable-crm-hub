@@ -18,8 +18,15 @@ interface GenerateRequest {
 const EPOCH = new Date('2000-01-01T00:00:00Z');
 const LICENSE_VERSION = 1;
 
-// Get the secret from environment - NEVER expose to frontend
-const SECRET_KEY = Deno.env.get('LICENSE_SECRET_KEY') || 'ORBIX_LICENSE_SECRET_2025';
+// Get the secret from environment - NO FALLBACK ALLOWED
+// If the secret is not configured, the function will fail explicitly
+function getSecretKey(): string {
+  const secret = Deno.env.get('LICENSE_SECRET_KEY');
+  if (!secret) {
+    throw new Error('LICENSE_SECRET_KEY environment variable is not configured');
+  }
+  return secret;
+}
 
 // Feature bit positions (MSB first) - 8 bits for 7 features
 const FEATURE_ORDER: LicenseFeature[] = ['partners', 'projects', 'sales', 'documents', 'calendar', 'my_items', 'audit'];
@@ -136,7 +143,7 @@ async function generateLicenseKey(input: GenerateRequest): Promise<string> {
   payload = (payload << 8n) | BigInt(featuresMask);
   
   const payloadBytes = bigIntToBytes(payload, 8);
-  const mac = await hmacSha256(SECRET_KEY, payloadBytes);
+  const mac = await hmacSha256(getSecretKey(), payloadBytes);
   const macBytes = mac.slice(0, 7);
   
   const combined = new Uint8Array(15);
