@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PipeLiT - Teljes Rendszer Specifikáció v3.2</title>
+    <title>PipeLiT - Teljes Rendszer Specifikáció v3.3</title>
     <style>
         * {
             margin: 0;
@@ -271,8 +271,8 @@
     
     <div class="info-box">
         <strong>Dokumentum információk:</strong><br>
-        <strong>Verzió: 3.2</strong><br>
-        Utolsó frissítés: 2025-12-08<br>
+        <strong>Verzió: 3.3</strong><br>
+        Utolsó frissítés: 2025-12-09<br>
         Projekt típus: Vállalati CRM rendszer feladatkezeléssel, projektmenedzsmenttel és automatizációval<br>
         Technológia: React + TypeScript + Lovable Cloud (Supabase)<br>
         Alkalmazás neve: <strong>PipeLiT</strong><br>
@@ -443,7 +443,7 @@
             </div>
             <div class="tech-item">
                 <strong>Edge Functions</strong>
-                Deno Runtime (18 funkció)
+                Deno Runtime (19 funkció)
             </div>
             <div class="tech-item">
                 <strong>Email (jelenleg)</strong>
@@ -1888,6 +1888,12 @@ USING (
             <thead><tr><th>Funkció</th><th>Leírás</th><th>Input</th><th>Jogosultság</th></tr></thead>
             <tbody>
                 <tr>
+                    <td><code>generate-license</code></td>
+                    <td>Licenc kulcs generálása (biztonságos, backend-only)</td>
+                    <td>maxUsers, validFrom, validUntil, features[]</td>
+                    <td>Super Admin</td>
+                </tr>
+                <tr>
                     <td><code>activate-license</code></td>
                     <td>Licenc kulcs aktiválása</td>
                     <td>licenseKey, companyId</td>
@@ -2203,9 +2209,19 @@ USING (
     <!-- ==================== FOOTER ==================== -->
     <div class="info-box" style="margin-top: 50px;">
         <strong>Dokumentum vége</strong><br>
-        PipeLiT - Teljes Rendszer Specifikáció v3.2<br>
-        Generálva: 2025-12-08<br>
+        PipeLiT - Teljes Rendszer Specifikáció v3.3<br>
+        Generálva: 2025-12-09<br>
         Ez a dokumentum a kódbázis és a teljes Lovable beszélgetés alapján készült.<br><br>
+        <strong>v3.3 változások (Security Hardening):</strong>
+        <ul style="margin-top: 10px; margin-bottom: 0;">
+            <li><strong>KRITIKUS:</strong> LICENSE_SECRET_KEY átmozgatva backend edge function-be (generate-license)</li>
+            <li><strong>KÖZEPES:</strong> Frontend 2FA route guard implementálva (use2FAVerification hook + MainLayout)</li>
+            <li>RLS 2FA check hozzáadva: notifications, approval_workflows, comments, time_entries, favorites, dashboard_widgets</li>
+            <li>Storage documents bucket INSERT policy: company scope + 2FA check</li>
+            <li>Edge Functions darabszám: 18 → 19 (generate-license hozzáadva)</li>
+            <li>companies_safe view és exchange_rates RLS dokumentálva mint elfogadott architektúra</li>
+            <li>SECURITY_AUDIT_SUMMARY.md frissítve v2-re</li>
+        </ul>
         <strong>v3.2 változások:</strong>
         <ul style="margin-top: 10px; margin-bottom: 0;">
             <li>Tartalomjegyzék linkek ellenőrizve: belső anchor hivatkozások használata (#intro, #tech-stack, stb.)</li>

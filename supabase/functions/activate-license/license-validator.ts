@@ -34,7 +34,8 @@ export interface DecodedLicense {
 
 const EPOCH = new Date('2000-01-01T00:00:00Z');
 const LICENSE_VERSION = 1;
-const SECRET_KEY = 'ORBIX_LICENSE_SECRET_2025';
+// Get secret from environment - NEVER hardcode in production
+const SECRET_KEY = Deno.env.get('LICENSE_SECRET_KEY') || 'ORBIX_LICENSE_SECRET_2025';
 
 // Feature bit positions (MSB first) - 8 bits for 7 features
 const FEATURE_ORDER: LicenseFeature[] = ['partners', 'projects', 'sales', 'documents', 'calendar', 'my_items', 'audit'];

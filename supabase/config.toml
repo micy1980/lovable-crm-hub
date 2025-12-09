@@ -1,5 +1,8 @@
 project_id = "klhebfqxfgepacruplxy"
 
+[functions.generate-license]
+verify_jwt = true
+
 [functions.validate-license]
 verify_jwt = false
 
@@ -47,3 +50,9 @@ verify_jwt = true
 
 [functions.complete-registration]
 verify_jwt = false
+
+[functions.send-event-invitation]
+verify_jwt = true
+
+[functions.execute-automation]
+verify_jwt = true
