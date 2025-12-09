@@ -36,7 +36,8 @@ export const DetailedLicenseInfo = ({ companyId }: DetailedLicenseInfoProps) => 
     { key: 'calendar', label: t('nav.calendar'), enabled: features.calendar },
     { key: 'projects', label: t('nav.projects'), enabled: features.projects },
     { key: 'documents', label: t('nav.documents'), enabled: features.documents },
-    { key: 'logs', label: t('nav.logs'), enabled: features.logs },
+    { key: 'my_items', label: t('nav.myItems'), enabled: features.my_items },
+    { key: 'audit', label: t('nav.logs'), enabled: features.audit },
   ];
 
   return (
