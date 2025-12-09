@@ -34,8 +34,16 @@ export interface DecodedLicense {
 
 const EPOCH = new Date('2000-01-01T00:00:00Z');
 const LICENSE_VERSION = 1;
-// Get secret from environment - NEVER hardcode in production
-const SECRET_KEY = Deno.env.get('LICENSE_SECRET_KEY') || 'ORBIX_LICENSE_SECRET_2025';
+
+// Get the secret from environment - NO FALLBACK ALLOWED
+// If the secret is not configured, validation will fail explicitly
+function getSecretKey(): string {
+  const secret = Deno.env.get('LICENSE_SECRET_KEY');
+  if (!secret) {
+    throw new Error('LICENSE_SECRET_KEY environment variable is not configured');
+  }
+  return secret;
+}
 
 // Feature bit positions (MSB first) - 8 bits for 7 features
 const FEATURE_ORDER: LicenseFeature[] = ['partners', 'projects', 'sales', 'documents', 'calendar', 'my_items', 'audit'];
@@ -143,7 +151,7 @@ export async function verifyAndDecodeLicenseKey(rawKey: string): Promise<Decoded
     const payloadBytes = combined.slice(0, 8);
     const receivedMac = combined.slice(8, 15);
     
-    const computedMac = await hmacSha256(SECRET_KEY, payloadBytes);
+    const computedMac = await hmacSha256(getSecretKey(), payloadBytes);
     const expectedMac = computedMac.slice(0, 7);
     
     if (!constantTimeCompare(receivedMac, expectedMac)) {

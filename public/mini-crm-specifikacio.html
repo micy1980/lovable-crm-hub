@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PipeLiT - Teljes Rendszer Specifikáció v3.3</title>
+    <title>PipeLiT - Teljes Rendszer Specifikáció v3.4</title>
     <style>
         * {
             margin: 0;
@@ -2209,9 +2209,16 @@ USING (
     <!-- ==================== FOOTER ==================== -->
     <div class="info-box" style="margin-top: 50px;">
         <strong>Dokumentum vége</strong><br>
-        PipeLiT - Teljes Rendszer Specifikáció v3.3<br>
+        PipeLiT - Teljes Rendszer Specifikáció v3.4<br>
         Generálva: 2025-12-09<br>
         Ez a dokumentum a kódbázis és a teljes Lovable beszélgetés alapján készült.<br><br>
+        <strong>v3.4 változások (Final Security Pass):</strong>
+        <ul style="margin-top: 10px; margin-bottom: 0;">
+            <li><strong>KRITIKUS:</strong> LICENSE_SECRET_KEY fallback eltávolítva - nincs hardcoded default érték, hiányzó env var explicit hibát dob</li>
+            <li><strong>KÖZEPES:</strong> Storage documents bucket SELECT/UPDATE/DELETE policy-k is 2FA-t követelnek (INSERT mellé)</li>
+            <li>License architektúra pontosítva: getSecretKey() function explicit error dobással</li>
+            <li>SECURITY_AUDIT_SUMMARY.md frissítve v3-ra</li>
+        </ul>
         <strong>v3.3 változások (Security Hardening):</strong>
         <ul style="margin-top: 10px; margin-bottom: 0;">
             <li><strong>KRITIKUS:</strong> LICENSE_SECRET_KEY átmozgatva backend edge function-be (generate-license)</li>

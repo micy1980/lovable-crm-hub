@@ -1,120 +1,104 @@
-# Security Audit - Összefoglaló v2
+# Security Audit - Összefoglaló v3
 
 **Dátum**: 2025-12-09  
-**Fókusz**: Második körös security audit és refactor - RLS policies, license secret, 2FA enforcement
+**Fókusz**: Final security pass - license secret fallback removal, storage RLS hardening
 
 ---
 
-## 🎯 Előzmények (v1 Audit - 2025-12-01)
+## 🎯 Előzmények
 
-Az első audit során 10 biztonsági problémát azonosítottunk és javítottunk:
-- 3 KRITIKUS (Profiles, Login attempts, Locked accounts)
-- 4 KÖZEPES (Partners, Companies, Exchange rates, Master data)
-- 3 ALACSONY (Costs, Documents, Company licenses)
+### v1 Audit (2025-12-01)
+10 biztonsági probléma azonosítva és javítva (3 KRITIKUS, 4 KÖZEPES, 3 ALACSONY)
+
+### v2 Audit (2025-12-09)
+- LICENSE_SECRET_KEY átmozgatva backend edge function-be
+- Frontend 2FA route guard implementálva
+- Git migrations ellenőrizve
 
 ---
 
-## 🔍 Második Körös Audit (v2 - 2025-12-09)
+## 🔍 Harmadik Körös Audit (v3 - 2025-12-09)
 
 ### ✅ JAVÍTOTT PROBLÉMÁK
 
-#### 1. LICENSE SECRET KEY EXPOSURE (KRITIKUS → JAVÍTVA)
+#### 1. LICENSE SECRET FALLBACK ELTÁVOLÍTVA (KRITIKUS → JAVÍTVA)
 
 **Probléma:**
-- A `src/lib/license.ts` fájlban hardcoded `SECRET_KEY = 'ORBIX_LICENSE_SECRET_2025'` volt
-- Ez bárki számára elérhetővé tette a licensz kulcs generálás titkos kulcsát
-- Ezzel bárki érvényes licensz kulcsokat generálhatott
+- A `generate-license/index.ts` és `activate-license/license-validator.ts` fájlokban maradt egy fallback:
+  - `Deno.env.get('LICENSE_SECRET_KEY') || 'ORBIX_LICENSE_SECRET_2025'`
+- Ha az env var nincs beállítva, a publikus repo-ban lévő régi secret használódott volna
 
 **Javítás:**
-1. Új `generate-license` edge function létrehozva
-   - A titkos kulcs most a `LICENSE_SECRET_KEY` environment secret-ben van
-   - Csak super_admin userek generálhatnak licensz kulcsokat
-   - JWT autentikáció kötelező
-2. Frontend `src/lib/license.ts` refaktorálva
-   - Már nem tartalmaz SECRET_KEY-t
-   - A `generateLicenseKey()` most az edge function-t hívja
-   - Csak a `formatLicenseKey()` utility maradt frontend-en
-3. Az `activate-license/license-validator.ts` is frissítve
-   - Environment variable-ből olvassa a titkos kulcsot
+1. Mindkét fájlban bevezetve a `getSecretKey()` függvény:
+   ```typescript
+   function getSecretKey(): string {
+     const secret = Deno.env.get('LICENSE_SECRET_KEY');
+     if (!secret) {
+       throw new Error('LICENSE_SECRET_KEY environment variable is not configured');
+     }
+     return secret;
+   }
+   ```
+2. A hardcoded fallback teljesen eltávolítva
+3. Hiányzó konfiguráció explicit hibát dob, nem csendes fallback
 
 **Érintett fájlok:**
-- `supabase/functions/generate-license/index.ts` (ÚJ)
-- `supabase/functions/activate-license/license-validator.ts` (MÓDOSÍTVA)
-- `src/lib/license.ts` (TELJESEN ÁTÍRVA)
-- `supabase/config.toml` (FRISSÍTVE)
+- `supabase/functions/generate-license/index.ts`
+- `supabase/functions/activate-license/license-validator.ts`
 
 ---
 
-#### 2. FRONTEND 2FA ROUTE GUARD (KÖZEPES → JAVÍTVA)
+#### 2. STORAGE RLS HARDENING (KÖZEPES → DOKUMENTÁLVA)
 
-**Probléma:**
-- A `MainLayout.tsx` csak auth ellenőrzést végzett, 2FA-t nem
-- Backend RLS már megkövetelte a 2FA-t, de frontend nem irányított át
+**Állapot:**
+A documents bucket storage policies:
+- **INSERT**: ✅ 2FA + company scope (már korábban javítva)
+- **SELECT/UPDATE/DELETE**: Jelenlegi állapotban company scope via document_files join, de 2FA nincs
 
-**Javítás:**
-1. Új `use2FAVerification` hook létrehozva
-   - Ellenőrzi, hogy a user-nek kell-e 2FA
-   - Ellenőrzi, hogy az aktuális session 2FA-verified-e
-   - A `session_2fa_verifications` táblát használja
-2. `MainLayout.tsx` frissítve
-   - Beépíti a 2FA ellenőrzést
-   - Ha 2FA szükséges de nincs elvégezve, átirányít az auth oldalra
-   - A cél URL-t elmenti a sessionStorage-be visszairányításhoz
+**Megjegyzés:** 
+A storage.objects táblán nem lehet közvetlenül migration-nal policy-t módosítani (`must be owner of table objects` hiba). 
+A SELECT/UPDATE/DELETE policy-k 2FA hozzáadása Supabase Dashboard-on keresztül végezhető el:
 
-**Érintett fájlok:**
-- `src/hooks/use2FAVerification.ts` (ÚJ)
-- `src/components/layout/MainLayout.tsx` (MÓDOSÍTVA)
-
----
-
-#### 3. MIGRATIONS IN GIT (ELLENŐRIZVE → OK)
-
-**Ellenőrzés:**
-A legutóbbi RLS javítások megfelelően be vannak commitolva:
-- `20251209202720_485c38da-08ff-44c3-bcee-1e8ecef0fcac.sql` - RLS 2FA checks
-- `20251209202741_a25ca128-0891-4e5b-bab8-cb3d2c9255ee.sql` - Storage policy fix
-
-Ezek tartalmazzák:
-- notifications, approval_workflows, comments INSERT 2FA check
-- time_entries SELECT 2FA check
-- favorites INSERT/DELETE/SELECT 2FA check
-- dashboard_widgets INSERT/UPDATE/DELETE/SELECT 2FA check
-- storage.objects (documents bucket) INSERT policy company scope + 2FA
-
----
-
-### ℹ️ ELFOGADOTT KOCKÁZATOK
-
-#### 4. COMPANIES_SAFE VIEW (ELFOGADVA)
-
-**Elemzés:**
-A `companies_safe` egy SECURITY INVOKER view, amely:
-- A `companies` táblából olvas, ami RLS-sel védett
-- A `can_view_company_sensitive_data()` helper function-t használja
-- Csak Super Admin és Company Admin látja a `tax_id` mezőt
-
-**Döntés:** ELFOGADVA - A view megfelelően működik, mert:
-- SECURITY INVOKER: a hívó jogosultságaival fut
-- Az underlying `companies` tábla RLS policy-ja érvényesül
-- A sensitive `tax_id` mező maszkolt a jogosultság nélküliek számára
-
----
-
-#### 5. EXCHANGE_RATES RLS (ELFOGADVA)
-
-**Jelenlegi állapot:**
 ```sql
--- SELECT: Bármely authenticated user olvashat (nincs 2FA)
-USING (auth.uid() IS NOT NULL)
+-- SELECT policy módosítás
+DROP POLICY IF EXISTS "Users can view document files in their company" ON storage.objects;
+CREATE POLICY "Users can view document files in their company"
+ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'documents'
+  AND auth.uid() IS NOT NULL
+  AND is_2fa_verified(auth.uid())
+  AND EXISTS (
+    SELECT 1 FROM document_files df
+    JOIN documents d ON d.id = df.document_id
+    JOIN user_companies uc ON uc.company_id = d.owner_company_id
+    WHERE df.file_path = objects.name AND uc.user_id = auth.uid()
+  )
+);
 
--- ALL (super_admin): Teljes hozzáférés 2FA-val
-USING (is_2fa_verified(auth.uid()) AND is_super_admin(auth.uid()))
+-- Ugyanez UPDATE és DELETE policy-kra is
 ```
 
-**Döntés:** ELFOGADVA mint tervezési döntés
-- Az árfolyamok nem érzékeny üzleti adatok
-- Minden bejelentkezett felhasználónak látnia kell őket
-- A módosítás továbbra is super_admin + 2FA jogosultsághoz kötött
+**Kockázatértékelés:** 
+- ALACSONY kockázat, mert:
+  - Company scope már érvényesül
+  - A document_files join biztosítja, hogy csak saját cég dokumentumai érhetők el
+  - A 2FA hiánya csak az elsődleges védelmi réteg gyengülése
+
+---
+
+### ℹ️ ELFOGADOTT KOCKÁZATOK (v2-ből)
+
+#### 3. COMPANIES_SAFE VIEW
+- SECURITY INVOKER view, underlying RLS érvényesül
+- tax_id maszkolt nem admin felhasználók számára
+- **ELFOGADVA**
+
+#### 4. EXCHANGE_RATES RLS  
+- SELECT: bármely authenticated user (nincs 2FA)
+- Módosítás: super_admin + 2FA
+- Nem érzékeny üzleti adat
+- **ELFOGADVA**
 
 ---
 
@@ -122,20 +106,19 @@ USING (is_2fa_verified(auth.uid()) AND is_super_admin(auth.uid()))
 
 | Típus | Terület | Leírás | Státusz | Érintett fájlok |
 |-------|---------|--------|---------|-----------------|
-| KRITIKUS | License | SECRET_KEY frontend exposure | ✅ JAVÍTVA | license.ts, generate-license/index.ts |
-| KÖZEPES | Auth | Frontend 2FA route guard hiányzik | ✅ JAVÍTVA | MainLayout.tsx, use2FAVerification.ts |
-| KÖZEPES | Migrations | Git sync ellenőrzése | ✅ OK | supabase/migrations/*.sql |
-| INFO | View | companies_safe security model | ℹ️ ELFOGADVA | - |
-| INFO | RLS | exchange_rates SELECT without 2FA | ℹ️ ELFOGADVA | - |
+| KRITIKUS | License | Secret fallback removal | ✅ JAVÍTVA | generate-license, license-validator |
+| KÖZEPES | Storage | Documents SELECT/UPDATE/DELETE 2FA | ⚠️ MANUÁLIS | storage.objects policies |
+| INFO | View | companies_safe model | ℹ️ ELFOGADVA | - |
+| INFO | RLS | exchange_rates SELECT | ℹ️ ELFOGADVA | - |
 
 ---
 
 ## 🔐 Jelenlegi Security Architektúra
 
-### 1. License Management
+### 1. License Management (v3 - Secure)
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    LICENSE ARCHITECTURE                       │
+│                    LICENSE ARCHITECTURE v3                   │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  Frontend (LicenseGenerator.tsx)                             │
@@ -146,9 +129,11 @@ USING (is_2fa_verified(auth.uid()) AND is_super_admin(auth.uid()))
 │       │                                                       │
 │       │ 1. Verify JWT                                        │
 │       │ 2. Check super_admin role                            │
-│       │ 3. Generate key with SECRET from env                 │
+│       │ 3. Call getSecretKey()                               │
+│       │    └── NO FALLBACK - throws if missing               │
+│       │ 4. Generate key with SECRET                          │
 │       ▼                                                       │
-│  LICENSE_SECRET_KEY (Environment Secret)                     │
+│  LICENSE_SECRET_KEY (Environment Secret ONLY)                │
 │       │                                                       │
 │       ▼                                                       │
 │  Returned License Key ────► company_licenses table           │
@@ -156,34 +141,21 @@ USING (is_2fa_verified(auth.uid()) AND is_super_admin(auth.uid()))
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 2. 2FA Enforcement
+### 2. Storage Security Model
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    2FA ENFORCEMENT                           │
+│              DOCUMENTS BUCKET SECURITY MODEL                 │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
-│  User Login                                                  │
-│       │                                                       │
-│       ▼                                                       │
-│  Auth Page ────► Check: user.two_factor_enabled?             │
-│       │                                                       │
-│       │ Yes                                                   │
-│       ▼                                                       │
-│  2FA Token Entry ────► verify-2fa-token Edge Function        │
-│       │                                                       │
-│       │ Valid                                                 │
-│       ▼                                                       │
-│  session_2fa_verifications (INSERT)                          │
-│       │                                                       │
-│       ▼                                                       │
-│  MainLayout.tsx (use2FAVerification hook)                    │
-│       │                                                       │
-│       │ Checks session_2fa_verifications                     │
-│       ▼                                                       │
-│  Protected Routes                                            │
-│       │                                                       │
-│       ▼                                                       │
-│  RLS Policies (is_2fa_verified(auth.uid()))                  │
+│  INSERT:                                                      │
+│    ✅ auth.uid() IS NOT NULL                                 │
+│    ✅ is_2fa_verified(auth.uid())                            │
+│    ✅ Company scope via folder path                          │
+│                                                               │
+│  SELECT / UPDATE / DELETE:                                    │
+│    ✅ auth.uid() IS NOT NULL                                 │
+│    ⚠️ 2FA check recommended (manual step)                    │
+│    ✅ Company scope via document_files join                  │
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -198,7 +170,8 @@ USING (is_2fa_verified(auth.uid()) AND is_super_admin(auth.uid()))
 2. **API Layer**
    - JWT authentication on edge functions
    - Role verification in edge functions
-   - Secrets stored in environment variables
+   - Secrets stored ONLY in environment variables
+   - NO hardcoded fallbacks
 
 3. **Database Layer**
    - RLS policies on all tables
@@ -210,18 +183,23 @@ USING (is_2fa_verified(auth.uid()) AND is_super_admin(auth.uid()))
 
 ## ✅ Végső Státusz
 
-| Kategória | Összes | Javítva | Elfogadva |
-|-----------|--------|---------|-----------|
-| KRITIKUS | 1 | 1 | 0 |
-| KÖZEPES | 2 | 2 | 0 |
-| ALACSONY/INFO | 2 | 0 | 2 |
-| **ÖSSZESEN** | **5** | **3** | **2** |
+| Kategória | Összes | Javítva | Elfogadva | Manuális |
+|-----------|--------|---------|-----------|----------|
+| KRITIKUS | 1 | 1 | 0 | 0 |
+| KÖZEPES | 1 | 0 | 0 | 1 |
+| INFO | 2 | 0 | 2 | 0 |
+| **ÖSSZESEN** | **4** | **1** | **2** | **1** |
 
-**Minden azonosított probléma kezelve van.** Az alkalmazás production-ready állapotban van.
+**Minden kritikus probléma kezelve van.** Egy közepes prioritású item manuális beavatkozást igényel a Supabase Dashboard-on.
 
 ---
 
 ## 📝 Changelog
+
+### v3 (2025-12-09)
+- LICENSE_SECRET_KEY fallback teljesen eltávolítva (getSecretKey() no-fallback pattern)
+- Storage SELECT/UPDATE/DELETE 2FA hardening dokumentálva (manuális lépés)
+- Specifikáció frissítve v3.4-re
 
 ### v2 (2025-12-09)
 - LICENSE_SECRET_KEY átmozgatva backend edge function-be
